@@ -1,0 +1,20 @@
+def profiles = "prod"
+
+if (project.hasProperty("swagger")) {
+    profiles += ",swagger"
+}
+
+bootRun {
+    args = ["--spring.profiles.active=" + profiles]
+}
+
+
+processResources {
+    inputs.property('version', version)
+    inputs.property('springProfiles', profiles)
+//    filesMatching("**/application.yml") {
+//        filter {
+//            it.replace("#spring.profiles.active#", profiles)
+//        }
+//    }
+}

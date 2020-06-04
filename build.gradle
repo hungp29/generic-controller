@@ -1,8 +1,10 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
 
-group 'org.example.genericcontroller'
+group 'org.example.authorize'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
@@ -11,6 +13,44 @@ repositories {
     mavenCentral()
 }
 
+if (project.hasProperty("prod")) {
+    apply from: "gradle/profile_prod.gradle"
+} else if (project.hasProperty("dev")) {
+    apply from: "gradle/profile_dev.gradle"
+} else if (project.hasProperty("stg")) {
+    apply from: "gradle/profile_stg.gradle"
+} else {
+    apply from: "gradle/profile_local.gradle"
+}
+
+defaultTasks "bootRun"
+
+springBoot {
+    mainClassName = "org.example.genericcontroller.Application"
+}
+
+ext {
+    springbootVersion = '2.2.2.RELEASE'
+    junitVersion = '4.12'
+    flywayVersion = '6.3.3'
+    lombokVersion = '1.18.12'
+}
+
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation "org.springframework.boot:spring-boot-dependencies:$springbootVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+    // DB
+    runtimeOnly 'mysql:mysql-connector-java'
+    implementation "org.flywaydb:flyway-core:$flywayVersion"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+    testCompile "junit:junit:$junitVersion"
 }
