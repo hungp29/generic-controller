@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.defaulthttp;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.GenericDuplicateException;
 import org.example.genericcontroller.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.exception.GenericSelectionEmptyException;
 import org.example.genericcontroller.utils.ObjectUtils;
@@ -89,10 +90,15 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
                 if (!StringUtils.isEmpty(entityFieldName)) {
                     Path<?> path = buildPath(root, entityFieldName, entityClass);
                     if (null != path) {
+                        if (!StringUtils.isEmpty(path.getAlias()) && !filterField.equals(path.getAlias())) {
+                            throw new GenericDuplicateException(String
+                                    .format("Alias for field '%s.%s' is exist: '%s' and '%s'",
+                                            dtoType.getSimpleName(), dtoField.getName(), path.getAlias(), filterField));
+                        }
                         selections.add(path.alias(filterField));
                     }
                 }
-            }
+            }//((SingularAttributePath) selections.get(5)).getAttribute()
         }
         return selections.toArray(new Selection<?>[0]);
     }
@@ -104,7 +110,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
             Field entityField = ObjectUtils.getField(entityClass, entityPaths[0]);
             if (null != entityField) {
                 if (entityPaths.length > 1 && Converter.isForeignKeyField(entityField)) {
-                    Join<?, ?> join = JoinChecker.existJoin(from, entityField.getType());
+                    Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getType());
                     if (null == join) {
                         join = from.join(entityPaths[0]);
                     }

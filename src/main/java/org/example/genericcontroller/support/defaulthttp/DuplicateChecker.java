@@ -2,12 +2,11 @@ package org.example.genericcontroller.support.defaulthttp;
 
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
 import java.util.Set;
 
-public class JoinChecker {
+public class DuplicateChecker {
 
-    private JoinChecker() {
+    private DuplicateChecker() {
     }
 
     public static <X, Y> Join<Y, ?> existJoin(From<X, Y> root, Class<?> entityType) {

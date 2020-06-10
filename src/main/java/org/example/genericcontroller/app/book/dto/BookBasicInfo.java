@@ -27,5 +27,8 @@ public class BookBasicInfo {
     @MapField(entityField = "publisher.name")
     private String publisherName;
 
+//    @MapField(entityField = "publisher.name")
+//    private String publisherName2;
+
 //    private String authors;
 }
