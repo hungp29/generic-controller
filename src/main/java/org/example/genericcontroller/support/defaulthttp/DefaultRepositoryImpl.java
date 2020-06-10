@@ -1,8 +1,10 @@
 package org.example.genericcontroller.support.defaulthttp;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.exception.GenericSelectionEmptyException;
 import org.example.genericcontroller.utils.ObjectUtils;
+import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
@@ -73,6 +75,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
     private <S extends T> Selection<?>[] buildMultiSelect(Class<?> dtoType, @Nullable String[] filter, Root<S> root) {
         List<Selection<?>> selections = new ArrayList<>();
         List<String> dtoFieldNames = Converter.getFieldNames(dtoType);
+        Class<?> entityClass = ObjectUtils.getAnnotation(dtoType, MapClass.class).value();
         if (!CollectionUtils.isEmpty(dtoFieldNames)) {
             if (null != filter) {
                 List<String> filterField = Arrays.asList(filter);
@@ -84,11 +87,39 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
                 String entityFieldName = Converter.getEntityFieldNameByDTOField(dtoField);
 
                 if (!StringUtils.isEmpty(entityFieldName)) {
-                    selections.add(root.get(entityFieldName).alias(filterField));
+                    Path<?> path = buildPath(root, entityFieldName, entityClass);
+                    if (null != path) {
+                        selections.add(path.alias(filterField));
+                    }
                 }
             }
         }
         return selections.toArray(new Selection<?>[0]);
+    }
+
+    private Path<?> buildPath(From<?, ?> from, String entityFieldPath, Class<?> entityClass) {
+        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityClass) {
+            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
+
+            Field entityField = ObjectUtils.getField(entityClass, entityPaths[0]);
+            if (null != entityField) {
+                if (entityPaths.length > 1 && Converter.isForeignKeyField(entityField)) {
+                    Join<?, ?> join = JoinChecker.existJoin(from, entityField.getType());
+                    if (null == join) {
+                        join = from.join(entityPaths[0]);
+                    }
+                    String nextPath = entityFieldPath.substring(entityFieldPath.indexOf(Constants.DOT) + 1);
+                    return buildPath(join, nextPath, entityField.getType());
+                } else {
+                    return from.get(entityPaths[0]);
+                }
+            } else {
+                throw new GenericFieldNameIncorrectException(String
+                        .format("Cannot found field '%s' in entity '%s'", entityPaths[0], entityClass.getSimpleName()));
+            }
+        }
+
+        return null;
     }
 
     private <S> TypedQuery<S> applyRepositoryMethodMetadata(TypedQuery<S> query) {

@@ -6,6 +6,7 @@ import org.example.genericcontroller.entity.Author;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.entity.Publisher;
 import org.example.genericcontroller.support.defaulthttp.MapClass;
+import org.example.genericcontroller.support.defaulthttp.MapField;
 
 import java.util.List;
 
@@ -19,4 +20,12 @@ public class BookBasicInfo {
     private String name;
 
     private String description;
+
+    @MapField(entityField = "publisher.id")
+    private int publisherId;
+
+    @MapField(entityField = "publisher.name")
+    private String publisherName;
+
+//    private String authors;
 }
