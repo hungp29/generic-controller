@@ -1,7 +1,7 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.GenericException;
+import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        defaultRepository.findAll(readDTOClass, filter, null);
+        defaultRepository.findAll(readDTOClass, filter, null, DefaultSelectionCriteria.autoBuildSelection());
 
 
 //        MapClass mapClass = ObjectUtils.getAnnotation(readDTOClass, MapClass.class);

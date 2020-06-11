@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;

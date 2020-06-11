@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,10 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface MapField {
+@Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+public @interface MapClass {
 
-    String dtoField() default "";
-
-    String entityField() default "";
+    Class<?> value() default void.class;
 }

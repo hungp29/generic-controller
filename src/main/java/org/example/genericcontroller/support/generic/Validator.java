@@ -1,7 +1,7 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
-import org.example.genericcontroller.exception.GenericClassInvalidException;
-import org.example.genericcontroller.exception.GenericException;
+import org.example.genericcontroller.exception.generic.GenericClassInvalidException;
+import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.utils.ObjectUtils;
 
 import java.lang.annotation.Annotation;

@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -3,7 +3,7 @@ package org.example.genericcontroller.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.genericcontroller.app.book.dto.BookBasicInfo;
-import org.example.genericcontroller.support.defaulthttp.EntityMapClass;
+import org.example.genericcontroller.support.generic.EntityMapClass;
 
 import javax.persistence.*;
 import java.util.List;

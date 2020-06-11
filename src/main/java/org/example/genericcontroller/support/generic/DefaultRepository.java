@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,5 +14,5 @@ import java.util.List;
 @NoRepositoryBean
 public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Serializable>, JpaSpecificationExecutor<T> {
 
-    List<Tuple> findAll(Class<?> dtoType, String[] filter, @Nullable Specification<T> spec);
+    List<Tuple> findAll(Class<?> dtoType, String[] filter, @Nullable Specification<T> spec, SelectionCriteria<T> selection);
 }

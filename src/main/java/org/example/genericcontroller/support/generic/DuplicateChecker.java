@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.defaulthttp;
+package org.example.genericcontroller.support.generic;
 
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;

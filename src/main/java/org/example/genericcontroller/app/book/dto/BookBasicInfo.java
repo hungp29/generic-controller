@@ -2,13 +2,9 @@ package org.example.genericcontroller.app.book.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.example.genericcontroller.entity.Author;
 import org.example.genericcontroller.entity.Book;
-import org.example.genericcontroller.entity.Publisher;
-import org.example.genericcontroller.support.defaulthttp.MapClass;
-import org.example.genericcontroller.support.defaulthttp.MapField;
-
-import java.util.List;
+import org.example.genericcontroller.support.generic.MapClass;
+import org.example.genericcontroller.support.generic.MapField;
 
 @Data
 @MapClass(Book.class)
