@@ -30,29 +30,25 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
     }
 
     @Override
-    public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, Specification<T> spec,
-                               SelectionCriteria<T> selection) {
-        System.out.println("FIND ALL");
-        List<Tuple> tuples = getDTOQuery(dtoType, filter, spec, selection, Sort.unsorted()).getResultList();
+    public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, Specification<T> spec) {
+        List<Tuple> tuples = getDTOQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
         return tuples;
     }
 
     protected TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                            @Nullable Specification<T> spec, SelectionCriteria<T> selection, Sort sort) {
-        return getDTOQuery(dtoType, filter, spec, selection, getDomainClass(), sort);
+                                            @Nullable Specification<T> spec, Sort sort) {
+        return getDTOQuery(dtoType, filter, spec, getDomainClass(), sort);
     }
 
     protected <S extends T> TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                                          @Nullable Specification<S> spec, SelectionCriteria<S> selection,
-                                                          Class<S> domainClass, Sort sort) {
+                                                          @Nullable Specification<S> spec, Class<S> domainClass, Sort sort) {
+        Assert.notNull(dtoType, "DTO Type must not be null!");
         Validator.validateObjectConfiguration(dtoType, MapClass.class);
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
         Root<S> root = applySpecificationToCriteria(spec, domainClass, query);
-
-        query = applySelectionToCriteria(root, dtoType, filter, query, selection);
 
         if (sort.isSorted()) {
             query.orderBy(toOrders(sort, root, builder));

@@ -56,7 +56,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        defaultRepository.findAll(readDTOClass, filter, null, DefaultSelectionCriteria.autoBuildSelection());
+        defaultRepository.findAll(readDTOClass, filter, null);
 
 
 //        MapClass mapClass = ObjectUtils.getAnnotation(readDTOClass, MapClass.class);

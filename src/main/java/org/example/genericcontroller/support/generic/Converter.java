@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
+import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -10,12 +11,20 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Converter {
 
     private Converter() {
+    }
+
+    public static Class<? extends Audit> getEntityTypeFromDTO(Class<?> dtoType) {
+        if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MapClass.class)) {
+            return ObjectUtils.getAnnotation(dtoType, MapClass.class).value();
+        }
+        return null;
     }
 
     public static List<String> getFieldNames(Class<?> classType) {
@@ -26,19 +35,6 @@ public class Converter {
             }
         }
         return null;
-    }
-
-    public static String getEntityFieldNameByDTOField(Field dtoField) {
-        String entityFieldName = Constants.EMPTY_STRING;
-        if (null != dtoField) {
-            MapField mapField = ObjectUtils.getAnnotation(dtoField, MapField.class);
-            if (null != mapField && !StringUtils.isEmpty(mapField.entityField())) {
-                entityFieldName = mapField.entityField();
-            } else {
-                entityFieldName = dtoField.getName();
-            }
-        }
-        return entityFieldName;
     }
 
     public static Field getEntityFieldByDTOField(Field dtoField, Class<?> entityClass) {
@@ -59,5 +55,49 @@ public class Converter {
                 null != ObjectUtils.getAnnotation(field, OneToMany.class) ||
                 null != ObjectUtils.getAnnotation(field, ManyToOne.class) ||
                 null != ObjectUtils.getAnnotation(field, ManyToMany.class);
+    }
+
+    public static String getEntityFieldNameByDTOField(Field field) {
+        if (null != field) {
+            String entityFieldName = field.getName();
+            MapField mapField = ObjectUtils.getAnnotation(field, MapField.class);
+            if (null != mapField && !StringUtils.isEmpty(mapField.entityField())) {
+                entityFieldName = mapField.entityField();
+            }
+            return entityFieldName;
+        }
+        return null;
+    }
+
+    public static List<String> getEntityFieldPath(Class<?> entityType, Field dtoField) {
+        List<String> lstEntityFieldPath = new ArrayList<>();
+        if (null != entityType && null != dtoField) {
+            // Get entity field name. Ex: name or user.name
+            String entityFieldName = getEntityFieldNameByDTOField(dtoField);
+            String[] entityFieldPaths = entityFieldName.split(Constants.DOT_REGEX);
+
+            Field subField = ObjectUtils.getField(entityType, entityFieldPaths[0]);
+
+            if (entityFieldPaths.length > 1) {
+                String nextPath = entityFieldName.substring(entityFieldName.indexOf(Constants.DOT) + 1);
+            } else if (isForeignKeyField(subField)) {
+//                List<String> subFieldPaths = getEntityFieldPath(subField.getType());
+            } else {
+                lstEntityFieldPath.add(entityFieldName);
+            }
+        }
+        return lstEntityFieldPath;
+    }
+
+    public static List<String> getEntityFieldPath(Class<?> dtoType) {
+        List<String> lstEntityFieldPath = new ArrayList<>();
+        Class<? extends Audit> entityType = getEntityTypeFromDTO(dtoType);
+        if (null != entityType) {
+            List<Field> dtoFields = ObjectUtils.getFields(dtoType);
+            for (Field dtoField : dtoFields) {
+                lstEntityFieldPath.addAll(getEntityFieldPath(entityType, dtoField));
+            }
+        }
+        return lstEntityFieldPath;
     }
 }

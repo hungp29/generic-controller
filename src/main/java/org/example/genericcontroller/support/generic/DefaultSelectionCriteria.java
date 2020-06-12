@@ -22,6 +22,15 @@ public class DefaultSelectionCriteria {
 
     public static <T extends Audit> SelectionCriteria<T> autoBuildSelection() {
         return (root, dtoType, filter) -> {
+            List<Field> dtoFields = ObjectUtils.getFields(dtoType);
+            for (Field dtoField : dtoFields) {
+
+            }
+
+
+
+
+
             List<Selection<?>> selections = new ArrayList<>();
             List<String> dtoFieldNames = Converter.getFieldNames(dtoType);
             Class<?> entityClass = ObjectUtils.getAnnotation(dtoType, MapClass.class).value();
