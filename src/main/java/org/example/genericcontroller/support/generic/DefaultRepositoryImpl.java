@@ -1,9 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.GenericSelectionEmptyException;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
@@ -14,7 +12,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
@@ -30,44 +30,31 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
     }
 
     @Override
-    public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, Specification<T> spec) {
+    public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, GenericSpecification<T> spec) {
         List<Tuple> tuples = getDTOQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
         return tuples;
     }
 
     protected TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                            @Nullable Specification<T> spec, Sort sort) {
+                                            @Nullable GenericSpecification<T> spec, Sort sort) {
         return getDTOQuery(dtoType, filter, spec, getDomainClass(), sort);
     }
 
     protected <S extends T> TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                                          @Nullable Specification<S> spec, Class<S> domainClass, Sort sort) {
+                                                          @Nullable GenericSpecification<S> spec, Class<S> domainClass, Sort sort) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
         Validator.validateObjectConfiguration(dtoType, MapClass.class);
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(spec, domainClass, query);
+        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, filter);
 
         if (sort.isSorted()) {
             query.orderBy(toOrders(sort, root, builder));
         }
 
         return applyRepositoryMethodMetadata(em.createQuery(query));
-    }
-
-    private <S, U extends T> CriteriaQuery<S> applySelectionToCriteria(Root<U> root, Class<?> dtoType, @Nullable String[] filter,
-                                                                       CriteriaQuery<S> query, SelectionCriteria<U> selection) {
-        Assert.notNull(query, "CriteriaQuery must not be null!");
-        Assert.notNull(selection, "SelectionCriteria must not be null!");
-
-        Selection<?>[] selections = selection.buildMultiSelect(root, dtoType, filter);
-        if (selections.length == 0) {
-            throw new GenericSelectionEmptyException("Selection must not be empty");
-        }
-
-        return query.multiselect(selections);
     }
 
     private <S> TypedQuery<S> applyRepositoryMethodMetadata(TypedQuery<S> query) {
@@ -80,8 +67,8 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         return type == null ? query : query.setLockMode(type);
     }
 
-    private <S, U extends T> Root<U> applySpecificationToCriteria(@Nullable Specification<U> spec, Class<U> domainClass,
-                                                                  CriteriaQuery<S> query) {
+    private <S, U extends T> Root<U> applySpecificationToCriteria(@Nullable GenericSpecification<U> spec, Class<U> domainClass,
+                                                                  CriteriaQuery<S> query, Class<?> dtoType, @Nullable String[] filter) {
 
         Assert.notNull(domainClass, "Domain class must not be null!");
         Assert.notNull(query, "CriteriaQuery must not be null!");
@@ -93,11 +80,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         }
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
-        Predicate predicate = spec.toPredicate(root, query, builder);
-
-        if (predicate != null) {
-            query.where(predicate);
-        }
+        spec.buildCriteria(root, query, builder, dtoType, filter);
 
         return root;
     }

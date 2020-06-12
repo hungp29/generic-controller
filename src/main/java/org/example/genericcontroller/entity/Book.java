@@ -3,7 +3,7 @@ package org.example.genericcontroller.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.genericcontroller.app.book.dto.BookBasicInfo;
-import org.example.genericcontroller.support.generic.EntityMapClass;
+import org.example.genericcontroller.support.generic.DTOMappingEntity;
 
 import javax.persistence.*;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
-@EntityMapClass(classForRead = BookBasicInfo.class)
+@DTOMappingEntity(read = BookBasicInfo.class)
 public class Book extends Audit {
 
     private String name;

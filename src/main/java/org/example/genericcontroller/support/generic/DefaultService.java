@@ -42,9 +42,9 @@ public class DefaultService<T extends Audit> {
         Class<?> readDTOClass;
 
         // Validate configurations of entity
-        Validator.validateObjectConfiguration(entityClass, EntityMapClass.class);
+        Validator.validateObjectConfiguration(entityClass, DTOMappingEntity.class);
 
-        readDTOClass = ObjectUtils.getAnnotation(entityClass, EntityMapClass.class).classForRead();
+        readDTOClass = ObjectUtils.getAnnotation(entityClass, DTOMappingEntity.class).read();
 
         // Validate configurations of dto
         Validator.validateObjectConfiguration(readDTOClass, MapClass.class);
@@ -56,7 +56,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        defaultRepository.findAll(readDTOClass, filter, null);
+        defaultRepository.findAll(readDTOClass, filter, GenericSpecificationA.autoBuildSpecification());
 
 
 //        MapClass mapClass = ObjectUtils.getAnnotation(readDTOClass, MapClass.class);

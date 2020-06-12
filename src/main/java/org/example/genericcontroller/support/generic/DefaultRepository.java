@@ -14,5 +14,5 @@ import java.util.List;
 @NoRepositoryBean
 public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Serializable>, JpaSpecificationExecutor<T> {
 
-    List<Tuple> findAll(Class<?> dtoType, String[] filter, @Nullable Specification<T> spec);
+    List<Tuple> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec);
 }

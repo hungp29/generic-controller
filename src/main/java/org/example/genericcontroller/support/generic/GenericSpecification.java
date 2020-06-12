@@ -8,8 +8,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-public interface GenericSpecification<T> extends Specification<T> {
+public interface GenericSpecification<T>  {
 
     @Nullable
-    Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder, Class<?> dtoType, @Nullable String[] filter);
+    void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
+                          Class<?> dtoType, @Nullable String[] filter);
 }

@@ -7,7 +7,16 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface EntityMapClass {
+public @interface DTOMappingEntity {
 
-    Class<?> classForRead();
+    Class<?> createRequest() default void.class;
+
+    Class<?> createResponse() default void.class;
+
+    Class<?> read() default void.class;
+
+    Class<?> updateRequest() default void.class;
+
+    Class<?> updateResponse() default void.class;
+
 }
