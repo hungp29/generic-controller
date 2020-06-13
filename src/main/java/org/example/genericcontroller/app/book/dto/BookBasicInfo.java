@@ -2,12 +2,13 @@ package org.example.genericcontroller.app.book.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.example.genericcontroller.app.publisher.dto.PublisherDTO;
 import org.example.genericcontroller.entity.Book;
-import org.example.genericcontroller.support.generic.MapClass;
-import org.example.genericcontroller.support.generic.MapField;
+import org.example.genericcontroller.support.generic.MappingClass;
+import org.example.genericcontroller.support.generic.MappingField;
 
 @Data
-@MapClass(Book.class)
+@MappingClass(Book.class)
 @AllArgsConstructor
 public class BookBasicInfo {
 
@@ -17,11 +18,13 @@ public class BookBasicInfo {
 
     private String description;
 
-    @MapField(entityField = "publisher.id")
+    @MappingField(entityField = "publisher.id")
     private int publisherId;
 
-    @MapField(entityField = "publisher.name")
+    @MappingField(entityField = "publisher.name")
     private String publisherName;
+
+    private PublisherDTO publisher;
 
 //    @MapField(entityField = "publisher.name")
 //    private String publisherName2;

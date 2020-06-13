@@ -11,6 +11,12 @@ import javax.persistence.Tuple;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Default Repository.
+ *
+ * @param <T> generic of Entity
+ * @author hungp
+ */
 @NoRepositoryBean
 public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Serializable>, JpaSpecificationExecutor<T> {
 

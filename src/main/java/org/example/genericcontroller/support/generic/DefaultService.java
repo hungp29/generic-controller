@@ -18,6 +18,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Default Service.
+ *
+ * @param <T> generic of Entity
+ * @author hungp
+ */
 public class DefaultService<T extends Audit> {
 
     public static final String PAGE = "page";
@@ -42,12 +48,12 @@ public class DefaultService<T extends Audit> {
         Class<?> readDTOClass;
 
         // Validate configurations of entity
-        Validator.validateObjectConfiguration(entityClass, DTOMappingEntity.class);
+        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
 
-        readDTOClass = ObjectUtils.getAnnotation(entityClass, DTOMappingEntity.class).read();
+        readDTOClass = ObjectUtils.getAnnotation(entityClass, DataTransferObjectMapping.class).forRead();
 
         // Validate configurations of dto
-        Validator.validateObjectConfiguration(readDTOClass, MapClass.class);
+        Validator.validateObjectConfiguration(readDTOClass, MappingClass.class);
 
         // Build page request.
         PageRequest pageRequest = getPageRequest(request);
@@ -56,7 +62,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        defaultRepository.findAll(readDTOClass, filter, GenericSpecificationA.autoBuildSpecification());
+        defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification());
 
 
 //        MapClass mapClass = ObjectUtils.getAnnotation(readDTOClass, MapClass.class);

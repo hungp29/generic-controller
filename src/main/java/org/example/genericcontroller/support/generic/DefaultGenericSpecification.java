@@ -3,6 +3,7 @@ package org.example.genericcontroller.support.generic;
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericDuplicateException;
 import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
+import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -18,14 +19,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GenericSpecificationA {
+/**
+ * Default Generic Specification.
+ *
+ * @author hungp
+ */
+public class DefaultGenericSpecification {
 
+    /**
+     * Auto build specification.
+     *
+     * @param <T> generic of Entity
+     * @return Generic Specification instance
+     */
     public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
         return (root, query, cb, dtoType, filter) -> {
+            MappingUtils.getMappingEntityFields(dtoType);
+
+
 
             List<Selection<?>> selections = new ArrayList<>();
             List<String> dtoFieldNames = Converter.getFieldNames(dtoType);
-            Class<?> entityClass = ObjectUtils.getAnnotation(dtoType, MapClass.class).value();
+            Class<?> entityClass = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
             if (!CollectionUtils.isEmpty(dtoFieldNames)) {
                 if (null != filter) {
                     List<String> filterField = Arrays.asList(filter);

@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 
+/**
+ * Default Rest Controller.
+ *
+ * @param <T> generic of Entity
+ * @author hungp
+ */
 public class DefaultRestController<T extends Audit> {
 
     private DefaultService<T> defaultService;

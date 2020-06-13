@@ -43,7 +43,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
     protected <S extends T> TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
                                                           @Nullable GenericSpecification<S> spec, Class<S> domainClass, Sort sort) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
-        Validator.validateObjectConfiguration(dtoType, MapClass.class);
+        Validator.validateObjectConfiguration(dtoType, MappingClass.class);
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);

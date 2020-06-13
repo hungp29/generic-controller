@@ -21,8 +21,8 @@ public class Converter {
     }
 
     public static Class<? extends Audit> getEntityTypeFromDTO(Class<?> dtoType) {
-        if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MapClass.class)) {
-            return ObjectUtils.getAnnotation(dtoType, MapClass.class).value();
+        if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
+            return ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
         }
         return null;
     }
@@ -39,10 +39,10 @@ public class Converter {
 
     public static Field getEntityFieldByDTOField(Field dtoField, Class<?> entityClass) {
         if (null != dtoField && null != entityClass) {
-            MapField mapField = ObjectUtils.getAnnotation(dtoField, MapField.class);
+            MappingField mappingField = ObjectUtils.getAnnotation(dtoField, MappingField.class);
             String entityFieldName = dtoField.getName();
-            if (null != mapField && !StringUtils.isEmpty(mapField.entityField())) {
-                entityFieldName = mapField.entityField();
+            if (null != mappingField && !StringUtils.isEmpty(mappingField.entityField())) {
+                entityFieldName = mappingField.entityField();
             }
 
             Field entityField = ObjectUtils.getField(entityClass, entityFieldName);
@@ -60,9 +60,9 @@ public class Converter {
     public static String getEntityFieldNameByDTOField(Field field) {
         if (null != field) {
             String entityFieldName = field.getName();
-            MapField mapField = ObjectUtils.getAnnotation(field, MapField.class);
-            if (null != mapField && !StringUtils.isEmpty(mapField.entityField())) {
-                entityFieldName = mapField.entityField();
+            MappingField mappingField = ObjectUtils.getAnnotation(field, MappingField.class);
+            if (null != mappingField && !StringUtils.isEmpty(mappingField.entityField())) {
+                entityFieldName = mappingField.entityField();
             }
             return entityFieldName;
         }
