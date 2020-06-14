@@ -2,6 +2,7 @@ package org.example.genericcontroller.app.book.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.example.genericcontroller.app.author.dto.AuthorDTO;
 import org.example.genericcontroller.app.publisher.dto.PublisherDTO;
 import org.example.genericcontroller.entity.Book;
@@ -12,7 +13,7 @@ import java.util.List;
 
 @Data
 @MappingClass(Book.class)
-@AllArgsConstructor
+@NoArgsConstructor
 public class BookBasicInfo {
 
     private int id;
@@ -21,16 +22,16 @@ public class BookBasicInfo {
 
     private String description;
 
-    @MappingField(entityField = "publisher.id")
-    private int publisherId;
+//    @MappingField(entityField = "publisher.id")
+//    private int publisherId;
+//
+//    @MappingField(entityField = "publisher.name")
+//    private String publisherName;
 
-    @MappingField(entityField = "publisher.name")
-    private String publisherName;
+    private PublisherDTO publisher;
 
-//    private PublisherDTO publisher;
-
-//    @MapField(entityField = "publisher.name")
+//    @MappingField(entityField = "publisher.name")
 //    private String publisherName2;
 
-//    private List<AuthorDTO> authors;
+    private List<AuthorDTO> authors;
 }

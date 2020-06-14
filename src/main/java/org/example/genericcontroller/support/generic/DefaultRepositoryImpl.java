@@ -1,6 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.generic.DataTransferObjectInvalidException;
+import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
+import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -16,10 +19,17 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
+/**
+ * Implementation for DefaultRepository.
+ *
+ * @param <T> generic of Entity
+ * @author hungp
+ */
 public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<T, Serializable> implements DefaultRepository<T> {
 
     private EntityManager em;
@@ -29,19 +39,57 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         this.em = em;
     }
 
+    /**
+     * Find All.
+     *
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter field
+     * @param spec    GenericSpecification intance
+     * @return
+     */
     @Override
     public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, GenericSpecification<T> spec) {
-        List<Tuple> tuples = getDTOQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
+        List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
+
+        try {
+            for (Tuple tuple : tuples) {
+                Object dto = DataTransferObjectUtils.convertTupleToDataTransferObject(tuple, dtoType);
+            }
+            System.out.println("ASD");
+        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
+        }
+
         return tuples;
     }
 
-    protected TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                            @Nullable GenericSpecification<T> spec, Sort sort) {
-        return getDTOQuery(dtoType, filter, spec, getDomainClass(), sort);
+    /**
+     * Get Data Transfer Object.
+     *
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter field
+     * @param spec    Generic Specification
+     * @param sort    Sort instance
+     * @return TypeQuery instance
+     */
+    protected TypedQuery<Tuple> getDataTransferObjectQuery(Class<?> dtoType, @Nullable String[] filter,
+                                                           @Nullable GenericSpecification<T> spec, Sort sort) {
+        return getDataTransferObjectQuery(dtoType, filter, spec, getDomainClass(), sort);
     }
 
-    protected <S extends T> TypedQuery<Tuple> getDTOQuery(Class<?> dtoType, @Nullable String[] filter,
-                                                          @Nullable GenericSpecification<S> spec, Class<S> domainClass, Sort sort) {
+    /**
+     * Get Data Transfer Object.
+     *
+     * @param dtoType     Data Transfer Object type
+     * @param filter      filter field
+     * @param spec        Generic Specification
+     * @param domainClass Entity class
+     * @param sort        Sort instance
+     * @param <S>         generic of entity
+     * @return TypeQuery instance
+     */
+    protected <S extends T> TypedQuery<Tuple> getDataTransferObjectQuery(Class<?> dtoType, @Nullable String[] filter,
+                                                                         @Nullable GenericSpecification<S> spec, Class<S> domainClass, Sort sort) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
         Validator.validateObjectConfiguration(dtoType, MappingClass.class);
 
@@ -57,6 +105,13 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         return applyRepositoryMethodMetadata(em.createQuery(query));
     }
 
+    /**
+     * Apply repository method metadata.
+     *
+     * @param query Type query
+     * @param <S>   Generic of Query
+     * @return Type Query instance
+     */
     private <S> TypedQuery<S> applyRepositoryMethodMetadata(TypedQuery<S> query) {
         CrudMethodMetadata metadata = getRepositoryMethodMetadata();
         if (metadata == null) {
@@ -67,6 +122,18 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         return type == null ? query : query.setLockMode(type);
     }
 
+    /**
+     * Apply Specification to criteria.
+     *
+     * @param spec        Generic Specification
+     * @param domainClass Entity class
+     * @param query       Criteria Query
+     * @param dtoType     Data Transfer Object type
+     * @param filter      filter field
+     * @param <S>         Generic of Query Type
+     * @param <U>         Generic of entity
+     * @return Root instance
+     */
     private <S, U extends T> Root<U> applySpecificationToCriteria(@Nullable GenericSpecification<U> spec, Class<U> domainClass,
                                                                   CriteriaQuery<S> query, Class<?> dtoType, @Nullable String[] filter) {
 

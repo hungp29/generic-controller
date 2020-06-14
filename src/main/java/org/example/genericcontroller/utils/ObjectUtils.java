@@ -5,10 +5,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -228,5 +225,61 @@ public class ObjectUtils {
      */
     public static boolean fieldIsCollection(Field field) {
         return Collection.class.isAssignableFrom(field.getType());
+    }
+
+    /**
+     * Check array is empty or not.
+     *
+     * @param array the array need to check
+     * @return true if array is empty, otherwise return false
+     */
+    public static boolean isEmpty(Object[] array) {
+        return null == array || array.length == 0;
+    }
+
+    /**
+     * New instance of class.
+     *
+     * @param type           type of object
+     * @param parameterTypes parameter types
+     * @param parameters     parameter values
+     * @param <T>            generic of object
+     * @return new instance
+     * @throws NoSuchMethodException     if a matching method is not found.
+     * @throws IllegalAccessException    if this {@code Constructor} object
+     *                                   is enforcing Java language access control and the underlying
+     *                                   constructor is inaccessible.
+     * @throws InvocationTargetException if the underlying constructor
+     *                                   throws an exception.
+     * @throws InstantiationException    if the class that declares the
+     *                                   underlying constructor represents an abstract class.
+     */
+    public static <T> T newInstance(Class<T> type, Class<?>[] parameterTypes, Object[] parameters)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        if (null != type) {
+            Constructor<T> constructors = type.getDeclaredConstructor(parameterTypes);
+            return constructors.newInstance(parameters);
+        }
+        return null;
+    }
+
+    /**
+     * New instance of class by default constructor.
+     *
+     * @param type type of object
+     * @param <T>  generic of object
+     * @return new instance
+     * @throws NoSuchMethodException     if a matching method is not found.
+     * @throws IllegalAccessException    if this {@code Constructor} object
+     *                                   is enforcing Java language access control and the underlying
+     *                                   constructor is inaccessible.
+     * @throws InvocationTargetException if the underlying constructor
+     *                                   throws an exception.
+     * @throws InstantiationException    if the class that declares the
+     *                                   underlying constructor represents an abstract class.
+     */
+    public static <T> T newInstance(Class<T> type)
+            throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        return newInstance(type, null, null);
     }
 }

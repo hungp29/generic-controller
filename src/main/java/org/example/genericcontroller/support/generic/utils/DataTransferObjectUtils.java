@@ -8,7 +8,9 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Tuple;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,23 +43,25 @@ public class DataTransferObjectUtils {
      *
      * @param dtoType DTO type
      * @param thr     Exception to throw if DTO class is invalid
-     * @return true if DTO class has MappingClass annotation, otherwise return false
      */
-    public static boolean validateThrow(Class<?> dtoType, Throwable thr) {
+    public static void validateThrow(Class<?> dtoType, Throwable thr) {
         if (!validate(dtoType)) {
             throw new RuntimeException(thr);
         }
-        return true;
     }
 
     /**
      * Get mapping entity path by Data Transfer Object field. Don't looking inner object.
      *
      * @param field Data Transfer Object field
-     * @return list mapping entity path of field
+     * @return mapping entity path of field
      */
-    public static List<String> getEntityMappingFieldPaths(Field field) {
-        return getEntityMappingFieldPaths(field, false);
+    public static String getEntityMappingFieldPath(Field field) {
+        List<String> fieldPaths = getEntityMappingFieldPaths(field, false);
+        if (fieldPaths.size() > 0) {
+            return fieldPaths.get(0);
+        }
+        return null;
     }
 
     /**
@@ -91,7 +95,7 @@ public class DataTransferObjectUtils {
                 fieldPaths.add(fieldPath);
             }
         }
-        return fieldPaths;
+        return fieldPaths.stream().distinct().collect(Collectors.toList());
     }
 
     /**
@@ -120,6 +124,21 @@ public class DataTransferObjectUtils {
                 fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner));
             }
         }
-        return fieldPaths;
+        return fieldPaths.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static Object convertTupleToDataTransferObject(Tuple tuple, Class<?> dtoType)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        if (null != tuple) {
+            Object dto = ObjectUtils.newInstance(dtoType);
+            List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
+            for (Field dtoField : dtoFields) {
+                String entityMappingFieldPath = getEntityMappingFieldPath(dtoField);
+                Object entityFieldValue = tuple.get(entityMappingFieldPath);
+                System.out.println(">>>>>> " + entityFieldValue);
+            }
+            return dto;
+        }
+        return null;
     }
 }

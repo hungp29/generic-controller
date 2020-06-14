@@ -64,9 +64,6 @@ public class DefaultService<T extends Audit> {
 
         defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification());
 
-
-//        MapClass mapClass = ObjectUtils.getAnnotation(readDTOClass, MapClass.class);
-//        MapClass mapClass2 = AnnotatedElementUtils.findMergedAnnotation(entityClass, MapClass.class);
         return null;
     }
 
