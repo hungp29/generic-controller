@@ -2,8 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.DataTransferObjectInvalidException;
-import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
-import org.example.genericcontroller.utils.ObjectUtils;
+import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -21,6 +20,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
@@ -51,14 +51,15 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
     public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, GenericSpecification<T> spec) {
         List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
 
-        try {
-            for (Tuple tuple : tuples) {
-                Object dto = DataTransferObjectUtils.convertTupleToDataTransferObject(tuple, dtoType);
-            }
-            System.out.println("ASD");
-        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
-        }
+        List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter));
+//        try {
+//            for (Tuple tuple : tuples) {
+//                Object dto = MappingUtils.convertTupleToDataTransferObject(tuple, dtoType);
+//            }
+//            System.out.println("ASD");
+//        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+//            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
+//        }
 
         return tuples;
     }

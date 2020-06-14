@@ -8,9 +8,7 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Tuple;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -125,20 +123,5 @@ public class DataTransferObjectUtils {
             }
         }
         return fieldPaths.stream().distinct().collect(Collectors.toList());
-    }
-
-    public static Object convertTupleToDataTransferObject(Tuple tuple, Class<?> dtoType)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (null != tuple) {
-            Object dto = ObjectUtils.newInstance(dtoType);
-            List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
-            for (Field dtoField : dtoFields) {
-                String entityMappingFieldPath = getEntityMappingFieldPath(dtoField);
-                Object entityFieldValue = tuple.get(entityMappingFieldPath);
-                System.out.println(">>>>>> " + entityFieldValue);
-            }
-            return dto;
-        }
-        return null;
     }
 }
