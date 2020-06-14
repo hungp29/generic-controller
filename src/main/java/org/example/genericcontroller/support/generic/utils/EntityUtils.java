@@ -4,6 +4,10 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.utils.ObjectUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entity Utils.
@@ -38,6 +42,29 @@ public class EntityUtils {
         if (!validate(entityType)) {
             throw new RuntimeException(thr);
         }
+    }
+
+    /**
+     * Get Primary Key of entity.
+     *
+     * @param entityType entity class
+     * @return the key of entity
+     */
+    public static List<String> getPrimaryKey(Class<? extends Audit> entityType) {
+        List<String> keys = new ArrayList<>();
+        if (null != entityType) {
+            List<Field> fields = ObjectUtils.getFields(entityType, true);
+            for (Field field : fields) {
+                if (ObjectUtils.hasAnnotation(field, Id.class)) {
+                    keys.add(field.getName());
+                }
+//                else if (ObjectUtils.hasAnnotation(field, EmbeddedId.class)) {
+//                    List<Field> embeddedIdFields = ObjectUtils.getFields(field.getType());
+//
+//                }
+            }
+        }
+        return keys;
     }
 
 

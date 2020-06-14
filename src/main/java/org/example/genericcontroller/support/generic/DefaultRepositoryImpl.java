@@ -52,14 +52,12 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
 
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter));
-//        try {
-//            for (Tuple tuple : tuples) {
-//                Object dto = MappingUtils.convertTupleToDataTransferObject(tuple, dtoType);
-//            }
-//            System.out.println("ASD");
-//        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-//            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
-//        }
+        try {
+            MappingUtils.convertToListDataTransferObject(records, dtoType);
+            System.out.println("ASD");
+        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
+        }
 
         return tuples;
     }

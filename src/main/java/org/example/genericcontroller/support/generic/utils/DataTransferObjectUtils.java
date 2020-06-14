@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.utils;
 
+import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.DataTransferObjectInvalidException;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
@@ -9,8 +10,11 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +53,19 @@ public class DataTransferObjectUtils {
     }
 
     /**
+     * Get entity type is configuration of Data Transfer Object.
+     *
+     * @param dtoType Data Transfer Object type
+     * @return entity type
+     */
+    public static Class<? extends Audit> getEntityType(Class<?> dtoType) {
+        if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
+            return ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
+        }
+        return null;
+    }
+
+    /**
      * Get mapping entity path by Data Transfer Object field. Don't looking inner object.
      *
      * @param field Data Transfer Object field
@@ -78,11 +95,7 @@ public class DataTransferObjectUtils {
                 fieldPath = mappingField.entityField();
             }
 
-            Class<?> innerClass = field.getType();
-            // Override inner class if field is collection
-            if (ObjectUtils.fieldIsCollection(field)) {
-                innerClass = ObjectUtils.getGenericField(field);
-            }
+            Class<?> innerClass = ObjectUtils.getFieldType(field);
             if (lookingInner && validate(innerClass)) {
                 List<String> innerFieldPaths = getEntityMappingFieldPaths(innerClass, true);
                 if (!CollectionUtils.isEmpty(innerFieldPaths)) {
@@ -123,5 +136,51 @@ public class DataTransferObjectUtils {
             }
         }
         return fieldPaths.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static String getKey(String prefix, Class<?> dtoType, Map<String, Object> record) {
+        StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
+        List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
+        for (String key : keys) {
+            String fieldPath = StringUtils.isEmpty(prefix) ? key : prefix + Constants.DOT + key;
+            Object value = record.get(fieldPath);
+            finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
+                    .append(Constants.UNDERSCORE);
+        }
+        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
+    }
+
+    public static Object convertDataToFieldDataTransferObject(String prefix, Field field, Map<String, Object> record) {
+        Class<?> innerClass = ObjectUtils.getFieldType(field);
+        if (validate(innerClass)) {
+
+        }
+        String fieldPath = getEntityMappingFieldPath(field);
+        if (!StringUtils.isEmpty(prefix)) {
+            fieldPath = prefix + Constants.DOT + fieldPath;
+        }
+
+        return null;
+    }
+
+    public static Map<String, Object> convertDataToDataToDataTransferObject(Map<String, Object> mapDTO, String prefix,
+                                                                            Map<String, Object> record, Class<?> dtoType)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        if (null == mapDTO) {
+            mapDTO = new HashMap<>();
+        }
+        String key = getKey(prefix, dtoType, record);
+        Object dto = mapDTO.get(key);
+        if (null == dto) {
+            dto = ObjectUtils.newInstance(dtoType);
+        }
+
+        List<Field> dtoFields = ObjectUtils.getFields(dtoType);
+        for (Field dtoField : dtoFields) {
+
+        }
+
+        mapDTO.put(key, dto);
+        return mapDTO;
     }
 }
