@@ -48,7 +48,7 @@ public class DefaultGenericSpecification {
                 }
 
                 for (String filterField : dtoFieldNames) {
-                    Field dtoField = ObjectUtils.getField(dtoType, filterField);
+                    Field dtoField = ObjectUtils.getField(dtoType, filterField, true);
                     String entityFieldName = Converter.getEntityFieldNameByDTOField(dtoField);
 
                     if (!StringUtils.isEmpty(entityFieldName)) {
@@ -76,7 +76,7 @@ public class DefaultGenericSpecification {
         if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityClass) {
             String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
 
-            Field entityField = ObjectUtils.getField(entityClass, entityPaths[0]);
+            Field entityField = ObjectUtils.getField(entityClass, entityPaths[0], true);
             if (null != entityField) {
                 if (entityPaths.length > 1 && Converter.isForeignKeyField(entityField)) {
                     Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getType());

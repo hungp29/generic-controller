@@ -77,6 +77,10 @@ public class DataTransferObjectUtils {
             }
 
             Class<?> innerClass = field.getType();
+            // Override inner class if field is collection
+            if (ObjectUtils.fieldIsCollection(field)) {
+                innerClass = ObjectUtils.getGenericField(field);
+            }
             if (lookingInner && validate(innerClass)) {
                 List<String> innerFieldPaths = getEntityMappingFieldPaths(innerClass, true);
                 if (!CollectionUtils.isEmpty(innerFieldPaths)) {
@@ -111,7 +115,7 @@ public class DataTransferObjectUtils {
         validateThrow(dtoType, new DataTransferObjectInvalidException("Data Transfer Object configuration is invalid"));
         List<String> fieldPaths = new ArrayList<>();
         if (null != dtoType) {
-            List<Field> fields = ObjectUtils.getFields(dtoType);
+            List<Field> fields = ObjectUtils.getFields(dtoType, true);
             for (Field field : fields) {
                 fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner));
             }

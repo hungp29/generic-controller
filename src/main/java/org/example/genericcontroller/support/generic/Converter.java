@@ -29,7 +29,7 @@ public class Converter {
 
     public static List<String> getFieldNames(Class<?> classType) {
         if (null != classType) {
-            List<Field> fields = ObjectUtils.getFields(classType);
+            List<Field> fields = ObjectUtils.getFields(classType, true);
             if (!CollectionUtils.isEmpty(fields)) {
                 return fields.stream().map(Field::getName).collect(Collectors.toList());
             }
@@ -45,7 +45,7 @@ public class Converter {
                 entityFieldName = mappingField.entityField();
             }
 
-            Field entityField = ObjectUtils.getField(entityClass, entityFieldName);
+            Field entityField = ObjectUtils.getField(entityClass, entityFieldName, true);
         }
         return null;
     }
@@ -76,7 +76,7 @@ public class Converter {
             String entityFieldName = getEntityFieldNameByDTOField(dtoField);
             String[] entityFieldPaths = entityFieldName.split(Constants.DOT_REGEX);
 
-            Field subField = ObjectUtils.getField(entityType, entityFieldPaths[0]);
+            Field subField = ObjectUtils.getField(entityType, entityFieldPaths[0], true);
 
             if (entityFieldPaths.length > 1) {
                 String nextPath = entityFieldName.substring(entityFieldName.indexOf(Constants.DOT) + 1);
@@ -93,7 +93,7 @@ public class Converter {
         List<String> lstEntityFieldPath = new ArrayList<>();
         Class<? extends Audit> entityType = getEntityTypeFromDTO(dtoType);
         if (null != entityType) {
-            List<Field> dtoFields = ObjectUtils.getFields(dtoType);
+            List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
             for (Field dtoField : dtoFields) {
                 lstEntityFieldPath.addAll(getEntityFieldPath(entityType, dtoField));
             }
