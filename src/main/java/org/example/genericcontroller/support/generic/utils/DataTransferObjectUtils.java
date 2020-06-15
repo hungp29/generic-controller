@@ -70,7 +70,7 @@ public class DataTransferObjectUtils {
      * @return mapping entity path of field
      */
     public static String getEntityMappingFieldPath(Field field) {
-        List<String> fieldPaths = getEntityMappingFieldPaths(field, false);
+        List<String> fieldPaths = getEntityMappingFieldPaths(field, false, true);
         if (fieldPaths.size() > 0) {
             return fieldPaths.get(0);
         }
@@ -84,7 +84,7 @@ public class DataTransferObjectUtils {
      * @param lookingInner flag to looking inner object
      * @return list mapping entity path of field
      */
-    public static List<String> getEntityMappingFieldPaths(Field field, boolean lookingInner) {
+    public static List<String> getEntityMappingFieldPaths(Field field, boolean lookingInner, boolean includeCollection) {
         List<String> fieldPaths = new ArrayList<>();
         if (null != field) {
             String fieldPath = field.getName();
@@ -94,13 +94,14 @@ public class DataTransferObjectUtils {
             }
 
             Class<?> innerClass = ObjectUtils.getFieldType(field);
-            if (lookingInner && validate(innerClass)) {
-                List<String> innerFieldPaths = getEntityMappingFieldPaths(innerClass, true);
+            boolean isCollection = ObjectUtils.fieldIsCollection(field);
+            if (lookingInner && validate(innerClass) && (includeCollection || !isCollection)) {
+                List<String> innerFieldPaths = getEntityMappingFieldPaths(innerClass, true, true);
                 if (!CollectionUtils.isEmpty(innerFieldPaths)) {
                     String finalFieldPath = fieldPath.concat(Constants.DOT);
                     fieldPaths.addAll(innerFieldPaths.stream().map(finalFieldPath::concat).collect(Collectors.toList()));
                 }
-            } else {
+            } else if (includeCollection || !isCollection) {
                 fieldPaths.add(fieldPath);
             }
         }
@@ -114,7 +115,7 @@ public class DataTransferObjectUtils {
      * @return list mapping entity path of object
      */
     public static List<String> getEntityMappingFieldPaths(Class<?> dtoType) {
-        return getEntityMappingFieldPaths(dtoType, false);
+        return getEntityMappingFieldPaths(dtoType, false, true);
     }
 
     /**
@@ -124,27 +125,27 @@ public class DataTransferObjectUtils {
      * @param lookingInner flag to looking inner object
      * @return list mapping entity path of object
      */
-    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, boolean lookingInner) {
+    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, boolean lookingInner, boolean includeCollection) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
 
         List<String> fieldPaths = new ArrayList<>();
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
-            fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner));
+            fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner, includeCollection));
         }
         return fieldPaths.stream().distinct().collect(Collectors.toList());
     }
 
-    public static List<String> getEntityMappingPrimaryFieldPaths(Class<?> dtoType) {
+    public static List<String> getEntityMappingPrimaryFieldPaths(Class<?> dtoType, boolean includeCollection) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
         List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
             Class<?> fieldType = ObjectUtils.getFieldType(field);
-            if (validate(fieldType)) {
+            if (validate(fieldType) && (includeCollection || !ObjectUtils.fieldIsCollection(field))) {
                 String fieldPath = getEntityMappingFieldPath(field);
                 fieldPath = null != fieldPath ? fieldPath + Constants.DOT : Constants.EMPTY_STRING;
-                List<String> innerKeyFieldPaths = getEntityMappingPrimaryFieldPaths(fieldType)
+                List<String> innerKeyFieldPaths = getEntityMappingPrimaryFieldPaths(fieldType, includeCollection)
                         .stream().map(fieldPath::concat).collect(Collectors.toList());
                 entityKeyFields.addAll(innerKeyFieldPaths);
             }

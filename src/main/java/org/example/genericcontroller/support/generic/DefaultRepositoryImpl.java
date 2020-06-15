@@ -59,6 +59,8 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         return MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
     }
 
+//    public
+
 //    @Override
 //    public Page<Object> findAll(Class<?> dtoType, String[] filter, GenericSpecification<T> spec, Pageable pageable) {
 //        Page<Object> page = null;
@@ -120,6 +122,14 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
             query.orderBy(toOrders(sort, root, builder));
         }
 
+
+
+//        TypedQuery<Tuple> typedQuery = applyRepositoryMethodMetadata(em.createQuery(query));
+
+//        if (pageable.isPaged()) {
+//            typedQuery.setFirstResult((int) pageable.getOffset());
+//            typedQuery.setMaxResults(pageable.getPageSize());
+//        }
         return applyRepositoryMethodMetadata(em.createQuery(query));
     }
 

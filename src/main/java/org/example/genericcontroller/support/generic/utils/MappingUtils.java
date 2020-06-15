@@ -43,8 +43,8 @@ public class MappingUtils {
 
             if (!count) {
                 entityFieldPaths = filterFieldPath(
-                        DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true),
-                        DataTransferObjectUtils.getEntityMappingPrimaryFieldPaths(dtoType),
+                        DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false),
+                        DataTransferObjectUtils.getEntityMappingPrimaryFieldPaths(dtoType, false),
                         filter);
             } else {
                 entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsForCount(dtoType);
