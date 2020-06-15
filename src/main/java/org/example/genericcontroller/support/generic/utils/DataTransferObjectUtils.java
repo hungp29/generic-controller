@@ -12,11 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -130,14 +126,30 @@ public class DataTransferObjectUtils {
      */
     public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, boolean lookingInner) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+
         List<String> fieldPaths = new ArrayList<>();
-        if (null != dtoType) {
-            List<Field> fields = ObjectUtils.getFields(dtoType, true);
-            for (Field field : fields) {
-                fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner));
-            }
+        List<Field> fields = ObjectUtils.getFields(dtoType, true);
+        for (Field field : fields) {
+            fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner));
         }
         return fieldPaths.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static List<String> getEntityMappingPrimaryFieldPaths(Class<?> dtoType) {
+        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+        List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
+        List<Field> fields = ObjectUtils.getFields(dtoType, true);
+        for (Field field : fields) {
+            Class<?> fieldType = ObjectUtils.getFieldType(field);
+            if (validate(fieldType)) {
+                String fieldPath = getEntityMappingFieldPath(field);
+                fieldPath = null != fieldPath ? fieldPath + Constants.DOT : Constants.EMPTY_STRING;
+                List<String> innerKeyFieldPaths = getEntityMappingPrimaryFieldPaths(fieldType)
+                        .stream().map(fieldPath::concat).collect(Collectors.toList());
+                entityKeyFields.addAll(innerKeyFieldPaths);
+            }
+        }
+        return entityKeyFields;
     }
 
     public static List<String> getEntityMappingFieldPathsForCount(Class<?> dtoType) {
@@ -180,13 +192,14 @@ public class DataTransferObjectUtils {
      * @param dtoType Data Transfer Object type
      * @return list Data Transfer Object
      */
-    public static Collection<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType) {
+    public static Collection<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType,
+                                                                     String[] filter) {
         Map<String, Object> mapDTO = new HashMap<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
             for (Map<String, Object> record : records) {
                 String key = getKey(dtoType, record);
                 Object dto = mapDTO.get(key);
-                dto = convertToDataTransferObject(dto, Constants.EMPTY_STRING, record, dtoType);
+                dto = convertToDataTransferObject(dto, Constants.EMPTY_STRING, record, dtoType, filter);
                 mapDTO.put(key, dto);
             }
         }
@@ -202,7 +215,8 @@ public class DataTransferObjectUtils {
      * @param dtoType Data Transfer Object type
      * @return Data Transfer Object
      */
-    public static Object convertToDataTransferObject(Object dto, String prefix, Map<String, Object> record, Class<?> dtoType) {
+    public static Object convertToDataTransferObject(Object dto, String prefix, Map<String, Object> record,
+                                                     Class<?> dtoType, String[] filter) {
         if (null != record && null != dtoType) {
             if (null == dto) {
                 dto = newDataTransferObjectInstance(dtoType);
@@ -210,7 +224,7 @@ public class DataTransferObjectUtils {
             List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
             for (Field dtoField : dtoFields) {
                 try {
-                    Object value = convertToFieldOfDataTransferObject(prefix, record, dtoField);
+                    Object value = convertToFieldOfDataTransferObject(prefix, record, dtoField, filter);
                     if (ObjectUtils.fieldIsCollection(dtoField)) {
                         Collection collection = ObjectUtils.getValueOfField(dto, dtoField.getName(), Collection.class);
                         if (null == collection) {
@@ -241,7 +255,7 @@ public class DataTransferObjectUtils {
      * @param field  field of Data Transfer Object
      * @return value of field
      */
-    public static Object convertToFieldOfDataTransferObject(String prefix, Map<String, Object> record, Field field) {
+    public static Object convertToFieldOfDataTransferObject(String prefix, Map<String, Object> record, Field field, String[] filter) {
         if (null != record && null != field) {
             String entityFieldPath = getEntityMappingFieldPath(field);
             if (!StringUtils.isEmpty(prefix)) {
@@ -250,8 +264,8 @@ public class DataTransferObjectUtils {
 
             Class<?> fieldType = ObjectUtils.getFieldType(field);
             if (validate(fieldType)) {
-                return convertToDataTransferObject(null, entityFieldPath, record, fieldType);
-            } else {
+                return convertToDataTransferObject(null, entityFieldPath, record, fieldType, filter);
+            } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
                 return record.get(entityFieldPath);
             }
         }

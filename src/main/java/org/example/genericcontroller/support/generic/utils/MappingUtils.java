@@ -6,12 +6,14 @@ import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Mapping Utils.
@@ -40,7 +42,10 @@ public class MappingUtils {
             EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
 
             if (!count) {
-                entityFieldPaths = filterFieldPath(DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true), filter);
+                entityFieldPaths = filterFieldPath(
+                        DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true),
+                        DataTransferObjectUtils.getEntityMappingPrimaryFieldPaths(dtoType),
+                        filter);
             } else {
                 entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsForCount(dtoType);
             }
@@ -55,28 +60,43 @@ public class MappingUtils {
      * @param filter     list field should be keeping
      * @return list field path after filter
      */
-    public static List<String> filterFieldPath(List<String> fieldPaths, String[] filter) {
+    public static List<String> filterFieldPath(List<String> fieldPaths, List<String> keyFieldPaths, String[] filter) {
         if (!ObjectUtils.isEmpty(filter)) {
             int index = 0;
             while (index < fieldPaths.size()) {
                 String entityFieldPath = fieldPaths.get(index);
 
-                boolean keep = false;
-                for (String keepField : filter) {
-                    if (entityFieldPath.equals(keepField) || entityFieldPath.startsWith(keepField.concat(Constants.DOT))) {
-                        keep = true;
-                        break;
-                    }
-                }
+//                boolean keep = false;
+//                for (String keepField : filter) {
+//                    if (entityFieldPath.equals(keepField) || entityFieldPath.startsWith(keepField.concat(Constants.DOT))) {
+//                        keep = true;
+//                        break;
+//                    }
+//                }
 
-                if (keep) {
+                if (isKeepField(entityFieldPath, filter)) {
                     index++;
                 } else {
                     fieldPaths.remove(index);
                 }
             }
         }
+        if (!CollectionUtils.isEmpty(keyFieldPaths)) {
+            fieldPaths.addAll(keyFieldPaths);
+            fieldPaths = fieldPaths.stream().distinct().collect(Collectors.toList());
+        }
         return fieldPaths;
+    }
+
+    public static boolean isKeepField(String fieldPath, String[] filter) {
+        if (!StringUtils.isEmpty(fieldPath) && null != filter) {
+            for (String keepField : filter) {
+                if (fieldPath.equals(keepField) || fieldPath.startsWith(keepField.concat(Constants.DOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -107,10 +127,10 @@ public class MappingUtils {
      * @param dtoType Data Transfer Object type
      * @return list Data Transfer Object
      */
-    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType) {
+    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType, String[] filter) {
         List<Object> list = new ArrayList<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
-            list.addAll(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType));
+            list.addAll(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType, filter));
         }
         return list;
     }

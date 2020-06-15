@@ -27,7 +27,7 @@ public class DefaultRestController<T extends Audit> {
     }
 
     @GetMapping
-    public ResponseEntity<Page<Object>> getAll(HttpServletRequest request) {
+    public ResponseEntity<List<Object>> getAll(HttpServletRequest request) {
         return ResponseEntity.ok(defaultService.getAllEntity(request));
     }
 
