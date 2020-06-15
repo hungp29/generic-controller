@@ -44,7 +44,7 @@ public class DefaultService<T extends Audit> {
         return null;
     }
 
-    public List<Object> getAllEntity(HttpServletRequest request) {
+    public Page<Object> getAllEntity(HttpServletRequest request) {
         @SuppressWarnings("unchecked")
         Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
         Class<?> readDTOClass;
@@ -64,7 +64,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        return defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification());
+        return defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification(), pageRequest);
     }
 
     protected String[] getFilterFields(HttpServletRequest request) {

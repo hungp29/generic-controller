@@ -26,5 +26,5 @@ public interface GenericSpecification<T> {
      */
     @Nullable
     void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                       Class<?> dtoType, @Nullable String[] filter, boolean count);
+                       Class<?> dtoType, @Nullable String[] filter, boolean count, boolean collection);
 }

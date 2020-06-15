@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.utils.EntityUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -16,15 +17,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
@@ -56,31 +56,32 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
         // Convert list tuple to map
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
-        return MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
+
+        List<Tuple> collectionTuples = getDataTransferObjectCollectionQuery(dtoType, filter, spec, getDomainClass(), records).getResultList();
+        List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+
+        List<Map<String, Object>> mergeRecords = MappingUtils.merge(records, collectionRecords, dtoType);
+        return MappingUtils.convertToListDataTransferObject(mergeRecords, dtoType, filter);
     }
 
-//    public
 
-//    @Override
-//    public Page<Object> findAll(Class<?> dtoType, String[] filter, GenericSpecification<T> spec, Pageable pageable) {
-//        Page<Object> page = null;
-//        if (isUnpaged(pageable)) {
-//            List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
-//            // Convert list tuple to map
-//            List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
-//            page = new PageImpl<>(MappingUtils.convertToListDataTransferObject(records, dtoType, filter));
-//        } else {
-//            TypedQuery<Tuple> query = getDataTransferObjectQuery(dtoType, filter, spec, pageable);
-//            page = readPage(dtoType, filter, query, getDomainClass(), pageable, spec);
-//        }
-//        return page;
-//    }
+    @Override
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, GenericSpecification<T> spec, Pageable pageable) {
+        Page<Object> page = null;
+        if (isUnpaged(pageable)) {
+            page = new PageImpl<>(findAll(dtoType, filter, spec));
+        } else {
+            TypedQuery<Tuple> query = getDataTransferObjectQuery(dtoType, filter, spec, pageable);
+            page = readPage(dtoType, filter, query, getDomainClass(), pageable, spec);
+        }
+        return page;
+    }
 
-//    protected TypedQuery<Tuple> getDataTransferObjectQuery(Class<?> dtoType, @Nullable String[] filter,
-//                                                           @Nullable GenericSpecification<T> spec, Pageable pageable) {
-//        Sort sort = pageable.isPaged() ? pageable.getSort() : Sort.unsorted();
-//        return getDataTransferObjectQuery(dtoType, filter, spec, getDomainClass(), sort);
-//    }
+    protected TypedQuery<Tuple> getDataTransferObjectQuery(Class<?> dtoType, @Nullable String[] filter,
+                                                           @Nullable GenericSpecification<T> spec, Pageable pageable) {
+        Sort sort = pageable.isPaged() ? pageable.getSort() : Sort.unsorted();
+        return getDataTransferObjectQuery(dtoType, filter, spec, getDomainClass(), sort);
+    }
 
     /**
      * Get Data Transfer Object.
@@ -116,43 +117,65 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, filter, false);
+        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, filter, false, false);
 
         if (sort.isSorted()) {
             query.orderBy(toOrders(sort, root, builder));
         }
 
-
-
-//        TypedQuery<Tuple> typedQuery = applyRepositoryMethodMetadata(em.createQuery(query));
-
-//        if (pageable.isPaged()) {
-//            typedQuery.setFirstResult((int) pageable.getOffset());
-//            typedQuery.setMaxResults(pageable.getPageSize());
-//        }
         return applyRepositoryMethodMetadata(em.createQuery(query));
     }
 
-//    protected <S extends T> TypedQuery<Long> getCountDataTransferObjectQuery(Class<?> dtoType,
-//                                                                             @Nullable GenericSpecification<S> spec,
-//                                                                             Class<S> domainClass) {
-//
-//        CriteriaBuilder builder = em.getCriteriaBuilder();
-//        CriteriaQuery<Long> query = builder.createQuery(Long.class);
-//
-//        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, null, true);
-//
-//        if (query.isDistinct()) {
-//            query.select(builder.countDistinct(root));
-//        } else {
-//            query.select(builder.count(root));
+    protected <S extends T> TypedQuery<Tuple> getDataTransferObjectCollectionQuery(Class<?> dtoType, @Nullable String[] filter,
+                                                                                   @Nullable GenericSpecification<S> spec,
+                                                                                   Class<S> domainClass, List<Map<String, Object>> records) {
+        Assert.notNull(dtoType, "DTO Type must not be null!");
+        Validator.validateObjectConfiguration(dtoType, MappingClass.class);
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
+
+        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, filter, false, true);
+
+//        if (sort.isSorted()) {
+//            query.orderBy(toOrders(sort, root, builder));
 //        }
-//
-//        // Remove all Orders the Specifications might have applied
-//        query.orderBy(Collections.<Order>emptyList());
-//
-//        return em.createQuery(query);
-//    }
+
+        List<String> primaryKeys = EntityUtils.getPrimaryKey(domainClass);
+
+        List<Predicate> conditions = new ArrayList<>();
+        for (String key : primaryKeys) {
+            List<Object> conditionValue = records.stream().map(record -> record.get(key)).distinct().collect(Collectors.toList());
+            conditions.add(root.get(key).in(conditionValue));
+        }
+        Predicate predicate = builder.and(conditions.toArray(new Predicate[0]));
+
+        query.where(predicate);
+
+
+        return applyRepositoryMethodMetadata(em.createQuery(query));
+    }
+
+    protected <S extends T> TypedQuery<Long> getCountDataTransferObjectQuery(Class<?> dtoType,
+                                                                             @Nullable GenericSpecification<S> spec,
+                                                                             Class<S> domainClass) {
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+
+        Root<S> root = applySpecificationToCriteria(spec, domainClass, query, dtoType, null, true, false);
+
+        if (query.isDistinct()) {
+            query.select(builder.countDistinct(root));
+        } else {
+            query.select(builder.count(root));
+        }
+
+        // Remove all Orders the Specifications might have applied
+        query.orderBy(Collections.<Order>emptyList());
+
+        return em.createQuery(query);
+    }
 
     /**
      * Apply repository method metadata.
@@ -186,7 +209,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
      */
     private <S, U extends T> Root<U> applySpecificationToCriteria(@Nullable GenericSpecification<U> spec, Class<U> domainClass,
                                                                   CriteriaQuery<S> query, Class<?> dtoType, @Nullable String[] filter,
-                                                                  boolean count) {
+                                                                  boolean count, boolean collection) {
 
         Assert.notNull(domainClass, "Domain class must not be null!");
         Assert.notNull(query, "CriteriaQuery must not be null!");
@@ -198,7 +221,7 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         }
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
-        spec.buildCriteria(root, query, builder, dtoType, filter, count);
+        spec.buildCriteria(root, query, builder, dtoType, filter, count, collection);
 
         return root;
     }
@@ -207,26 +230,37 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         return pageable.isUnpaged();
     }
 
-//    protected <S extends T> Page<Object> readPage(Class<?> dtoType, String[] filter, TypedQuery<Tuple> query, final Class<S> domainClass, Pageable pageable,
-//                                                  @Nullable GenericSpecification<S> spec) {
-//
-//        if (pageable.isPaged()) {
-//            query.setFirstResult((int) pageable.getOffset());
-//            query.setMaxResults(pageable.getPageSize());
-//        }
-//
-//        return getPage(dtoType, filter, query.getResultList(), pageable,
-//                () -> executeCountQuery(getCountDataTransferObjectQuery(dtoType, spec, domainClass)));
-//    }
+    protected Page<Object> readPage(Class<?> dtoType, String[] filter, TypedQuery<Tuple> query, final Class<T> domainClass, Pageable pageable,
+                                                  @Nullable GenericSpecification<T> spec) {
 
-    public static Page<Object> getPage(Class<?> dtoType, String[] filter, List<Tuple> tuples, Pageable pageable, LongSupplier totalSupplier) {
+        if (pageable.isPaged()) {
+            query.setFirstResult((int) pageable.getOffset());
+            query.setMaxResults(pageable.getPageSize());
+        }
 
-        Assert.notNull(tuples, "Content must not be null!");
+        List<Tuple> tuples = query.getResultList();
+        List<Object> contents;
+        // Convert list tuple to map
+        List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
+        if (records.size() > 0) {
+            List<Tuple> collectionTuples = getDataTransferObjectCollectionQuery(dtoType, filter, spec, getDomainClass(), records).getResultList();
+            List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+
+            List<Map<String, Object>> mergeRecords = MappingUtils.merge(records, collectionRecords, dtoType);
+
+            contents = MappingUtils.convertToListDataTransferObject(mergeRecords, dtoType, filter);
+        } else {
+            contents = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
+        }
+        return getPage(dtoType, filter, contents, pageable,
+                () -> executeCountQuery(getCountDataTransferObjectQuery(dtoType, spec, domainClass)));
+    }
+
+    public static Page<Object> getPage(Class<?> dtoType, String[] filter, List<Object> content, Pageable pageable, LongSupplier totalSupplier) {
+
+        Assert.notNull(content, "Content must not be null!");
         Assert.notNull(pageable, "Pageable must not be null!");
         Assert.notNull(totalSupplier, "TotalSupplier must not be null!");
-
-        List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
-        List<Object> content = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
 
         if (pageable.isUnpaged() || pageable.getOffset() == 0) {
 

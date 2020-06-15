@@ -22,5 +22,5 @@ public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Ser
 
     List<Object> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec);
 
-//    Page<Object> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec, Pageable pageable);
+    Page<Object> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec, Pageable pageable);
 }

@@ -44,11 +44,24 @@ public class MappingUtils {
             if (!count) {
                 entityFieldPaths = filterFieldPath(
                         DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false),
-                        DataTransferObjectUtils.getEntityMappingPrimaryFieldPaths(dtoType, false),
+                        DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
                         filter);
             } else {
                 entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsForCount(dtoType);
             }
+        }
+        return entityFieldPaths;
+    }
+
+    public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType, String[] filter) {
+        List<String> entityFieldPaths = new ArrayList<>();
+        if (ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
+            Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
+            EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
+            entityFieldPaths = filterFieldPath(
+                    DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType),
+                    DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
+                    filter);
         }
         return entityFieldPaths;
     }
@@ -118,6 +131,44 @@ public class MappingUtils {
             }
         }
         return records;
+    }
+
+    public static List<Map<String, Object>> merge(List<Map<String, Object>> records, List<Map<String, Object>> collection, Class<?> dtoType) {
+        List<Map<String, Object>> merged = new ArrayList<>();
+        if (null != dtoType) {
+            Map<String, List<Map<String, Object>>> mapCollectionById = new HashMap<>();
+            if (!CollectionUtils.isEmpty(collection)) {
+                for (Map<String, Object> collect : collection) {
+                    String key = DataTransferObjectUtils.getKey(dtoType, collect);
+                    List<Map<String, Object>> list = mapCollectionById.get(key);
+                    if (null == list) {
+                        list = new ArrayList<>();
+                    }
+                    list.add(collect);
+                    mapCollectionById.put(key, list);
+                }
+            }
+            if (!CollectionUtils.isEmpty(records)) {
+                for (Map<String, Object> record : records) {
+                    String key = DataTransferObjectUtils.getKey(dtoType, record);
+                    List<Map<String, Object>> list = mapCollectionById.get(key);
+                    if (!CollectionUtils.isEmpty(list)) {
+                        merged.addAll(buildMerge(record, list));
+                    }
+                }
+            }
+        }
+        return merged;
+    }
+
+    private static List<Map<String, Object>> buildMerge(Map<String, Object> record, List<Map<String, Object>> collection) {
+        List<Map<String, Object>> listBuild = new ArrayList<>();
+        for (Map<String, Object> collect : collection) {
+            Map<String, Object> newMap = new HashMap<>(collect);
+            newMap.putAll(record);
+            listBuild.add(newMap);
+        }
+        return listBuild;
     }
 
     /**

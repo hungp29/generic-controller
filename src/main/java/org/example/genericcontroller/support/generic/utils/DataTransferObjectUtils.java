@@ -136,7 +136,7 @@ public class DataTransferObjectUtils {
         return fieldPaths.stream().distinct().collect(Collectors.toList());
     }
 
-    public static List<String> getEntityMappingPrimaryFieldPaths(Class<?> dtoType, boolean includeCollection) {
+    public static List<String> getEntityMappingFieldPathsPrimary(Class<?> dtoType, boolean includeCollection) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
         List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
@@ -145,12 +145,24 @@ public class DataTransferObjectUtils {
             if (validate(fieldType) && (includeCollection || !ObjectUtils.fieldIsCollection(field))) {
                 String fieldPath = getEntityMappingFieldPath(field);
                 fieldPath = null != fieldPath ? fieldPath + Constants.DOT : Constants.EMPTY_STRING;
-                List<String> innerKeyFieldPaths = getEntityMappingPrimaryFieldPaths(fieldType, includeCollection)
+                List<String> innerKeyFieldPaths = getEntityMappingFieldPathsPrimary(fieldType, includeCollection)
                         .stream().map(fieldPath::concat).collect(Collectors.toList());
                 entityKeyFields.addAll(innerKeyFieldPaths);
             }
         }
         return entityKeyFields;
+    }
+
+    public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType) {
+        List<String> fieldPaths = new ArrayList<>();
+        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+        List<Field> fields = ObjectUtils.getFields(dtoType, true);
+        for (Field field : fields) {
+            if (validate(ObjectUtils.getFieldType(field)) && ObjectUtils.fieldIsCollection(field)) {
+                fieldPaths.addAll(getEntityMappingFieldPaths(field, true, true));
+            }
+        }
+        return fieldPaths;
     }
 
     public static List<String> getEntityMappingFieldPathsForCount(Class<?> dtoType) {
