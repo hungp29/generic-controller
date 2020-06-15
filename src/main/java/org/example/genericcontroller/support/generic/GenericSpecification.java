@@ -22,8 +22,9 @@ public interface GenericSpecification<T> {
      * @param criteriaBuilder Criteria builder
      * @param dtoType         Data Transfer Object type
      * @param filter          list field accepted to get from database
+     * @param count           count query
      */
     @Nullable
     void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                       Class<?> dtoType, @Nullable String[] filter);
+                       Class<?> dtoType, @Nullable String[] filter, boolean count);
 }

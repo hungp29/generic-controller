@@ -140,6 +140,21 @@ public class DataTransferObjectUtils {
         return fieldPaths.stream().distinct().collect(Collectors.toList());
     }
 
+    public static List<String> getEntityMappingFieldPathsForCount(Class<?> dtoType) {
+        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+        List<String> fieldPaths = new ArrayList<>();
+        if (null != dtoType) {
+            List<Field> fields = ObjectUtils.getFields(dtoType, true);
+            for (Field field : fields) {
+                String fieldPath = getEntityMappingFieldPath(field);
+                if (null != fieldPath && !fieldPath.contains(Constants.DOT)) {
+                    fieldPaths.add(fieldPath);
+                }
+            }
+        }
+        return fieldPaths.stream().distinct().collect(Collectors.toList());
+    }
+
     /**
      * Get key value of entity.
      *

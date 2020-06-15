@@ -33,13 +33,17 @@ public class MappingUtils {
      * @param filter  array filter field
      * @return list entity field path
      */
-    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, String[] filter) {
+    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, String[] filter, boolean count) {
         List<String> entityFieldPaths = new ArrayList<>();
         if (ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
             Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
             EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
 
-            entityFieldPaths = filterFieldPath(DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true), filter);
+            if (!count) {
+                entityFieldPaths = filterFieldPath(DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true), filter);
+            } else {
+                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsForCount(dtoType);
+            }
         }
         return entityFieldPaths;
     }
@@ -104,9 +108,10 @@ public class MappingUtils {
      * @return list Data Transfer Object
      */
     public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType) {
+        List<Object> list = new ArrayList<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
-            return new ArrayList<>(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType));
+            list.addAll(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType));
         }
-        return null;
+        return list;
     }
 }

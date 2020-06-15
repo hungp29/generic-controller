@@ -31,9 +31,9 @@ public class DefaultGenericSpecification {
      * @return Generic Specification instance
      */
     public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
-        return (root, query, cb, dtoType, filter) -> {
+        return (root, query, cb, dtoType, filter, count) -> {
             Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
-            List<String> entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter);
+            List<String> entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, count);
 
             if (!CollectionUtils.isEmpty(entityFieldPaths)) {
                 List<Selection<?>> selections = new ArrayList<>();
