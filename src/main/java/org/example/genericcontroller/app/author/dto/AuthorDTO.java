@@ -1,10 +1,12 @@
 package org.example.genericcontroller.app.author.dto;
 
+import lombok.Data;
 import org.example.genericcontroller.entity.Author;
 import org.example.genericcontroller.support.generic.MappingClass;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
+@Data
 @MappingClass(Author.class)
 public class AuthorDTO {
 
@@ -12,5 +14,5 @@ public class AuthorDTO {
 
     private String name;
 
-    private LocalDateTime dob;
+    private LocalDate dob;
 }

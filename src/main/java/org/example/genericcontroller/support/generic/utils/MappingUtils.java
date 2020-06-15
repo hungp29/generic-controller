@@ -8,7 +8,6 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.Tuple;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,38 +96,16 @@ public class MappingUtils {
         return records;
     }
 
-//    public static String getKeyOfDataTransferObject(Class<?> dtoType, Map<String, Object> record) {
-//        StringBuilder key = new StringBuilder(Constants.EMPTY_STRING);
-//        if (null != dtoType) {
-//            List<Field> fields = ObjectUtils.getFields(dtoType, true);
-//            for (Field field : fields) {
-//                Class<?> innerClass = field.getType();
-//                // Override inner class if field is collection
-//                if (ObjectUtils.fieldIsCollection(field)) {
-//                    innerClass = ObjectUtils.getGenericField(field);
-//                }
-//
-//                if (!validate(innerClass)) {
-//                    String fieldPath = getEntityMappingFieldPath(field);
-//                    Object fieldValue = record.get(fieldPath);
-//                    key.append(fieldValue.toString());
-//                }
-//            }
-//        }
-//        return key.toString();
-//    }
-
-    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    /**
+     * Convert list map record to list object Data Transfer Object.
+     *
+     * @param records list map record
+     * @param dtoType Data Transfer Object type
+     * @return list Data Transfer Object
+     */
+    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType) {
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
-            Map<String, Object> mapDTO = new HashMap<>();
-            for (Map<String, Object> record : records) {
-                DataTransferObjectUtils.convertDataToDataToDataTransferObject(mapDTO, Constants.EMPTY_STRING, record, dtoType);
-//                String key = DataTransferObjectUtils.getKeyOfDataTransferObject(dtoType, record);
-//                System.out.println(key);
-            }
-//            Object dto = ObjectUtils.newInstance(dtoType);
-//            List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
+            return new ArrayList<>(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType));
         }
         return null;
     }

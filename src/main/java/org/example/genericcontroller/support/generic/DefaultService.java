@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +43,7 @@ public class DefaultService<T extends Audit> {
         return null;
     }
 
-    public Page<Object> getAllEntity(HttpServletRequest request) {
+    public List<Object> getAllEntity(HttpServletRequest request) {
         @SuppressWarnings("unchecked")
         Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
         Class<?> readDTOClass;
@@ -62,9 +63,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification());
-
-        return null;
+        return defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification());
     }
 
     protected String[] getFilterFields(HttpServletRequest request) {

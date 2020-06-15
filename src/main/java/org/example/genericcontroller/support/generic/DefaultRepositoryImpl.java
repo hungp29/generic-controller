@@ -1,8 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.DataTransferObjectInvalidException;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -18,7 +19,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -48,18 +48,23 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
      * @return
      */
     @Override
-    public List<Tuple> findAll(Class<?> dtoType, @Nullable String[] filter, GenericSpecification<T> spec) {
+    public List<Object> findAll(Class<?> dtoType, @Nullable String[] filter, GenericSpecification<T> spec) {
         List<Tuple> tuples = getDataTransferObjectQuery(dtoType, filter, spec, Sort.unsorted()).getResultList();
-
+        // Convert list tuple to map
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter));
-        try {
-            MappingUtils.convertToListDataTransferObject(records, dtoType);
-            System.out.println("ASD");
-        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            throw new DataTransferObjectInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
-        }
+        return MappingUtils.convertToListDataTransferObject(records, dtoType);
+    }
 
-        return tuples;
+    @Override
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, GenericSpecification<T> spec, Pageable pageable) {
+//        TypedQuery<Tuple> query = getDataTransferObjectQuery(dtoType, filter, spec, )
+        return null;
+    }
+
+    protected TypedQuery<Tuple> getDataTransferObjectQuery(Class<?> dtoType, @Nullable String[] filter,
+                                                           @Nullable GenericSpecification<T> spec, Pageable pageable) {
+        Sort sort = pageable.isPaged() ? pageable.getSort() : Sort.unsorted();
+        return getDataTransferObjectQuery(dtoType, filter, spec, getDomainClass(), sort);
     }
 
     /**
