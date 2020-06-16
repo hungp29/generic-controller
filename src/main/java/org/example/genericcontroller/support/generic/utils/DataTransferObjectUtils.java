@@ -12,7 +12,12 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -198,6 +203,31 @@ public class DataTransferObjectUtils {
         return finalKey.deleteCharAt(finalKey.length() - 1).toString();
     }
 
+    public static String getKey(String prefix, Class<?> dtoType, Map<String, Object> record) {
+        StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
+        List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
+        for (String key : keys) {
+            if (!StringUtils.isEmpty(prefix)) {
+                key = prefix + Constants.DOT + key;
+            }
+            Object value = record.get(key);
+            finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
+                    .append(Constants.UNDERSCORE);
+        }
+        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
+    }
+
+    public static String getKey(Class<?> dtoType, Object record) throws IllegalAccessException {
+        StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
+        List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
+        for (String key : keys) {
+            Object value = ObjectUtils.getValueOfField(record, key);
+            finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
+                    .append(Constants.UNDERSCORE);
+        }
+        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
+    }
+
     /**
      * Convert list map record to list object Data Transfer Object.
      *
@@ -219,6 +249,22 @@ public class DataTransferObjectUtils {
         return mapDTO.values();
     }
 
+    private static boolean hasData(Map<String, Object> record, String prefix, String fieldName) {
+        boolean hasData = false;
+        if (!StringUtils.isEmpty(prefix)) {
+            fieldName = prefix + Constants.DOT + fieldName;
+        }
+        Set<String> mapKey = record.keySet();
+        for (String key : mapKey) {
+            if (key.equals(fieldName) || key.startsWith(fieldName.concat(Constants.DOT))) {
+                hasData = true;
+                break;
+            }
+        }
+
+        return hasData;
+    }
+
     /**
      * Convert data in map to Data Transfer Object.
      *
@@ -237,20 +283,23 @@ public class DataTransferObjectUtils {
             List<Field> dtoFields = ObjectUtils.getFields(dtoType, true);
             for (Field dtoField : dtoFields) {
                 try {
-                    Object value = convertToFieldOfDataTransferObject(prefix, record, dtoField, filter);
-                    if (ObjectUtils.fieldIsCollection(dtoField)) {
-                        Collection collection = ObjectUtils.getValueOfField(dto, dtoField.getName(), Collection.class);
-                        if (null == collection) {
-                            collection = ObjectUtils.newInstanceCollection(dtoField.getType());
-                        }
-                        collection.add(value);
-                        ObjectUtils.setValueForField(dto, dtoField.getName(), collection, true);
-                    } else {
-                        ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
+                    Object value = null;
+                    if (hasData(record, prefix, dtoField.getName())) {
+                        value = convertToFieldOfDataTransferObject(dto, prefix, record, dtoField, filter);
                     }
-                } catch (NoSuchMethodException e) {
-                    throw new ConstructorInvalidException("Cannot new collection instance for field "
-                            + dtoType.getSimpleName() + "." + dtoField.getName(), e);
+//                    if (ObjectUtils.fieldIsCollection(dtoField)) {
+//                        Collection collection = ObjectUtils.getValueOfField(dto, dtoField.getName(), Collection.class);
+//                        if (null == collection) {
+//                            collection = ObjectUtils.newInstanceCollection(dtoField.getType());
+//                        }
+//                        collection.add(value);
+//                        ObjectUtils.setValueForField(dto, dtoField.getName(), collection, true);
+//                    } else {
+                        ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
+//                    }
+//                } catch (NoSuchMethodException e) {
+//                    throw new ConstructorInvalidException("Cannot new collection instance for field "
+//                            + dtoType.getSimpleName() + "." + dtoField.getName(), e);
                 } catch (IllegalAccessException e) {
                     throw new FieldInvalidException("Cannot set/get value for field "
                             + dtoType.getSimpleName() + "." + dtoField.getName(), e);
@@ -268,7 +317,7 @@ public class DataTransferObjectUtils {
      * @param field  field of Data Transfer Object
      * @return value of field
      */
-    public static Object convertToFieldOfDataTransferObject(String prefix, Map<String, Object> record, Field field, String[] filter) {
+    public static Object convertToFieldOfDataTransferObject(Object dto, String prefix, Map<String, Object> record, Field field, String[] filter) {
         if (null != record && null != field) {
             String entityFieldPath = getEntityMappingFieldPath(field);
             if (!StringUtils.isEmpty(prefix)) {
@@ -277,7 +326,40 @@ public class DataTransferObjectUtils {
 
             Class<?> fieldType = ObjectUtils.getFieldType(field);
             if (validate(fieldType)) {
-                return convertToDataTransferObject(null, entityFieldPath, record, fieldType, filter);
+                Object innerDTO = null;
+                try {
+                    if (ObjectUtils.fieldIsCollection(field)) {
+//                        Class<?> innerType = ObjectUtils.getFieldType(field);
+                        Collection collection = ObjectUtils.getValueOfField(dto, field.getName(), Collection.class);
+                        if (null == collection) {
+                            collection = ObjectUtils.newInstanceCollection(field.getType());
+                        } else {
+                            for (Object obj : collection) {
+                                String keyOne = getKey(fieldType, obj);
+                                String keyTwo = getKey(entityFieldPath, fieldType, record);
+                                if (keyOne.equals(keyTwo)) {
+                                    innerDTO = obj;
+                                    break;
+                                }
+                            }
+                        }
+
+                        Object value = convertToDataTransferObject(innerDTO, entityFieldPath, record, fieldType, filter);
+
+                        if (null == innerDTO) {
+                            collection.add(value);
+                        }
+                        return collection;
+                    } else {
+                        return convertToDataTransferObject(null, entityFieldPath, record, fieldType, filter);
+                    }
+                } catch (NoSuchMethodException e) {
+                    throw new ConstructorInvalidException("Cannot new collection instance for field "
+                            + dto.getClass().getSimpleName() + "." + field.getName(), e);
+                } catch (IllegalAccessException e) {
+                    throw new FieldInvalidException("Cannot get value for field "
+                            + dto.getClass().getSimpleName() + "." + field.getName(), e);
+                }
             } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
                 return record.get(entityFieldPath);
             }

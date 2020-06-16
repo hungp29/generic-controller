@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.genericcontroller.app.author.dto.AuthorDTO;
+import org.example.genericcontroller.app.publisher.dto.HistoryPublisherDTO;
 import org.example.genericcontroller.app.publisher.dto.PublisherDTO;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
@@ -34,4 +35,6 @@ public class BookBasicInfo {
 //    private String publisherName2;
 
     private List<AuthorDTO> authors;
+
+    private List<HistoryPublisherDTO> historyPublishers;
 }
