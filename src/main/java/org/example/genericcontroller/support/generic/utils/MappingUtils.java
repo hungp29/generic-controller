@@ -152,9 +152,7 @@ public class MappingUtils {
                 for (Map<String, Object> record : records) {
                     String key = DataTransferObjectUtils.getKey(dtoType, record);
                     List<Map<String, Object>> list = mapCollectionById.get(key);
-                    if (!CollectionUtils.isEmpty(list)) {
-                        merged.addAll(buildMerge(record, list));
-                    }
+                    merged.addAll(buildMerge(record, list));
                 }
             }
         }
@@ -163,10 +161,14 @@ public class MappingUtils {
 
     private static List<Map<String, Object>> buildMerge(Map<String, Object> record, List<Map<String, Object>> collection) {
         List<Map<String, Object>> listBuild = new ArrayList<>();
-        for (Map<String, Object> collect : collection) {
-            Map<String, Object> newMap = new HashMap<>(collect);
-            newMap.putAll(record);
-            listBuild.add(newMap);
+        if (!CollectionUtils.isEmpty(collection)) {
+            for (Map<String, Object> collect : collection) {
+                Map<String, Object> newMap = new HashMap<>(collect);
+                newMap.putAll(record);
+                listBuild.add(newMap);
+            }
+        } else {
+            listBuild.add(new HashMap<>(record));
         }
         return listBuild;
     }
