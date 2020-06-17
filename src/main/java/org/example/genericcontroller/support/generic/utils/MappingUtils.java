@@ -47,7 +47,7 @@ public class MappingUtils {
                         DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
                         filter);
             } else {
-                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsForCount(dtoType);
+//                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, false, false);
             }
         }
         return entityFieldPaths;
@@ -59,7 +59,7 @@ public class MappingUtils {
             Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
             EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
             entityFieldPaths = filterFieldPath(
-                    DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType),
+                    DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType, true),
                     DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
                     filter);
         }
@@ -139,7 +139,7 @@ public class MappingUtils {
             Map<String, List<Map<String, Object>>> mapCollectionById = new HashMap<>();
             if (!CollectionUtils.isEmpty(collection)) {
                 for (Map<String, Object> collect : collection) {
-                    String key = DataTransferObjectUtils.getKey(dtoType, collect);
+                    String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, collect);
                     List<Map<String, Object>> list = mapCollectionById.get(key);
                     if (null == list) {
                         list = new ArrayList<>();
@@ -150,7 +150,7 @@ public class MappingUtils {
             }
             if (!CollectionUtils.isEmpty(records)) {
                 for (Map<String, Object> record : records) {
-                    String key = DataTransferObjectUtils.getKey(dtoType, record);
+                    String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);
                     List<Map<String, Object>> list = mapCollectionById.get(key);
                     merged.addAll(buildMerge(record, list));
                 }

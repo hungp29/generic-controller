@@ -47,7 +47,7 @@ public class DefaultGenericSpecification {
                 }
 
                 query.multiselect(selections);
-            } else {
+            } else if (!count) {
                 throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
             }
         };

@@ -12,12 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -141,10 +136,18 @@ public class DataTransferObjectUtils {
         return fieldPaths.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * Get primary key fields.
+     *
+     * @param dtoType           Data Transfer Object type
+     * @param includeCollection flag to include collection field to list
+     * @return list primary key
+     */
     public static List<String> getEntityMappingFieldPathsPrimary(Class<?> dtoType, boolean includeCollection) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
         List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
+
         for (Field field : fields) {
             Class<?> fieldType = ObjectUtils.getFieldType(field);
             if (validate(fieldType) && (includeCollection || !ObjectUtils.fieldIsCollection(field))) {
@@ -158,51 +161,43 @@ public class DataTransferObjectUtils {
         return entityKeyFields;
     }
 
+    /**
+     * Get entity mapping of collection field.
+     *
+     * @param dtoType Data Transfer Object type
+     * @return list field
+     */
     public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType) {
+        return getEntityMappingFieldPathsCollection(dtoType, false);
+    }
+
+    /**
+     * Get entity mapping of collection field (looking inner class).
+     *
+     * @param dtoType      ata Transfer Object type
+     * @param lookingInner flag to specify looking inner class
+     * @return list field
+     */
+    public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType, boolean lookingInner) {
         List<String> fieldPaths = new ArrayList<>();
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
             if (validate(ObjectUtils.getFieldType(field)) && ObjectUtils.fieldIsCollection(field)) {
-                fieldPaths.addAll(getEntityMappingFieldPaths(field, true, true));
+                fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner, true));
             }
         }
         return fieldPaths;
     }
 
-    public static List<String> getEntityMappingFieldPathsForCount(Class<?> dtoType) {
-        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
-        List<String> fieldPaths = new ArrayList<>();
-        if (null != dtoType) {
-            List<Field> fields = ObjectUtils.getFields(dtoType, true);
-            for (Field field : fields) {
-                String fieldPath = getEntityMappingFieldPath(field);
-                if (null != fieldPath && !fieldPath.contains(Constants.DOT)) {
-                    fieldPaths.add(fieldPath);
-                }
-            }
-        }
-        return fieldPaths.stream().distinct().collect(Collectors.toList());
-    }
-
     /**
-     * Get key value of entity.
+     * Get key value of entity (data from map).
      *
-     * @param dtoType Data Transfer Object type
-     * @param record  Data as Map
-     * @return key of entity
+     * @param prefix  apply for inner object
+     * @param dtoType Data Transfer Object
+     * @param record  record data
+     * @return value of keys
      */
-    public static String getKey(Class<?> dtoType, Map<String, Object> record) {
-        StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
-        List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
-        for (String key : keys) {
-            Object value = record.get(key);
-            finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
-                    .append(Constants.UNDERSCORE);
-        }
-        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
-    }
-
     public static String getKey(String prefix, Class<?> dtoType, Map<String, Object> record) {
         StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
         List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
@@ -214,9 +209,17 @@ public class DataTransferObjectUtils {
             finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
                     .append(Constants.UNDERSCORE);
         }
-        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
+        return finalKey.deleteCharAt(finalKey.length() - 1).toString(); // remove last underscore
     }
 
+    /**
+     * Get key value of entity (data from object).
+     *
+     * @param dtoType Data Transfer Object type
+     * @param record  object data
+     * @return value of keys
+     * @throws IllegalAccessException throw exception if cannot find field in object
+     */
     public static String getKey(Class<?> dtoType, Object record) throws IllegalAccessException {
         StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
         List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
@@ -225,7 +228,7 @@ public class DataTransferObjectUtils {
             finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
                     .append(Constants.UNDERSCORE);
         }
-        return finalKey.deleteCharAt(finalKey.length() - 1).toString();
+        return finalKey.deleteCharAt(finalKey.length() - 1).toString(); // remove last underscore
     }
 
     /**
@@ -240,7 +243,7 @@ public class DataTransferObjectUtils {
         Map<String, Object> mapDTO = new HashMap<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
             for (Map<String, Object> record : records) {
-                String key = getKey(dtoType, record);
+                String key = getKey(Constants.EMPTY_STRING, dtoType, record);
                 Object dto = mapDTO.get(key);
                 dto = convertToDataTransferObject(dto, Constants.EMPTY_STRING, record, dtoType, filter);
                 mapDTO.put(key, dto);
