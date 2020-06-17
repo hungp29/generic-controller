@@ -9,10 +9,7 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +78,7 @@ public class DefaultGenericSpecification {
                     // If join is exist, get join from From instance, otherwise create new join
                     Join<?, ?> join = DuplicateChecker.existJoin(from, innerClass);
                     if (null == join) {
-                        join = from.join(entityPaths[0]);
+                        join = from.join(entityPaths[0], JoinType.LEFT);
                     }
                     String nextPath = entityFieldPath.substring(entityFieldPath.indexOf(Constants.DOT) + 1);
 

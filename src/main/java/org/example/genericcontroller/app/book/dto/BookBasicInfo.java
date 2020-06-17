@@ -17,17 +17,17 @@ import java.util.List;
 @NoArgsConstructor
 public class BookBasicInfo {
 
-    private int id;
+    private Integer id;
 
     private String name;
 
     private String description;
 
-//    @MappingField(entityField = "publisher.id")
-//    private int publisherId;
-//
-//    @MappingField(entityField = "publisher.name")
-//    private String publisherName;
+    @MappingField(entityField = "publisher.id")
+    private int publisherId;
+
+    @MappingField(entityField = "publisher.name")
+    private String publisherName;
 
     private PublisherDTO publisher;
 

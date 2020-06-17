@@ -256,7 +256,8 @@ public class DataTransferObjectUtils {
         }
         Set<String> mapKey = record.keySet();
         for (String key : mapKey) {
-            if (key.equals(fieldName) || key.startsWith(fieldName.concat(Constants.DOT))) {
+            if ((key.equals(fieldName) || key.startsWith(fieldName.concat(Constants.DOT)))
+                    && null != record.get(key)) {
                 hasData = true;
                 break;
             }
@@ -284,7 +285,8 @@ public class DataTransferObjectUtils {
             for (Field dtoField : dtoFields) {
                 try {
                     Object value = null;
-                    if (hasData(record, prefix, dtoField.getName())) {
+                    String entityFieldPath = getEntityMappingFieldPath(dtoField);
+                    if (hasData(record, prefix, entityFieldPath)) {
                         value = convertToFieldOfDataTransferObject(dto, prefix, record, dtoField, filter);
                     }
 //                    if (ObjectUtils.fieldIsCollection(dtoField)) {
@@ -295,7 +297,7 @@ public class DataTransferObjectUtils {
 //                        collection.add(value);
 //                        ObjectUtils.setValueForField(dto, dtoField.getName(), collection, true);
 //                    } else {
-                        ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
+                    ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
 //                    }
 //                } catch (NoSuchMethodException e) {
 //                    throw new ConstructorInvalidException("Cannot new collection instance for field "
