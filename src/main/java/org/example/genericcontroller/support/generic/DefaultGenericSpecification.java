@@ -32,9 +32,10 @@ public class DefaultGenericSpecification {
             Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
             List<String> entityFieldPaths;
             if (!collection) {
-                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, count);
+                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
             } else {
-                entityFieldPaths = MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter);
+//                entityFieldPaths = MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter);
+                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
             }
 
             if (!CollectionUtils.isEmpty(entityFieldPaths)) {

@@ -35,31 +35,20 @@ public class MappingUtils {
      * @param filter  array filter field
      * @return list entity field path
      */
-    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, String[] filter, boolean count) {
+    public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, String[] filter, boolean collection) {
         List<String> entityFieldPaths = new ArrayList<>();
         if (ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
             Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
             EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
 
-            if (!count) {
-                entityFieldPaths = filterFieldPath(
-                        DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false),
-                        DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
-                        filter);
+            if (!collection) {
+                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false);
             } else {
-//                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, false, false);
+                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType, true);
             }
-        }
-        return entityFieldPaths;
-    }
 
-    public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType, String[] filter) {
-        List<String> entityFieldPaths = new ArrayList<>();
-        if (ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
-            Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
-            EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
             entityFieldPaths = filterFieldPath(
-                    DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType, true),
+                    entityFieldPaths,
                     DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
                     filter);
         }
@@ -79,14 +68,6 @@ public class MappingUtils {
             while (index < fieldPaths.size()) {
                 String entityFieldPath = fieldPaths.get(index);
 
-//                boolean keep = false;
-//                for (String keepField : filter) {
-//                    if (entityFieldPath.equals(keepField) || entityFieldPath.startsWith(keepField.concat(Constants.DOT))) {
-//                        keep = true;
-//                        break;
-//                    }
-//                }
-
                 if (isKeepField(entityFieldPath, filter)) {
                     index++;
                 } else {
@@ -101,6 +82,13 @@ public class MappingUtils {
         return fieldPaths;
     }
 
+    /**
+     * Check field is include or exclude.
+     *
+     * @param fieldPath field path
+     * @param filter    filter field
+     * @return true if field is matching any value in filter array
+     */
     public static boolean isKeepField(String fieldPath, String[] filter) {
         if (!StringUtils.isEmpty(fieldPath) && null != filter) {
             for (String keepField : filter) {
@@ -133,7 +121,28 @@ public class MappingUtils {
         return records;
     }
 
-    public static List<Map<String, Object>> merge(List<Map<String, Object>> records, List<Map<String, Object>> collection, Class<?> dtoType) {
+    /**
+     * Convert list map record to list object Data Transfer Object.
+     *
+     * @param records list map record
+     * @param dtoType Data Transfer Object type
+     * @return list Data Transfer Object
+     */
+    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType, String[] filter) {
+        Map<String, Object> mapDTO = new HashMap<>();
+        if (!CollectionUtils.isEmpty(records) && null != dtoType) {
+            for (Map<String, Object> record : records) {
+                String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);
+                Object dto = mapDTO.get(key);
+                dto = DataTransferObjectUtils.convertToDataTransferObject(dto, Constants.EMPTY_STRING, record, dtoType, filter);
+                mapDTO.put(key, dto);
+            }
+        }
+        return new ArrayList<>(mapDTO.values());
+    }
+
+    public static List<Map<String, Object>> merge(List<Map<String, Object>> records,
+                                                  List<Map<String, Object>> collection, Class<?> dtoType) {
         List<Map<String, Object>> merged = new ArrayList<>();
         if (null != dtoType) {
             Map<String, List<Map<String, Object>>> mapCollectionById = new HashMap<>();
@@ -171,20 +180,5 @@ public class MappingUtils {
             listBuild.add(new HashMap<>(record));
         }
         return listBuild;
-    }
-
-    /**
-     * Convert list map record to list object Data Transfer Object.
-     *
-     * @param records list map record
-     * @param dtoType Data Transfer Object type
-     * @return list Data Transfer Object
-     */
-    public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType, String[] filter) {
-        List<Object> list = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(records) && null != dtoType) {
-            list.addAll(DataTransferObjectUtils.convertToListDataTransferObject(records, dtoType, filter));
-        }
-        return list;
     }
 }

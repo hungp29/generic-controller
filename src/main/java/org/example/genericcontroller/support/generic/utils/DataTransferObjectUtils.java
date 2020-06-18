@@ -12,7 +12,10 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -95,6 +98,9 @@ public class DataTransferObjectUtils {
 
             Class<?> innerClass = ObjectUtils.getFieldType(field);
             boolean isCollection = ObjectUtils.fieldIsCollection(field);
+            // Case 1: Field is normal field >> get one entity mapping field has been configuration in MappingField annotation
+            // Case 2: Field is another DTO field, lookingInner = true, includeCollection = true >> looking all field of DTO field
+            // Case 3: Field is another DTO field, lookingInner = true, includeCollection = false >> only non Collection field will be looking to get mapping fields
             if (lookingInner && validate(innerClass) && (includeCollection || !isCollection)) {
                 List<String> innerFieldPaths = getEntityMappingFieldPaths(innerClass, true, true);
                 if (!CollectionUtils.isEmpty(innerFieldPaths)) {
@@ -145,9 +151,11 @@ public class DataTransferObjectUtils {
      */
     public static List<String> getEntityMappingFieldPathsPrimary(Class<?> dtoType, boolean includeCollection) {
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+
+        // Get primary key of Entity mapping with DTO
         List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
-
+        // For each field of DTO, if field is another DTO then get also.
         for (Field field : fields) {
             Class<?> fieldType = ObjectUtils.getFieldType(field);
             if (validate(fieldType) && (includeCollection || !ObjectUtils.fieldIsCollection(field))) {
@@ -179,8 +187,9 @@ public class DataTransferObjectUtils {
      * @return list field
      */
     public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType, boolean lookingInner) {
-        List<String> fieldPaths = new ArrayList<>();
         validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
+
+        List<String> fieldPaths = new ArrayList<>();
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
             if (validate(ObjectUtils.getFieldType(field)) && ObjectUtils.fieldIsCollection(field)) {
@@ -232,35 +241,21 @@ public class DataTransferObjectUtils {
     }
 
     /**
-     * Convert list map record to list object Data Transfer Object.
+     * Check field has data or not.
      *
-     * @param records list map record
-     * @param dtoType Data Transfer Object type
-     * @return list Data Transfer Object
+     * @param record    record data
+     * @param prefix    prefix
+     * @param fieldName field name
+     * @return true if can found data of field in map record
      */
-    public static Collection<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType,
-                                                                     String[] filter) {
-        Map<String, Object> mapDTO = new HashMap<>();
-        if (!CollectionUtils.isEmpty(records) && null != dtoType) {
-            for (Map<String, Object> record : records) {
-                String key = getKey(Constants.EMPTY_STRING, dtoType, record);
-                Object dto = mapDTO.get(key);
-                dto = convertToDataTransferObject(dto, Constants.EMPTY_STRING, record, dtoType, filter);
-                mapDTO.put(key, dto);
-            }
-        }
-        return mapDTO.values();
-    }
-
     private static boolean hasData(Map<String, Object> record, String prefix, String fieldName) {
         boolean hasData = false;
         if (!StringUtils.isEmpty(prefix)) {
             fieldName = prefix + Constants.DOT + fieldName;
         }
-        Set<String> mapKey = record.keySet();
-        for (String key : mapKey) {
-            if ((key.equals(fieldName) || key.startsWith(fieldName.concat(Constants.DOT)))
-                    && null != record.get(key)) {
+        for (String key : record.keySet()) {
+            if (null != record.get(key) &&
+                    (key.equals(fieldName) || key.startsWith(fieldName.concat(Constants.DOT)))) {
                 hasData = true;
                 break;
             }
@@ -288,23 +283,10 @@ public class DataTransferObjectUtils {
             for (Field dtoField : dtoFields) {
                 try {
                     Object value = null;
-                    String entityFieldPath = getEntityMappingFieldPath(dtoField);
-                    if (hasData(record, prefix, entityFieldPath)) {
+                    if (hasData(record, prefix, getEntityMappingFieldPath(dtoField))) {
                         value = convertToFieldOfDataTransferObject(dto, prefix, record, dtoField, filter);
                     }
-//                    if (ObjectUtils.fieldIsCollection(dtoField)) {
-//                        Collection collection = ObjectUtils.getValueOfField(dto, dtoField.getName(), Collection.class);
-//                        if (null == collection) {
-//                            collection = ObjectUtils.newInstanceCollection(dtoField.getType());
-//                        }
-//                        collection.add(value);
-//                        ObjectUtils.setValueForField(dto, dtoField.getName(), collection, true);
-//                    } else {
                     ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
-//                    }
-//                } catch (NoSuchMethodException e) {
-//                    throw new ConstructorInvalidException("Cannot new collection instance for field "
-//                            + dtoType.getSimpleName() + "." + dtoField.getName(), e);
                 } catch (IllegalAccessException e) {
                     throw new FieldInvalidException("Cannot set/get value for field "
                             + dtoType.getSimpleName() + "." + dtoField.getName(), e);
@@ -323,6 +305,7 @@ public class DataTransferObjectUtils {
      * @return value of field
      */
     public static Object convertToFieldOfDataTransferObject(Object dto, String prefix, Map<String, Object> record, Field field, String[] filter) {
+        Object reValue = null;
         if (null != record && null != field) {
             String entityFieldPath = getEntityMappingFieldPath(field);
             if (!StringUtils.isEmpty(prefix)) {
@@ -334,7 +317,6 @@ public class DataTransferObjectUtils {
                 Object innerDTO = null;
                 try {
                     if (ObjectUtils.fieldIsCollection(field)) {
-//                        Class<?> innerType = ObjectUtils.getFieldType(field);
                         Collection collection = ObjectUtils.getValueOfField(dto, field.getName(), Collection.class);
                         if (null == collection) {
                             collection = ObjectUtils.newInstanceCollection(field.getType());
@@ -354,9 +336,9 @@ public class DataTransferObjectUtils {
                         if (null == innerDTO) {
                             collection.add(value);
                         }
-                        return collection;
+                        reValue = collection;
                     } else {
-                        return convertToDataTransferObject(null, entityFieldPath, record, fieldType, filter);
+                        reValue = convertToDataTransferObject(null, entityFieldPath, record, fieldType, filter);
                     }
                 } catch (NoSuchMethodException e) {
                     throw new ConstructorInvalidException("Cannot new collection instance for field "
@@ -366,10 +348,10 @@ public class DataTransferObjectUtils {
                             + dto.getClass().getSimpleName() + "." + field.getName(), e);
                 }
             } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
-                return record.get(entityFieldPath);
+                reValue = record.get(entityFieldPath);
             }
         }
-        return null;
+        return reValue;
     }
 
     /**

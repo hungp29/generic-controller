@@ -58,7 +58,8 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
 
         List<Tuple> collectionTuples = getDataTransferObjectCollectionQuery(dtoType, filter, spec, getDomainClass(), records).getResultList();
-        List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+//        List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+        List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true));
 
         List<Map<String, Object>> mergeRecords = MappingUtils.merge(records, collectionRecords, dtoType);
         return MappingUtils.convertToListDataTransferObject(mergeRecords, dtoType, filter);
@@ -244,7 +245,8 @@ public class DefaultRepositoryImpl<T extends Audit> extends SimpleJpaRepository<
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
         if (records.size() > 0) {
             List<Tuple> collectionTuples = getDataTransferObjectCollectionQuery(dtoType, filter, spec, getDomainClass(), records).getResultList();
-            List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+//            List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter));
+            List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true));
 
             List<Map<String, Object>> mergeRecords = MappingUtils.merge(records, collectionRecords, dtoType);
 
