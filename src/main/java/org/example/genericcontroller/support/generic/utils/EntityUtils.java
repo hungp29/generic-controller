@@ -38,9 +38,9 @@ public class EntityUtils {
      * @param entityType entity type
      * @param thr        Exception to throw if entity type is invalid
      */
-    public static void validateThrow(Class<? extends Audit> entityType, Throwable thr) {
+    public static void validateThrow(Class<? extends Audit> entityType, RuntimeException thr) {
         if (!validate(entityType)) {
-            throw new RuntimeException(thr);
+            throw thr;
         }
     }
 

@@ -1,14 +1,14 @@
 package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.EntityInvalidException;
-import org.example.genericcontroller.support.generic.MappingClass;
+import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Tuple;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,22 +36,21 @@ public class MappingUtils {
      * @return list entity field path
      */
     public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, String[] filter, boolean collection) {
-        List<String> entityFieldPaths = new ArrayList<>();
-        if (ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
-            Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
-            EntityUtils.validateThrow(entityType, new EntityInvalidException("Entity configuration is invalid"));
+        DataTransferObjectUtils.validateThrow(dtoType, new ConfigurationInvalidException(dtoType.getName() + ": Data Transfer Object configuration is invalid"));
+        Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
+        EntityUtils.validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+        List<String> entityFieldPaths;
 
-            if (!collection) {
-                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false);
-            } else {
-                entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType, true);
-            }
-
-            entityFieldPaths = filterFieldPath(
-                    entityFieldPaths,
-                    DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
-                    filter);
+        if (!collection) {
+            entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPaths(dtoType, true, false);
+        } else {
+            entityFieldPaths = DataTransferObjectUtils.getEntityMappingFieldPathsCollection(dtoType, true);
         }
+
+        entityFieldPaths = filterFieldPath(
+                entityFieldPaths,
+                DataTransferObjectUtils.getEntityMappingFieldPathsPrimary(dtoType, false),
+                filter);
         return entityFieldPaths;
     }
 
@@ -141,6 +140,14 @@ public class MappingUtils {
         return new ArrayList<>(mapDTO.values());
     }
 
+    /**
+     * Merge records with collection fields.
+     *
+     * @param records    the record data
+     * @param collection the record data of collection field
+     * @param dtoType    Data Transfer Object type
+     * @return list record after merged
+     */
     public static List<Map<String, Object>> merge(List<Map<String, Object>> records,
                                                   List<Map<String, Object>> collection, Class<?> dtoType) {
         List<Map<String, Object>> merged = new ArrayList<>();
@@ -161,24 +168,48 @@ public class MappingUtils {
                 for (Map<String, Object> record : records) {
                     String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);
                     List<Map<String, Object>> list = mapCollectionById.get(key);
-                    merged.addAll(buildMerge(record, list));
+                    merged.addAll(buildMergeRecord(record, list));
                 }
             }
         }
         return merged;
     }
 
-    private static List<Map<String, Object>> buildMerge(Map<String, Object> record, List<Map<String, Object>> collection) {
+    /**
+     * Build merge record.
+     *
+     * @param record     record data
+     * @param collection list collection field of record
+     * @return list record merged
+     */
+    private static List<Map<String, Object>> buildMergeRecord(Map<String, Object> record, List<Map<String, Object>> collection) {
         List<Map<String, Object>> listBuild = new ArrayList<>();
         if (!CollectionUtils.isEmpty(collection)) {
             for (Map<String, Object> collect : collection) {
-                Map<String, Object> newMap = new HashMap<>(collect);
-                newMap.putAll(record);
-                listBuild.add(newMap);
+                collect.putAll(record);
+                listBuild.add(collect);
             }
         } else {
             listBuild.add(new HashMap<>(record));
         }
         return listBuild;
+    }
+
+    /**
+     * Get Field Type.
+     *
+     * @param field Field
+     * @return field type
+     */
+    public static Class<?> getFieldType(Field field) {
+        if (null != field) {
+            Class<?> innerClass = field.getType();
+            // Override inner class if field is collection
+            if (ObjectUtils.fieldIsCollection(field)) {
+                innerClass = ObjectUtils.getGenericField(field);
+            }
+            return innerClass;
+        }
+        return null;
     }
 }

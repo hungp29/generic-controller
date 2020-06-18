@@ -47,9 +47,9 @@ public class DataTransferObjectUtils {
      * @param dtoType DTO type
      * @param thr     Exception to throw if DTO class is invalid
      */
-    public static void validateThrow(Class<?> dtoType, Throwable thr) {
+    public static void validateThrow(Class<?> dtoType, RuntimeException thr) {
         if (!validate(dtoType)) {
-            throw new RuntimeException(thr);
+            throw thr;
         }
     }
 
@@ -96,7 +96,7 @@ public class DataTransferObjectUtils {
                 fieldPath = mappingField.entityField();
             }
 
-            Class<?> innerClass = ObjectUtils.getFieldType(field);
+            Class<?> innerClass = MappingUtils.getFieldType(field);
             boolean isCollection = ObjectUtils.fieldIsCollection(field);
             // Case 1: Field is normal field >> get one entity mapping field has been configuration in MappingField annotation
             // Case 2: Field is another DTO field, lookingInner = true, includeCollection = true >> looking all field of DTO field
@@ -132,8 +132,6 @@ public class DataTransferObjectUtils {
      * @return list mapping entity path of object
      */
     public static List<String> getEntityMappingFieldPaths(Class<?> dtoType, boolean lookingInner, boolean includeCollection) {
-        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
-
         List<String> fieldPaths = new ArrayList<>();
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
@@ -150,14 +148,12 @@ public class DataTransferObjectUtils {
      * @return list primary key
      */
     public static List<String> getEntityMappingFieldPathsPrimary(Class<?> dtoType, boolean includeCollection) {
-        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
-
         // Get primary key of Entity mapping with DTO
         List<String> entityKeyFields = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         // For each field of DTO, if field is another DTO then get also.
         for (Field field : fields) {
-            Class<?> fieldType = ObjectUtils.getFieldType(field);
+            Class<?> fieldType = MappingUtils.getFieldType(field);
             if (validate(fieldType) && (includeCollection || !ObjectUtils.fieldIsCollection(field))) {
                 String fieldPath = getEntityMappingFieldPath(field);
                 fieldPath = null != fieldPath ? fieldPath + Constants.DOT : Constants.EMPTY_STRING;
@@ -187,12 +183,10 @@ public class DataTransferObjectUtils {
      * @return list field
      */
     public static List<String> getEntityMappingFieldPathsCollection(Class<?> dtoType, boolean lookingInner) {
-        validateThrow(dtoType, new ConstructorInvalidException("Data Transfer Object configuration is invalid"));
-
         List<String> fieldPaths = new ArrayList<>();
         List<Field> fields = ObjectUtils.getFields(dtoType, true);
         for (Field field : fields) {
-            if (validate(ObjectUtils.getFieldType(field)) && ObjectUtils.fieldIsCollection(field)) {
+            if (validate(MappingUtils.getFieldType(field)) && ObjectUtils.fieldIsCollection(field)) {
                 fieldPaths.addAll(getEntityMappingFieldPaths(field, lookingInner, true));
             }
         }
@@ -312,7 +306,7 @@ public class DataTransferObjectUtils {
                 entityFieldPath = prefix + Constants.DOT + entityFieldPath;
             }
 
-            Class<?> fieldType = ObjectUtils.getFieldType(field);
+            Class<?> fieldType = MappingUtils.getFieldType(field);
             if (validate(fieldType)) {
                 Object innerDTO = null;
                 try {

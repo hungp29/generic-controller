@@ -299,24 +299,6 @@ public class ObjectUtils {
     }
 
     /**
-     * Get Field Type.
-     *
-     * @param field Field
-     * @return field type
-     */
-    public static Class<?> getFieldType(Field field) {
-        if (null != field) {
-            Class<?> innerClass = field.getType();
-            // Override inner class if field is collection
-            if (ObjectUtils.fieldIsCollection(field)) {
-                innerClass = ObjectUtils.getGenericField(field);
-            }
-            return innerClass;
-        }
-        return null;
-    }
-
-    /**
      * Get value of field of object.
      *
      * @param object    object

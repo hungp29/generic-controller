@@ -7,7 +7,6 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 
@@ -15,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,15 +45,14 @@ public class DefaultService<T extends Audit> {
     public Page<Object> getAllEntity(HttpServletRequest request) {
         @SuppressWarnings("unchecked")
         Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
-        Class<?> readDTOClass;
 
         // Validate configurations of entity
         Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
 
-        readDTOClass = ObjectUtils.getAnnotation(entityClass, DataTransferObjectMapping.class).forRead();
+        Class<?> readDTOClass = ObjectUtils.getAnnotation(entityClass, DataTransferObjectMapping.class).forRead();
 
         // Validate configurations of dto
-        Validator.validateObjectConfiguration(readDTOClass, MappingClass.class);
+//        Validator.validateObjectConfiguration(readDTOClass, MappingClass.class);
 
         // Build page request.
         PageRequest pageRequest = getPageRequest(request);

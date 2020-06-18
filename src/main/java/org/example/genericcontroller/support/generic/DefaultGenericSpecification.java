@@ -3,6 +3,7 @@ package org.example.genericcontroller.support.generic;
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.exception.generic.GenericSelectionEmptyException;
+import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
@@ -29,12 +30,11 @@ public class DefaultGenericSpecification {
      */
     public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
         return (root, query, cb, dtoType, filter, count, collection) -> {
-            Class<? extends Audit> entityType = ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
+            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
             List<String> entityFieldPaths;
             if (!collection) {
                 entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
             } else {
-//                entityFieldPaths = MappingUtils.getEntityMappingFieldPathsCollection(dtoType, filter);
                 entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
             }
 
@@ -70,11 +70,7 @@ public class DefaultGenericSpecification {
             Field entityField = ObjectUtils.getField(entityType, entityPaths[0], true);
             if (null != entityField) {
                 if (entityPaths.length > 1 && Converter.isForeignKeyField(entityField)) {
-                    Class<?> innerClass = entityField.getType();
-                    // Override inner class if field is collection
-                    if (ObjectUtils.fieldIsCollection(entityField)) {
-                        innerClass = ObjectUtils.getGenericField(entityField);
-                    }
+                    Class<?> innerClass = MappingUtils.getFieldType(entityField);
 
                     // If join is exist, get join from From instance, otherwise create new join
                     Join<?, ?> join = DuplicateChecker.existJoin(from, innerClass);
