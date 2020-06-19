@@ -7,6 +7,7 @@ import org.example.genericcontroller.support.generic.utils.DataTransferObjectUti
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -20,40 +21,40 @@ import java.util.List;
  *
  * @author hungp
  */
-public class DefaultGenericSpecification {
+public class DefaultGenericSpecification implements GenericSpecification {
 
-    /**
-     * Auto build specification.
-     *
-     * @param <T> generic of Entity
-     * @return Generic Specification instance
-     */
-    public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
-        return (root, query, cb, dtoType, filter, count, collection) -> {
-            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-            List<String> entityFieldPaths;
-            if (!collection) {
-                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
-            } else {
-                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
-            }
-
-            if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-                List<Selection<?>> selections = new ArrayList<>();
-                for (String entityFieldPath : entityFieldPaths) {
-                    Path<?> path = buildPath(root, entityFieldPath, entityType);
-                    if (null != path) {
-                        selections.add(path.alias(entityFieldPath));
-                    }
-                }
-
-                query.multiselect(selections);
-            } else if (!count) {
-                throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
-            }
-        };
-
-    }
+//    /**
+//     * Auto build specification.
+//     *
+//     * @param <T> generic of Entity
+//     * @return Generic Specification instance
+//     */
+//    public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
+//        return (root, query, cb, dtoType, filter, count, collection) -> {
+//            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
+//            List<String> entityFieldPaths;
+//            if (!collection) {
+//                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
+//            } else {
+//                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
+//            }
+//
+//            if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+//                List<Selection<?>> selections = new ArrayList<>();
+//                for (String entityFieldPath : entityFieldPaths) {
+//                    Path<?> path = buildPath(root, entityFieldPath, entityType);
+//                    if (null != path) {
+//                        selections.add(path.alias(entityFieldPath));
+//                    }
+//                }
+//
+//                query.multiselect(selections);
+//            } else if (!count) {
+//                throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
+//            }
+//        };
+//
+//    }
 
     /**
      * Build path for selection.
@@ -89,5 +90,30 @@ public class DefaultGenericSpecification {
             }
         }
         return null;
+    }
+
+    @Override
+    public <T> void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder, Class<?> dtoType, String[] filter, boolean count, boolean collection) {
+        Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
+        List<String> entityFieldPaths;
+        if (!collection) {
+            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
+        } else {
+            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
+        }
+
+        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+            List<Selection<?>> selections = new ArrayList<>();
+            for (String entityFieldPath : entityFieldPaths) {
+                Path<?> path = buildPath(root, entityFieldPath, entityType);
+                if (null != path) {
+                    selections.add(path.alias(entityFieldPath));
+                }
+            }
+
+            query.multiselect(selections);
+        } else if (!count) {
+            throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
+        }
     }
 }

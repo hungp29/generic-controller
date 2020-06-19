@@ -18,7 +18,7 @@ import java.util.List;
  * @author hungp
  */
 @NoRepositoryBean
-public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Serializable>, JpaSpecificationExecutor<T> {
+public interface GenericRepository<T extends Audit> extends JpaRepository<T, Serializable>, JpaSpecificationExecutor<T> {
 
     /**
      * Find all entity and get data return as Data Transfer Object.
@@ -28,7 +28,7 @@ public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param spec    Generic Specification
      * @return list Data Transfer Object
      */
-    List<Object> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec);
+    List<Object> findAll(Class<?> dtoType, String[] filter);
 
     /**
      * Find one page of entity and get data return as Data Transfer Object.
@@ -39,5 +39,5 @@ public interface DefaultRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param pageable Paging info
      * @return page data
      */
-    Page<Object> findAll(Class<?> dtoType, String[] filter, @Nullable GenericSpecification<T> spec, Pageable pageable);
+    Page<Object> findAll(Class<?> dtoType, String[] filter, Pageable pageable);
 }

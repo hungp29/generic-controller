@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * Default Rest Controller.
@@ -17,22 +16,22 @@ import java.util.List;
  * @param <T> generic of Entity
  * @author hungp
  */
-public class DefaultRestController<T extends Audit> {
+public class GenericRestController<T extends Audit> {
 
-    private DefaultService<T> defaultService;
+    private GenericService<T> genericService;
 
     @GetMapping("/{id}")
     public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, HttpServletRequest request) {
-        return ResponseEntity.ok(defaultService.getEntity(id, request));
+        return ResponseEntity.ok(genericService.getEntity(id, request));
     }
 
     @GetMapping
     public ResponseEntity<Page<Object>> getAll(HttpServletRequest request) {
-        return ResponseEntity.ok(defaultService.getAllEntity(request));
+        return ResponseEntity.ok(genericService.getAllEntity(request));
     }
 
     @Autowired
-    public void setDefaultService(DefaultService<T> defaultService) {
-        this.defaultService = defaultService;
+    public void setGenericService(GenericService<T> genericService) {
+        this.genericService = genericService;
     }
 }

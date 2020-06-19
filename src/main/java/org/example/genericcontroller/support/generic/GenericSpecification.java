@@ -9,10 +9,9 @@ import javax.persistence.criteria.Root;
 /**
  * Generic Specification. It use to build criteria (select field, where condition, ...)
  *
- * @param <T> generic of Entity
  * @author hungp
  */
-public interface GenericSpecification<T> {
+public interface GenericSpecification {
 
     /**
      * Build Criteria for query.
@@ -25,6 +24,6 @@ public interface GenericSpecification<T> {
      * @param count           count query
      */
     @Nullable
-    void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                       Class<?> dtoType, @Nullable String[] filter, boolean count, boolean collection);
+    <T> void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
+                           Class<?> dtoType, @Nullable String[] filter, boolean count, boolean collection);
 }

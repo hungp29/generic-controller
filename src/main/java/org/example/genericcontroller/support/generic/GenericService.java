@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * @param <T> generic of Entity
  * @author hungp
  */
-public class DefaultService<T extends Audit> {
+public class GenericService<T extends Audit> {
 
     public static final String PAGE = "page";
     public static final String LIMIT = "limit";
@@ -32,7 +32,7 @@ public class DefaultService<T extends Audit> {
     public static final String ORDER_BY = "orderBy";
     public static final String[] NOT_PARAM_FIELDS = {PAGE, LIMIT, ORDER_BY, FILTER};
 
-    private DefaultRepository<T> defaultRepository;
+    private GenericRepository<T> genericRepository;
 
     private int defaultPage = 1;
     private int defaultLimit = 10;
@@ -61,7 +61,7 @@ public class DefaultService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        return defaultRepository.findAll(readDTOClass, filter, DefaultGenericSpecification.autoBuildSpecification(), pageRequest);
+        return genericRepository.findAll(readDTOClass, filter, pageRequest);
     }
 
     protected String[] getFilterFields(HttpServletRequest request) {
@@ -144,7 +144,7 @@ public class DefaultService<T extends Audit> {
     }
 
     @Autowired
-    public void setDefaultRepository(DefaultRepository<T> defaultRepository) {
-        this.defaultRepository = defaultRepository;
+    public void setGenericRepository(GenericRepository<T> genericRepository) {
+        this.genericRepository = genericRepository;
     }
 }
