@@ -5,6 +5,10 @@ import org.example.genericcontroller.utils.ObjectUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,5 +71,17 @@ public class EntityUtils {
         return keys;
     }
 
+    /**
+     * Checking field is foreign key or not.
+     *
+     * @param field the field need to check
+     * @return true if field is foreign key
+     */
+    public static boolean isForeignKey(Field field) {
+        return ObjectUtils.hasAnnotation(field, OneToOne.class) ||
+                ObjectUtils.hasAnnotation(field, OneToMany.class) ||
+                ObjectUtils.hasAnnotation(field, ManyToOne.class) ||
+                ObjectUtils.hasAnnotation(field, ManyToMany.class);
+    }
 
 }

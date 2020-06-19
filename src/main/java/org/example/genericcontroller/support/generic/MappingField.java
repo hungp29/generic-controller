@@ -15,13 +15,6 @@ import java.lang.annotation.Target;
 public @interface MappingField {
 
     /**
-     * Path of Data Transfer Object field.
-     *
-     * @return path of field
-     */
-    String dtoField() default "";
-
-    /**
      * Path of Entity field.
      *
      * @return path of field

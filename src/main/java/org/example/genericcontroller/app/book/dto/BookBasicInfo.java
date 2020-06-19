@@ -1,6 +1,5 @@
 package org.example.genericcontroller.app.book.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.genericcontroller.app.author.dto.AuthorDTO;

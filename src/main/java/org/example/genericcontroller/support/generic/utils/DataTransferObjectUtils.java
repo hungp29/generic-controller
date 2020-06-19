@@ -298,6 +298,7 @@ public class DataTransferObjectUtils {
      * @param field  field of Data Transfer Object
      * @return value of field
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static Object convertToFieldOfDataTransferObject(Object dto, String prefix, Map<String, Object> record, Field field, String[] filter) {
         Object reValue = null;
         if (null != record && null != field) {

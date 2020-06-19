@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericException;
+import org.example.genericcontroller.support.generic.utils.Validator;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;

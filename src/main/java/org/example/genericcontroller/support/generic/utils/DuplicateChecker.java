@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic;
+package org.example.genericcontroller.support.generic.utils;
 
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;

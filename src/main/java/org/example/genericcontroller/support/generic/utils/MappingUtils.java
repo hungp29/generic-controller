@@ -89,14 +89,16 @@ public class MappingUtils {
      * @return true if field is matching any value in filter array
      */
     public static boolean isKeepField(String fieldPath, String[] filter) {
-        if (!StringUtils.isEmpty(fieldPath) && null != filter) {
+        boolean keep = !StringUtils.isEmpty(fieldPath) && null == filter;
+        if (!keep && null != filter) {
             for (String keepField : filter) {
                 if (fieldPath.equals(keepField) || fieldPath.startsWith(keepField.concat(Constants.DOT))) {
-                    return true;
+                    keep = true;
+                    break;
                 }
             }
         }
-        return false;
+        return keep;
     }
 
     /**

@@ -4,6 +4,7 @@ import org.springframework.lang.Nullable;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 /**
@@ -21,9 +22,10 @@ public interface GenericSpecification {
      * @param criteriaBuilder Criteria builder
      * @param dtoType         Data Transfer Object type
      * @param filter          list field accepted to get from database
-     * @param count           count query
+     * @param collection      flat to detect build criteria for collection fields
+     * @param <T>             generic of entity
      */
     @Nullable
-    <T> void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                           Class<?> dtoType, @Nullable String[] filter, boolean count, boolean collection);
+    <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
+                                Class<?> dtoType, @Nullable String[] filter, boolean collection);
 }

@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.lang.Nullable;
 
 import java.io.Serializable;
 import java.util.List;
@@ -25,7 +24,6 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      *
      * @param dtoType Data Transfer Object type
      * @param filter  filter fields
-     * @param spec    Generic Specification
      * @return list Data Transfer Object
      */
     List<Object> findAll(Class<?> dtoType, String[] filter);
@@ -35,7 +33,6 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      *
      * @param dtoType  Data Transfer Object type
      * @param filter   filter fields
-     * @param spec     Generic Specification
      * @param pageable Paging info
      * @return page data
      */

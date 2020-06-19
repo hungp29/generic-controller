@@ -2,16 +2,24 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
-import org.example.genericcontroller.exception.generic.GenericSelectionEmptyException;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
+import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
+import org.example.genericcontroller.support.generic.utils.EntityUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
-import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,38 +31,41 @@ import java.util.List;
  */
 public class DefaultGenericSpecification implements GenericSpecification {
 
-//    /**
-//     * Auto build specification.
-//     *
-//     * @param <T> generic of Entity
-//     * @return Generic Specification instance
-//     */
-//    public static <T extends Audit> GenericSpecification<T> autoBuildSpecification() {
-//        return (root, query, cb, dtoType, filter, count, collection) -> {
-//            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-//            List<String> entityFieldPaths;
-//            if (!collection) {
-//                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
-//            } else {
-//                entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
-//            }
-//
-//            if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-//                List<Selection<?>> selections = new ArrayList<>();
-//                for (String entityFieldPath : entityFieldPaths) {
-//                    Path<?> path = buildPath(root, entityFieldPath, entityType);
-//                    if (null != path) {
-//                        selections.add(path.alias(entityFieldPath));
-//                    }
-//                }
-//
-//                query.multiselect(selections);
-//            } else if (!count) {
-//                throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
-//            }
-//        };
-//
-//    }
+    /**
+     * Auto build criteria.
+     *
+     * @param root            Root Entity
+     * @param query           Criteria query
+     * @param criteriaBuilder Criteria builder
+     * @param dtoType         Data Transfer Object type
+     * @param filter          list field accepted to get from database
+     * @param collection      flat to detect build criteria for collection fields
+     * @param <T>             generic of entity
+     * @return Predicate instance
+     */
+    @Override
+    public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder, Class<?> dtoType, String[] filter, boolean collection) {
+        Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
+        List<String> entityFieldPaths;
+        if (!collection) {
+            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
+        } else {
+            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
+        }
+
+        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+            List<Selection<?>> selections = new ArrayList<>();
+            for (String entityFieldPath : entityFieldPaths) {
+                Path<?> path = buildPath(root, entityFieldPath, entityType);
+                if (null != path) {
+                    selections.add(path.alias(entityFieldPath));
+                }
+            }
+
+            query.multiselect(selections);
+        }
+        return null;
+    }
 
     /**
      * Build path for selection.
@@ -70,7 +81,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
 
             Field entityField = ObjectUtils.getField(entityType, entityPaths[0], true);
             if (null != entityField) {
-                if (entityPaths.length > 1 && Converter.isForeignKeyField(entityField)) {
+                if (entityPaths.length > 1 && EntityUtils.isForeignKey(entityField)) {
                     Class<?> innerClass = MappingUtils.getFieldType(entityField);
 
                     // If join is exist, get join from From instance, otherwise create new join
@@ -90,30 +101,5 @@ public class DefaultGenericSpecification implements GenericSpecification {
             }
         }
         return null;
-    }
-
-    @Override
-    public <T> void buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder, Class<?> dtoType, String[] filter, boolean count, boolean collection) {
-        Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-        List<String> entityFieldPaths;
-        if (!collection) {
-            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
-        } else {
-            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
-        }
-
-        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-            List<Selection<?>> selections = new ArrayList<>();
-            for (String entityFieldPath : entityFieldPaths) {
-                Path<?> path = buildPath(root, entityFieldPath, entityType);
-                if (null != path) {
-                    selections.add(path.alias(entityFieldPath));
-                }
-            }
-
-            query.multiselect(selections);
-        } else if (!count) {
-            throw new GenericSelectionEmptyException("Cannot found any selection to build select clause");
-        }
     }
 }
