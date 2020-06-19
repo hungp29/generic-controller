@@ -20,4 +20,9 @@ public @interface MappingField {
      * @return path of field
      */
     String entityField() default "";
+
+    Class<?> converter() default NoneConverter.class;
+
+    class NoneConverter {
+    }
 }

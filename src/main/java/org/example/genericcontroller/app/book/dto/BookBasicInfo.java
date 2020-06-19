@@ -3,11 +3,11 @@ package org.example.genericcontroller.app.book.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.genericcontroller.app.author.dto.AuthorDTO;
-import org.example.genericcontroller.app.publisher.dto.HistoryPublisherDTO;
 import org.example.genericcontroller.app.publisher.dto.PublisherDTO;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
+import org.example.genericcontroller.support.generic.fieldconverter.LocalDateTimeConverter;
 
 import java.util.List;
 
@@ -35,5 +35,8 @@ public class BookBasicInfo {
 
     private List<AuthorDTO> authors;
 
-    private List<HistoryPublisherDTO> historyPublishers;
+//    private List<HistoryPublisherDTO> historyPublishers;
+
+    @MappingField(converter = LocalDateTimeConverter.class)
+    private Long createAt;
 }

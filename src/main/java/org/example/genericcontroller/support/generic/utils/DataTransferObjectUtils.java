@@ -2,7 +2,9 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
+import org.example.genericcontroller.exception.generic.ConverterFieldInvalidException;
 import org.example.genericcontroller.exception.generic.FieldInvalidException;
+import org.example.genericcontroller.support.generic.FieldConverter;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.utils.ObjectUtils;
@@ -62,6 +64,19 @@ public class DataTransferObjectUtils {
     public static Class<? extends Audit> getEntityType(Class<?> dtoType) {
         if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
             return ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
+        }
+        return null;
+    }
+
+    /**
+     * Get field converter class.
+     *
+     * @param field field
+     * @return field converter class
+     */
+    public static Class<?> getFieldConverterClass(Field field) {
+        if (ObjectUtils.hasAnnotation(field, MappingField.class)) {
+            return ObjectUtils.getAnnotation(field, MappingField.class).converter();
         }
         return null;
     }
@@ -343,10 +358,26 @@ public class DataTransferObjectUtils {
                             + dto.getClass().getSimpleName() + "." + field.getName(), e);
                 }
             } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
-                reValue = record.get(entityFieldPath);
+                Class<?> fieldConverter = getFieldConverterClass(field);
+                reValue = convertField(fieldConverter, record.get(entityFieldPath));
             }
         }
         return reValue;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static Object convertField(Class<?> fieldConverterType, Object value) {
+        if (null != fieldConverterType) {
+            if (FieldConverter.class.isAssignableFrom(fieldConverterType)) {
+                try {
+                    FieldConverter fieldConverter = (FieldConverter) ObjectUtils.newInstance(fieldConverterType);
+                    value = fieldConverter.convertToFieldDataTransferObject(value);
+                } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+                    throw new ConverterFieldInvalidException("Cannot convert field " + value.getClass().getName() + " with " + fieldConverterType.getName() + " converter");
+                }
+            }
+        }
+        return value;
     }
 
     /**
