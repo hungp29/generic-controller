@@ -9,7 +9,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import javax.persistence.EntityManager;
@@ -54,11 +53,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType Data Transfer Object type
      * @param filter  filter field
-     * @return
+     * @param params  request params
+     * @return list Data Transfer Object
      */
     @Override
-    public List<Object> findAll(Class<?> dtoType, @Nullable String[] filter) {
-        TypedQuery<Tuple> query = getQuery(dtoType, filter, Sort.unsorted());
+    public List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params) {
+        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, Sort.unsorted());
         List<Map<String, Object>> records = readData(query, dtoType, filter);
         return MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
     }
@@ -68,17 +68,18 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType  Data Transfer Object type
      * @param filter   filter fields
+     * @param params   request params
      * @param pageable Paging info
      * @return page data
      */
     @Override
-    public Page<Object> findAll(Class<?> dtoType, String[] filter, Pageable pageable) {
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable) {
         Page<Object> page;
         if (isUnpaged(pageable)) {
-            page = new PageImpl<>(findAll(dtoType, filter));
+            page = new PageImpl<>(findAll(dtoType, filter, params));
         } else {
-            TypedQuery<Tuple> query = getQuery(dtoType, filter, pageable);
-            page = readPage(dtoType, filter, query, getDomainClass(), pageable);
+            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, pageable);
+            page = readPage(dtoType, filter, params, query, getDomainClass(), pageable);
         }
         return page;
     }
@@ -88,11 +89,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType Data Transfer Object type
      * @param filter  filter field
+     * @param params  request params
      * @param sort    Sort instance
      * @return TypeQuery instance
      */
-    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, @Nullable String[] filter, Sort sort) {
-        return getQuery(dtoType, filter, getDomainClass(), sort);
+    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort) {
+        return getQuery(dtoType, filter, params, getDomainClass(), sort);
     }
 
     /**
@@ -100,19 +102,20 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType     Data Transfer Object type
      * @param filter      filter field
+     * @param params      request params
      * @param domainClass Entity class
      * @param sort        Sort instance
      * @param <S>         generic of entity
      * @return TypeQuery instance
      */
-    protected <S extends T> TypedQuery<Tuple> getQuery(Class<?> dtoType, @Nullable String[] filter,
+    protected <S extends T> TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params,
                                                        Class<S> domainClass, Sort sort) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, false);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, params, false);
 
         if (sort.isSorted()) {
             query.orderBy(toOrders(sort, root, builder));
@@ -126,12 +129,13 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType  Data Transfer Object type
      * @param filter   filter fields
+     * @param params   request params
      * @param pageable paging info
      * @return TypedQuery instance
      */
-    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, @Nullable String[] filter, Pageable pageable) {
+    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable) {
         Sort sort = pageable.isPaged() ? pageable.getSort() : Sort.unsorted();
-        return getQuery(dtoType, filter, getDomainClass(), sort);
+        return getQuery(dtoType, filter, params, getDomainClass(), sort);
     }
 
     /**
@@ -144,14 +148,14 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param <S>         generic entity
      * @return collection query
      */
-    protected <S extends T> TypedQuery<Tuple> getCollectionQuery(Class<?> dtoType, @Nullable String[] filter,
+    protected <S extends T> TypedQuery<Tuple> getCollectionQuery(Class<?> dtoType, String[] filter,
                                                                  Class<S> domainClass, List<Map<String, Object>> records) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, true);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, null, true);
 
 //        if (sort.isSorted()) {
 //            query.orderBy(toOrders(sort, root, builder));
@@ -173,15 +177,16 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType     Data Transfer Object type
      * @param domainClass entity class
+     * @param params      request params
      * @param <S>         generic of entity
      * @return count query
      */
-    protected <S extends T> TypedQuery<Long> getCountQuery(Class<?> dtoType, Class<S> domainClass) {
+    protected <S extends T> TypedQuery<Long> getCountQuery(Class<?> dtoType, Class<S> domainClass, Map<String, String> params) {
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, null, false);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, null, params, false);
 
         if (query.isDistinct()) {
             query.select(builder.countDistinct(root));
@@ -202,13 +207,14 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param query       Criteria Query
      * @param dtoType     Data Transfer Object type
      * @param filter      filter field
+     * @param params      request params
      * @param <S>         Generic of Query Type
      * @param <U>         Generic of entity
      * @return Root instance
      */
     private <S, U extends T> Root<U> applySpecificationToCriteria(Class<U> domainClass,
                                                                   CriteriaQuery<S> query, Class<?> dtoType,
-                                                                  @Nullable String[] filter, boolean collection) {
+                                                                  String[] filter, Map<String, String> params, boolean collection) {
 
         Assert.notNull(domainClass, "Domain class must not be null!");
         Assert.notNull(query, "CriteriaQuery must not be null!");
@@ -220,7 +226,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         }
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
-        spec.buildCriteria(root, query, builder, dtoType, filter, collection);
+        spec.buildCriteria(root, query, builder, dtoType, filter, params, collection);
 
         return root;
     }
@@ -276,12 +282,13 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param dtoType     Data Transfer Object type
      * @param filter      filter field
+     * @param params      request params
      * @param query       query
      * @param domainClass entity class
      * @param pageable    paging info
      * @return page data
      */
-    protected Page<Object> readPage(Class<?> dtoType, String[] filter, TypedQuery<Tuple> query, final Class<T> domainClass, Pageable pageable) {
+    protected Page<Object> readPage(Class<?> dtoType, String[] filter, Map<String, String> params, TypedQuery<Tuple> query, final Class<T> domainClass, Pageable pageable) {
 
         if (pageable.isPaged()) {
             query.setFirstResult((int) pageable.getOffset());
@@ -290,7 +297,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
 
         List<Map<String, Object>> records = readData(query, dtoType, filter);
         List<Object> contents = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
-        return getPage(contents, pageable, () -> executeCountQuery(getCountQuery(dtoType, domainClass)));
+        return getPage(contents, pageable, () -> executeCountQuery(getCountQuery(dtoType, domainClass, params)));
     }
 
 

@@ -62,7 +62,7 @@ public class GenericService<T extends Audit> {
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        return genericRepository.findAll(readDTOClass, filter, pageRequest);
+        return genericRepository.findAll(readDTOClass, filter, params, pageRequest);
     }
 
     protected String[] getFilterFields(HttpServletRequest request) {

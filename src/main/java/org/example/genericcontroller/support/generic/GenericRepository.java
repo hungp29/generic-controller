@@ -9,6 +9,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Default Repository.
@@ -24,17 +25,19 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      *
      * @param dtoType Data Transfer Object type
      * @param filter  filter fields
+     * @param params  request params
      * @return list Data Transfer Object
      */
-    List<Object> findAll(Class<?> dtoType, String[] filter);
+    List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params);
 
     /**
      * Find one page of entity and get data return as Data Transfer Object.
      *
      * @param dtoType  Data Transfer Object type
      * @param filter   filter fields
+     * @param params   request params
      * @param pageable Paging info
      * @return page data
      */
-    Page<Object> findAll(Class<?> dtoType, String[] filter, Pageable pageable);
+    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable);
 }

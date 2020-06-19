@@ -23,6 +23,7 @@ import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Default Generic Specification.
@@ -39,12 +40,14 @@ public class DefaultGenericSpecification implements GenericSpecification {
      * @param criteriaBuilder Criteria builder
      * @param dtoType         Data Transfer Object type
      * @param filter          list field accepted to get from database
+     * @param params          request params
      * @param collection      flat to detect build criteria for collection fields
      * @param <T>             generic of entity
      * @return Predicate instance
      */
     @Override
-    public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder, Class<?> dtoType, String[] filter, boolean collection) {
+    public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
+                                       Class<?> dtoType, String[] filter, Map<String, String> params, boolean collection) {
         Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
         List<String> entityFieldPaths;
         if (!collection) {
@@ -53,6 +56,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
             entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
         }
 
+        // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
             List<Selection<?>> selections = new ArrayList<>();
             for (String entityFieldPath : entityFieldPaths) {
@@ -63,6 +67,15 @@ public class DefaultGenericSpecification implements GenericSpecification {
             }
 
             query.multiselect(selections);
+        }
+
+        // Build where clause
+        if (!CollectionUtils.isEmpty(params)) {
+            for (Map.Entry<String, String> param : params.entrySet()) {
+                String paramName = param.getKey();
+                String paramValue = param.getValue();
+                System.out.println(paramName + " " + paramValue);
+            }
         }
         return null;
     }
