@@ -403,4 +403,19 @@ public class ObjectUtils {
         }
         throw new NoSuchMethodException("Cannot found '" + (null != collectionType ? collectionType.getSimpleName() : "null") + "' class");
     }
+
+    /**
+     * Checking field is number.
+     *
+     * @param field field need to check
+     * @return true if field is number
+     */
+    public static boolean isNumber(Field field) {
+        return Number.class.isAssignableFrom(field.getType()) ||
+                short.class.equals(field.getType()) ||
+                int.class.equals(field.getType()) ||
+                long.class.equals(field.getType()) ||
+                float.class.equals(field.getType()) ||
+                double.class.equals(field.getType());
+    }
 }

@@ -1,7 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
+import org.example.genericcontroller.exception.generic.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -11,25 +13,19 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Default Generic Specification.
  *
  * @author hungp
  */
+@Slf4j
 public class DefaultGenericSpecification implements GenericSpecification {
 
     /**
@@ -70,14 +66,79 @@ public class DefaultGenericSpecification implements GenericSpecification {
         }
 
         // Build where clause
+        Predicate predicate = null;
         if (!CollectionUtils.isEmpty(params)) {
+            List<Predicate> predicates = new ArrayList<>();
             for (Map.Entry<String, String> param : params.entrySet()) {
                 String paramName = param.getKey();
                 String paramValue = param.getValue();
-                System.out.println(paramName + " " + paramValue);
+
+                if (!DataTransferObjectUtils.fieldPathExist(dtoType, paramName)) {
+                    throw new WhereConditionNotSupportException("Don't support condition for field '" + paramName + "'");
+                }
+
+                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, paramName);
+                Field entityField = EntityUtils.getFieldByPath(entityType, entityFieldPath);
+                Path<?> path = buildPath(root, entityFieldPath, entityType);
+
+                // Build predicate
+                if (EntityUtils.isPrimaryKey(entityType, entityFieldPath)) {
+                    buildPredicateForKey(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
+                } else if (ObjectUtils.isNumber(entityField)) {
+                    buildPredicateForNumber(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
+                }
+            }
+
+            predicate = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        }
+        return predicate;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static Optional<Predicate> buildPredicateForNumber(Path path, CriteriaBuilder criteriaBuilder, String value) {
+        Predicate predicate = null;
+        Operator operator = Operator.parse(value);
+
+        if (null != path && null != criteriaBuilder && null != operator) {
+            Comparable comparableValue = operator.getValue();
+
+            if (">=".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.greaterThanOrEqualTo(path, comparableValue);
+            } else if ("<=".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.lessThanOrEqualTo(path, comparableValue);
+            } else if ("==".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.equal(path, comparableValue);
+            } else if ("!=".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.notEqual(path, comparableValue);
+            } else if (">".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.greaterThan(path, comparableValue);
+            } else if ("<".equals(operator.getOperator())) {
+                predicate = criteriaBuilder.lessThan(path, comparableValue);
             }
         }
-        return null;
+        return Optional.ofNullable(predicate);
+    }
+
+    /**
+     * Build predicate for primary key or foreign key.
+     *
+     * @param path            Path criteria
+     * @param criteriaBuilder Criteria Builder
+     * @param value           value to search
+     * @return Predicate
+     */
+    private static Optional<Predicate> buildPredicateForKey(Path<?> path, CriteriaBuilder criteriaBuilder, String value) {
+        Predicate predicate = null;
+        if (null != path && null != criteriaBuilder && !StringUtils.isEmpty(value)) {
+            String[] values = splitValue(value);
+
+            if (values.length == 1) {
+                predicate = criteriaBuilder.equal(path, value);
+            } else {
+                predicate = path.in(values);
+            }
+        }
+        return Optional.ofNullable(predicate);
     }
 
     /**
@@ -114,5 +175,15 @@ public class DefaultGenericSpecification implements GenericSpecification {
             }
         }
         return null;
+    }
+
+    /**
+     * Split value by comma.
+     *
+     * @param paramValue param value
+     * @return array value
+     */
+    private static String[] splitValue(String paramValue) {
+        return StringUtils.trimArrayElements(paramValue.split(Constants.COMMA));
     }
 }

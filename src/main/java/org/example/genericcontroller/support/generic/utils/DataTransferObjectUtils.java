@@ -82,6 +82,62 @@ public class DataTransferObjectUtils {
     }
 
     /**
+     * Checking field path is exist.
+     *
+     * @param dtoType   Data Transfer Object type
+     * @param fieldPath field path need to checking
+     * @return true if field path exist in list field path of Data Transfer Object
+     */
+    public static boolean fieldPathExist(Class<?> dtoType, String fieldPath) {
+        if (null != dtoType && !StringUtils.isEmpty(fieldPath)) {
+            List<String> fieldPaths = getFieldPaths(dtoType, true);
+            return fieldPaths.contains(fieldPath);
+        }
+        return false;
+    }
+
+    /**
+     * Get field paths of field of Data Transfer Object.
+     *
+     * @param field        field of Data Transfer Object
+     * @param lookingInner flag looking inner
+     * @return list field paths of field
+     */
+    public static List<String> getFieldPaths(Field field, boolean lookingInner) {
+        List<String> fieldPaths = new ArrayList<>();
+        if (null != field) {
+            String fieldPath = field.getName();
+            Class<?> innerClass = MappingUtils.getFieldType(field);
+            if (lookingInner && validate(innerClass)) {
+                List<String> innerFieldPaths = getFieldPaths(innerClass, true);
+                if (!CollectionUtils.isEmpty(innerFieldPaths)) {
+                    String finalFieldPath = fieldPath + Constants.DOT;
+                    fieldPaths.addAll(innerFieldPaths.stream().map(finalFieldPath::concat).collect(Collectors.toList()));
+                }
+            } else {
+                fieldPaths.add(fieldPath);
+            }
+        }
+        return fieldPaths;
+    }
+
+    /**
+     * Get field paths of Data Transfer Object.
+     *
+     * @param dtoType      Data Transfer Object type
+     * @param lookingInner flag to looking inner object
+     * @return list field path
+     */
+    public static List<String> getFieldPaths(Class<?> dtoType, boolean lookingInner) {
+        List<String> fieldPaths = new ArrayList<>();
+        List<Field> fields = ObjectUtils.getFields(dtoType, true);
+        for (Field field : fields) {
+            fieldPaths.addAll(getFieldPaths(field, lookingInner));
+        }
+        return fieldPaths;
+    }
+
+    /**
      * Get mapping entity path by Data Transfer Object field. Don't looking inner object.
      *
      * @param field Data Transfer Object field
@@ -127,6 +183,28 @@ public class DataTransferObjectUtils {
             }
         }
         return fieldPaths.stream().distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * Get entity mapping field path.
+     *
+     * @param dtoType   Data Transfer Object type
+     * @param fieldPath field path of Data Transfer Object
+     * @return entity field path mapping with fieldPath
+     */
+    public static String getEntityMappingFieldPath(Class<?> dtoType, String fieldPath) {
+        if (null != dtoType && !StringUtils.isEmpty(fieldPath)) {
+            String[] paths = fieldPath.split(Constants.DOT_REGEX);
+            Field field = ObjectUtils.getField(dtoType, paths[0], true);
+            String entityFieldName = getEntityMappingFieldPath(field);
+            Class<?> innerClass = MappingUtils.getFieldType(field);
+            if (paths.length > 1 && validate(innerClass)) {
+                String nextPath = fieldPath.substring(fieldPath.indexOf(Constants.DOT) + 1);
+                entityFieldName = entityFieldName + Constants.DOT + getEntityMappingFieldPath(innerClass, nextPath);
+            }
+            return entityFieldName;
+        }
+        return null;
     }
 
     /**
@@ -392,5 +470,27 @@ public class DataTransferObjectUtils {
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new ConstructorInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
         }
+    }
+
+    /**
+     * Get Field of Data Transfer Object by path.
+     *
+     * @param dtoType   Data Transfer Object type
+     * @param fieldPath field path
+     * @return Field instance
+     */
+    public static Field getFieldByPath(Class<?> dtoType, String fieldPath) {
+        if (null != dtoType && !StringUtils.isEmpty(fieldPath)) {
+            String[] paths = fieldPath.split(Constants.DOT_REGEX);
+
+            Field field = ObjectUtils.getField(dtoType, paths[0], true);
+            Class<?> innerClass = MappingUtils.getFieldType(field);
+            if (paths.length > 1 && validate(innerClass)) {
+                String nextPath = fieldPath.substring(fieldPath.indexOf(Constants.DOT) + 1);
+                field = getFieldByPath(innerClass, nextPath);
+            }
+            return field;
+        }
+        return null;
     }
 }

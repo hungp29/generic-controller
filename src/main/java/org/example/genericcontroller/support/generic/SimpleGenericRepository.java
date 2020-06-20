@@ -226,7 +226,11 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         }
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
-        spec.buildCriteria(root, query, builder, dtoType, filter, params, collection);
+        Predicate predicate = spec.buildCriteria(root, query, builder, dtoType, filter, params, collection);
+
+        if (predicate != null) {
+            query.where(predicate);
+        }
 
         return root;
     }

@@ -25,6 +25,8 @@ public class Book extends Audit {
     @Column(columnDefinition = "text")
     private String description;
 
+    private Integer year;
+
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "publisher_id", nullable = false)
     private Publisher publisher;

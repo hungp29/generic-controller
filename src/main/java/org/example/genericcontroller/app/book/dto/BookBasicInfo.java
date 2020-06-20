@@ -22,6 +22,8 @@ public class BookBasicInfo {
 
     private String description;
 
+    private Integer year;
+
     @MappingField(entityField = "publisher.id")
     private int publisherId;
 
