@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -9,10 +10,7 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.Tuple;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -213,5 +211,30 @@ public class MappingUtils {
             return innerClass;
         }
         return null;
+    }
+
+    public static final String ENTITY_FIELD_PATH_KEY = "entityFieldPath";
+    public static final String ENTITY_FIELD_KEY = "entityField";
+    public static final String CONVERTER_KEY = "converter";
+
+    public static Map<String, Map<String, Object>> prepareDataForRequestParams(Class<?> dtoType, Set<String> fieldPaths) {
+        Map<String, Map<String, Object>> dataPrepared = new HashMap<>();
+        if (null != dtoType && !CollectionUtils.isEmpty(fieldPaths)) {
+            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
+            for (String fieldPath : fieldPaths) {
+                Map<String, Object> dataParam = new HashMap<>();
+                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, fieldPath);
+                dataParam.put(ENTITY_FIELD_PATH_KEY, entityFieldPath);
+                dataParam.put(ENTITY_FIELD_KEY, EntityUtils.getFieldByPath(entityType, entityFieldPath));
+                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, fieldPath);
+                MappingField mappingField = ObjectUtils.getAnnotation(dtoField, MappingField.class);
+                if (null != mappingField) {
+                    dataParam.put(CONVERTER_KEY, mappingField.converter());
+                }
+
+                dataPrepared.put(fieldPath, dataParam);
+            }
+        }
+        return dataPrepared;
     }
 }

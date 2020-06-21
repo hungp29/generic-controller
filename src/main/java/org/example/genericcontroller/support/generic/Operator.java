@@ -21,7 +21,13 @@ import java.util.regex.Pattern;
 public class Operator {
 
     public static final String PATTERN = "\\[(.*)\\](.*)";
-    public static final List<String> OPERATOR_SUPPORT = Arrays.asList(">=", "<=", "==", "!=", ">", "<");
+    public static final String GREATER_THAN_OR_EQUAL_OPERATOR = ">=";
+    public static final String LESS_THAN_OR_EQUAL_OPERATOR = "<=";
+    public static final String EQUAL_OPERATOR = "==";
+    public static final String NOT_EQUAL_OPERATOR = "!=";
+    public static final String GREATER_THAN_OPERATOR = ">";
+    public static final String LESS_THAN_OPERATOR = "<";
+    public static final List<String> OPERATOR_SUPPORT = Arrays.asList(GREATER_THAN_OR_EQUAL_OPERATOR, LESS_THAN_OR_EQUAL_OPERATOR, EQUAL_OPERATOR, NOT_EQUAL_OPERATOR, GREATER_THAN_OPERATOR, LESS_THAN_OPERATOR);
 
     private String operator;
 

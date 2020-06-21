@@ -443,7 +443,14 @@ public class DataTransferObjectUtils {
         return reValue;
     }
 
-    @SuppressWarnings("rawtypes")
+    /**
+     * Convert field from Data Transfer Object to Entity.
+     *
+     * @param fieldConverterType field converter type
+     * @param value              value of Data Transfer Object
+     * @return value of Entity
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static Object convertField(Class<?> fieldConverterType, Object value) {
         if (null != fieldConverterType) {
             if (FieldConverter.class.isAssignableFrom(fieldConverterType)) {
@@ -490,6 +497,20 @@ public class DataTransferObjectUtils {
                 field = getFieldByPath(innerClass, nextPath);
             }
             return field;
+        }
+        return null;
+    }
+
+    /**
+     * Get Field Converter type.
+     *
+     * @param field Data Transfer Object field
+     * @return Field converter
+     */
+    public static Class<?> getFieldConverterType(Field field) {
+        MappingField mappingField = ObjectUtils.getAnnotation(field, MappingField.class);
+        if (null != mappingField) {
+            return mappingField.converter();
         }
         return null;
     }

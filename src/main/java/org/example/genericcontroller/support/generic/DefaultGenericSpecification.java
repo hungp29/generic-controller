@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.generic.ConditionValueInvalidException;
 import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.exception.generic.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
@@ -52,6 +53,11 @@ public class DefaultGenericSpecification implements GenericSpecification {
             entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
         }
 
+        // Distinct if params is not null
+        if (!CollectionUtils.isEmpty(params)) {
+            query.distinct(true);
+        }
+
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
             List<Selection<?>> selections = new ArrayList<>();
@@ -74,9 +80,11 @@ public class DefaultGenericSpecification implements GenericSpecification {
                 String paramValue = param.getValue();
 
                 if (!DataTransferObjectUtils.fieldPathExist(dtoType, paramName)) {
-                    throw new WhereConditionNotSupportException("Don't support condition for field '" + paramName + "'");
+                    throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
                 }
 
+                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, paramName);
+                Class<?> fieldConverterType = DataTransferObjectUtils.getFieldConverterType(dtoField);
                 String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, paramName);
                 Field entityField = EntityUtils.getFieldByPath(entityType, entityFieldPath);
                 Path<?> path = buildPath(root, entityFieldPath, entityType);
@@ -85,7 +93,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
                 if (EntityUtils.isPrimaryKey(entityType, entityFieldPath)) {
                     buildPredicateForKey(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
                 } else if (ObjectUtils.isNumber(entityField)) {
-                    buildPredicateForNumber(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
+                    buildPredicateForOperator(path, criteriaBuilder, fieldConverterType, paramValue).ifPresent(predicates::add);
                 }
             }
 
@@ -94,25 +102,38 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
+    /**
+     * Build predicate for operator.
+     *
+     * @param path            criteria path
+     * @param criteriaBuilder criteria builder
+     * @param value           value to search
+     * @return predicate
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Optional<Predicate> buildPredicateForNumber(Path path, CriteriaBuilder criteriaBuilder, String value) {
+    private static Optional<Predicate> buildPredicateForOperator(Path path, CriteriaBuilder criteriaBuilder,
+                                                                 Class<?> fieldConverterType, String value) {
         Predicate predicate = null;
         Operator operator = Operator.parse(value);
 
         if (null != path && null != criteriaBuilder && null != operator) {
-            Comparable comparableValue = operator.getValue();
+            Object convertValue = DataTransferObjectUtils.convertField(fieldConverterType, operator.getValue());
+            if (!Comparable.class.isAssignableFrom(convertValue.getClass())) {
+                throw new ConditionValueInvalidException("Condition value '" + value + "' is invalid");
+            }
+            Comparable comparableValue = (Comparable) convertValue;
 
-            if (">=".equals(operator.getOperator())) {
+            if (Operator.GREATER_THAN_OR_EQUAL_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.greaterThanOrEqualTo(path, comparableValue);
-            } else if ("<=".equals(operator.getOperator())) {
+            } else if (Operator.LESS_THAN_OR_EQUAL_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.lessThanOrEqualTo(path, comparableValue);
-            } else if ("==".equals(operator.getOperator())) {
+            } else if (Operator.EQUAL_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.equal(path, comparableValue);
-            } else if ("!=".equals(operator.getOperator())) {
+            } else if (Operator.NOT_EQUAL_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.notEqual(path, comparableValue);
-            } else if (">".equals(operator.getOperator())) {
+            } else if (Operator.GREATER_THAN_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.greaterThan(path, comparableValue);
-            } else if ("<".equals(operator.getOperator())) {
+            } else if (Operator.LESS_THAN_OPERATOR.equals(operator.getOperator())) {
                 predicate = criteriaBuilder.lessThan(path, comparableValue);
             }
         }
