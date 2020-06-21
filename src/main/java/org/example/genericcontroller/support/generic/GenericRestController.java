@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
@@ -20,12 +21,17 @@ public class GenericRestController<T extends Audit> {
 
     private GenericService<T> genericService;
 
+    @APICreate
+    public ResponseEntity<Object> create(@RequestBody Object createRequestDTO) {
+        return null;
+    }
+
     @GetMapping("/{id}")
     public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, HttpServletRequest request) {
         return ResponseEntity.ok(genericService.getEntity(id, request));
     }
 
-    @GetMapping
+    @APIReadAll
     public ResponseEntity<Page<Object>> getAll(HttpServletRequest request) {
         return ResponseEntity.ok(genericService.getAllEntity(request));
     }

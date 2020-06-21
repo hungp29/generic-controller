@@ -1,6 +1,8 @@
 package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.StringUtils;
@@ -125,6 +127,24 @@ public class EntityUtils {
             }
         }
         return field;
+    }
+
+    /**
+     * Get Create Request DTO.
+     *
+     * @param entityType Entity type
+     * @return Create Request DTO
+     */
+    public static Class<?> getCreateRequestDTO(Class<?> entityType) {
+        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
+        if (null != dataTransferObjectMapping) {
+            Class<?> dtoType = dataTransferObjectMapping.forCreateRequest();
+            if (DataTransferObjectUtils.validate(dtoType)) {
+                return dtoType;
+            }
+        }
+        return null;
     }
 
 }
