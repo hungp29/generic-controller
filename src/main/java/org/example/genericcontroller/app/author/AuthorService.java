@@ -19,6 +19,10 @@ public class AuthorService {
     private final AuthorRepository authorRepository;
     private final PublisherService publisherService;
 
+    public String getName(int id) {
+        return authorRepository.getFirstById(id).getName();
+    }
+
     public boolean create() {
         Publisher publisher = publisherService.findById(1).orElse(null);
 
