@@ -7,7 +7,12 @@ import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,10 +144,22 @@ public class EntityUtils {
         validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
         DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
         if (null != dataTransferObjectMapping) {
-            Class<?> dtoType = dataTransferObjectMapping.forCreateRequest();
-            if (DataTransferObjectUtils.validate(dtoType)) {
-                return dtoType;
-            }
+            return dataTransferObjectMapping.forCreateRequest();
+        }
+        return null;
+    }
+
+    /**
+     * Get Read Response DTO.
+     *
+     * @param entityType Entity type
+     * @return Create Request DTO
+     */
+    public static Class<?> getReadResponseDTO(Class<?> entityType) {
+        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
+        if (null != dataTransferObjectMapping) {
+            return dataTransferObjectMapping.forRead();
         }
         return null;
     }

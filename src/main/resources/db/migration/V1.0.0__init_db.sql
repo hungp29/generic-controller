@@ -25,6 +25,7 @@ CREATE TABLE `book`
     `name`         varchar(255) NOT NULL,
     `description`  text         NULL,
     `publisher_id` int          NOT NULL,
+    `year`         int          NULL,
     `create_by`    int          NULL,
     `create_at`    timestamp    NULL,
     `update_by`    int          NULL,

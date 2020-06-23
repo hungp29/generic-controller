@@ -352,4 +352,9 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
 
         return new PageImpl<>(content, pageable, totalSupplier.getAsLong());
     }
+
+    @Override
+    public T saveDataTransferObject(Object dto) {
+        return null;
+    }
 }

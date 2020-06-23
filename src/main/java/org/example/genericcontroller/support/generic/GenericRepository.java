@@ -40,4 +40,12 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @return page data
      */
     Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable);
+
+    /**
+     * Save Data Transfer Object.
+     *
+     * @param dto data
+     * @return entity
+     */
+    T saveDataTransferObject(Object dto);
 }

@@ -21,9 +21,15 @@ public class GenericRestController<T extends Audit> {
 
     private GenericService<T> genericService;
 
+    /**
+     * API create.
+     *
+     * @param createRequestDTO Create Request Data
+     * @return Response data
+     */
     @APICreate
     public ResponseEntity<Object> create(@RequestBody Object createRequestDTO) {
-        return null;
+        return ResponseEntity.ok(genericService.createAndSave(createRequestDTO));
     }
 
     @GetMapping("/{id}")

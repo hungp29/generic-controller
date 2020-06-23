@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.GenericException;
+import org.example.genericcontroller.support.generic.utils.EntityUtils;
 import org.example.genericcontroller.support.generic.utils.Validator;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +40,18 @@ public class GenericService<T extends Audit> {
     private int defaultPage = 1;
     private int defaultLimit = 10;
 
+    /**
+     * Create and save new entity.
+     *
+     * @param createRequestDTO data
+     * @return response instance
+     */
+    @Transactional
+    public Object createAndSave(Object createRequestDTO) {
+        @SuppressWarnings("unchecked")
+        Class<T> entityClass = getEntityConfigMapping();
+        return genericRepository.saveDataTransferObject(createRequestDTO);
+    }
 
     public <ID extends Serializable> Object getEntity(ID id, HttpServletRequest request) {
         return null;
@@ -50,10 +64,7 @@ public class GenericService<T extends Audit> {
         // Validate configurations of entity
         Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
 
-        Class<?> readDTOClass = ObjectUtils.getAnnotation(entityClass, DataTransferObjectMapping.class).forRead();
-
-        // Validate configurations of dto
-//        Validator.validateObjectConfiguration(readDTOClass, MappingClass.class);
+        Class<?> readDTOClass = EntityUtils.getReadResponseDTO(entityClass);
 
         // Build page request.
         PageRequest pageRequest = getPageRequest(request);
@@ -120,6 +131,12 @@ public class GenericService<T extends Audit> {
         }
     }
 
+    /**
+     * Build sort with pattern .
+     *
+     * @param sort sort value
+     * @return {@link Sort} instance
+     */
     protected Sort buildSort(String sort) {
         Sort sortBuild = null;
         if (!StringUtils.isEmpty(sort)) {
@@ -137,11 +154,32 @@ public class GenericService<T extends Audit> {
         return sortBuild;
     }
 
+    /**
+     * Get value from Http Servlet Request.
+     *
+     * @param key     key of value
+     * @param request Http Servlet Request
+     * @return value
+     */
     protected String getValueFromRequest(String key, HttpServletRequest request) {
         if (!StringUtils.isEmpty(key) && null != request) {
             return request.getParameter(key);
         }
         return null;
+    }
+
+    /**
+     * Get Entity class and validate entity has configuration DataTransferObjectMapping.
+     *
+     * @return entity type
+     */
+    private Class<T> getEntityConfigMapping() {
+        @SuppressWarnings("unchecked")
+        Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
+
+        // Validate configurations of entity
+        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
+        return entityClass;
     }
 
     @Autowired
