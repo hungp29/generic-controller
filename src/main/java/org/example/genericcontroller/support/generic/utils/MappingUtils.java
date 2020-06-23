@@ -2,7 +2,6 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
-import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -10,7 +9,11 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.Tuple;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -213,28 +216,19 @@ public class MappingUtils {
         return null;
     }
 
-    public static final String ENTITY_FIELD_PATH_KEY = "entityFieldPath";
-    public static final String ENTITY_FIELD_KEY = "entityField";
-    public static final String CONVERTER_KEY = "converter";
-
-    public static Map<String, Map<String, Object>> prepareDataForRequestParams(Class<?> dtoType, Set<String> fieldPaths) {
-        Map<String, Map<String, Object>> dataPrepared = new HashMap<>();
-        if (null != dtoType && !CollectionUtils.isEmpty(fieldPaths)) {
-            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-            for (String fieldPath : fieldPaths) {
-                Map<String, Object> dataParam = new HashMap<>();
-                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, fieldPath);
-                dataParam.put(ENTITY_FIELD_PATH_KEY, entityFieldPath);
-                dataParam.put(ENTITY_FIELD_KEY, EntityUtils.getFieldByPath(entityType, entityFieldPath));
-                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, fieldPath);
-                MappingField mappingField = ObjectUtils.getAnnotation(dtoField, MappingField.class);
-                if (null != mappingField) {
-                    dataParam.put(CONVERTER_KEY, mappingField.converter());
-                }
-
-                dataPrepared.put(fieldPath, dataParam);
-            }
+    /**
+     * Convert Data Transfer Object to Entity.
+     *
+     * @param dto        Data Transfer Object instance
+     * @param entityType Entity type
+     * @param <T>        generic of entity
+     * @return Entity
+     */
+    public static <T> T convertDataTransferObjectToEntity(Object dto, Class<T> entityType) {
+        Class<?> entityTypeDTO = DataTransferObjectUtils.getEntityType(dto.getClass());
+        if (!entityType.isAssignableFrom(entityTypeDTO)) {
+            throw new ConfigurationInvalidException("Repository of class '" + entityType.getName() + "' cannot process for '" + entityTypeDTO.getName() + "' class");
         }
-        return dataPrepared;
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 package org.example.genericcontroller.support.generic.utils;
 
-import org.example.genericcontroller.exception.generic.GenericClassInvalidException;
 import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.utils.ObjectUtils;
 
@@ -27,9 +26,6 @@ public class Validator {
      */
     @SafeVarargs
     public static void validateObjectConfiguration(Class<?> objectType, Class<? extends Annotation>... annotationTypes) {
-        if (void.class.equals(objectType)) {
-            throw new GenericClassInvalidException("Class is invalid");
-        }
         if (null != objectType && null != annotationTypes) {
             for (Class<? extends Annotation> annotation : annotationTypes) {
                 if (!ObjectUtils.hasAnnotation(objectType, annotation)) {

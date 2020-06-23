@@ -371,6 +371,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
 
     @Override
     public T saveDataTransferObject(Object dto) {
+        T entity = MappingUtils.convertDataTransferObjectToEntity(dto, getDomainClass());
         return null;
     }
 }

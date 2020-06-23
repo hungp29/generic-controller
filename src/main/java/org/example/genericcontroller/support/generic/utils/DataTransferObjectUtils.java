@@ -2,8 +2,8 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
-import org.example.genericcontroller.exception.generic.ConverterFieldInvalidException;
-import org.example.genericcontroller.exception.generic.FieldInvalidException;
+import org.example.genericcontroller.exception.generic.ConverterFieldException;
+import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
 import org.example.genericcontroller.support.generic.FieldConverter;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
@@ -314,15 +314,19 @@ public class DataTransferObjectUtils {
      * @param dtoType Data Transfer Object type
      * @param record  object data
      * @return value of keys
-     * @throws IllegalAccessException throw exception if cannot find field in object
      */
-    public static String getKey(Class<?> dtoType, Object record) throws IllegalAccessException {
+    public static String getKey(Class<?> dtoType, Object record) {
         StringBuilder finalKey = new StringBuilder(Constants.EMPTY_STRING);
         List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
         for (String key : keys) {
-            Object value = ObjectUtils.getValueOfField(record, key);
-            finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
-                    .append(Constants.UNDERSCORE);
+            try {
+                Object value = ObjectUtils.getValueOfField(record, key);
+                finalKey.append(null != value ? value.toString() : Constants.EMPTY_STRING)
+                        .append(Constants.UNDERSCORE);
+            } catch (IllegalAccessException e) {
+                throw new FieldInaccessibleException("Cannot get value for field "
+                        + record.getClass().getSimpleName() + "." + key, e);
+            }
         }
         return finalKey.deleteCharAt(finalKey.length() - 1).toString(); // remove last underscore
     }
@@ -375,7 +379,7 @@ public class DataTransferObjectUtils {
                     }
                     ObjectUtils.setValueForField(dto, dtoField.getName(), value, true);
                 } catch (IllegalAccessException e) {
-                    throw new FieldInvalidException("Cannot set/get value for field "
+                    throw new FieldInaccessibleException("Cannot set value for field "
                             + dtoType.getSimpleName() + "." + dtoField.getName(), e);
                 }
             }
@@ -432,7 +436,7 @@ public class DataTransferObjectUtils {
                     throw new ConstructorInvalidException("Cannot new collection instance for field "
                             + dto.getClass().getSimpleName() + "." + field.getName(), e);
                 } catch (IllegalAccessException e) {
-                    throw new FieldInvalidException("Cannot get value for field "
+                    throw new FieldInaccessibleException("Cannot get value for field "
                             + dto.getClass().getSimpleName() + "." + field.getName(), e);
                 }
             } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
@@ -458,7 +462,7 @@ public class DataTransferObjectUtils {
                     FieldConverter fieldConverter = (FieldConverter) ObjectUtils.newInstance(fieldConverterType);
                     value = fieldConverter.convertToFieldDataTransferObject(value);
                 } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-                    throw new ConverterFieldInvalidException("Cannot convert field " + value.getClass().getName() + " with " + fieldConverterType.getName() + " converter");
+                    throw new ConverterFieldException("Cannot convert field " + value.getClass().getName() + " with " + fieldConverterType.getName() + " converter");
                 }
             }
         }

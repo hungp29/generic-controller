@@ -1,5 +1,8 @@
 package org.example.genericcontroller.exception.generic;
 
+/**
+ * Generic Exception.
+ */
 public class GenericException extends RuntimeException {
 
     public GenericException(String message) {

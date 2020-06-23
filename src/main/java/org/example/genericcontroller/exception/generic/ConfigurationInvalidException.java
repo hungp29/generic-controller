@@ -5,7 +5,7 @@ package org.example.genericcontroller.exception.generic;
  *
  * @author hungp
  */
-public class ConfigurationInvalidException extends RuntimeException {
+public class ConfigurationInvalidException extends GenericException {
 
     public ConfigurationInvalidException(String message) {
         super(message);
