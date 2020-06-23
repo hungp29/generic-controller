@@ -34,12 +34,12 @@ public class GenericRestController<T extends Audit> {
 
     @GetMapping("/{id}")
     public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, HttpServletRequest request) {
-        return ResponseEntity.ok(genericService.getEntity(id, request));
+        return ResponseEntity.ok(genericService.get(id, request));
     }
 
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(HttpServletRequest request) {
-        return ResponseEntity.ok(genericService.getAllEntity(request));
+        return ResponseEntity.ok(genericService.getAll(request));
     }
 
     @Autowired

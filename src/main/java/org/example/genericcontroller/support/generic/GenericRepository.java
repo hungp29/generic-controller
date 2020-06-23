@@ -3,6 +3,7 @@ package org.example.genericcontroller.support.generic;
 import org.example.genericcontroller.entity.Audit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -40,6 +41,17 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @return page data
      */
     Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable);
+
+    /**
+     * Find all data of entity and return as Data Transfer Object.
+     *
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter fields
+     * @param params  request params
+     * @param sort    Sort instance
+     * @return list data as page
+     */
+    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort);
 
     /**
      * Save Data Transfer Object.

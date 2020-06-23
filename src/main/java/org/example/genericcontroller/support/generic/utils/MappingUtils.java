@@ -128,7 +128,7 @@ public class MappingUtils {
      * @return list Data Transfer Object
      */
     public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType, String[] filter) {
-        Map<String, Object> mapDTO = new HashMap<>();
+        Map<String, Object> mapDTO = new LinkedHashMap<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
             for (Map<String, Object> record : records) {
                 String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);

@@ -85,6 +85,22 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
     }
 
     /**
+     * Find all entity.
+     *
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter fields
+     * @param params  request params
+     * @param sort    Sort instance
+     * @return page data
+     */
+    @Override
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort) {
+        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, sort);
+        List<Map<String, Object>> records = readData(query, dtoType, filter);
+        return new PageImpl<>(MappingUtils.convertToListDataTransferObject(records, dtoType, filter));
+    }
+
+    /**
      * Get Data Transfer Object.
      *
      * @param dtoType Data Transfer Object type

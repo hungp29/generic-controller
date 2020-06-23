@@ -9,6 +9,7 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,11 +54,25 @@ public class GenericService<T extends Audit> {
         return genericRepository.saveDataTransferObject(createRequestDTO);
     }
 
-    public <ID extends Serializable> Object getEntity(ID id, HttpServletRequest request) {
+    /**
+     * Get one entity data.
+     *
+     * @param id      id of entity
+     * @param request Http Servlet Request
+     * @param <ID>    generic of Id
+     * @return Data Transfer Object of Entity
+     */
+    public <ID extends Serializable> Object get(ID id, HttpServletRequest request) {
         return null;
     }
 
-    public Page<Object> getAllEntity(HttpServletRequest request) {
+    /**
+     * Get all entity.
+     *
+     * @param request Http Servlet Request
+     * @return Page data
+     */
+    public Page<Object> getAll(HttpServletRequest request) {
         @SuppressWarnings("unchecked")
         Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
 
@@ -67,15 +82,26 @@ public class GenericService<T extends Audit> {
         Class<?> readDTOClass = EntityUtils.getReadResponseDTO(entityClass);
 
         // Build page request.
-        PageRequest pageRequest = getPageRequest(request);
+        Pageable pageRequest = getPageRequest(request);
+
         // Get all request param
         Map<String, String> params = getParameters(request);
         // Get list filter field
         String[] filter = getFilterFields(request);
 
-        return genericRepository.findAll(readDTOClass, filter, params, pageRequest);
+        if (!pageRequest.isUnpaged()) {
+            return genericRepository.findAll(readDTOClass, filter, params, pageRequest);
+        } else {
+            return genericRepository.findAll(readDTOClass, filter, params, getSortRequest(request));
+        }
     }
 
+    /**
+     * Get filter field.
+     *
+     * @param request Http Servlet Request
+     * @return return filter fields array
+     */
     protected String[] getFilterFields(HttpServletRequest request) {
         String filterFieldsValue = request.getParameter(FILTER);
         if (!StringUtils.isEmpty(filterFieldsValue)) {
@@ -84,6 +110,12 @@ public class GenericService<T extends Audit> {
         return null;
     }
 
+    /**
+     * get map parameters from Http Servlet Request.
+     *
+     * @param request Http Servlet Request
+     * @return map params
+     */
     protected Map<String, String> getParameters(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
@@ -96,39 +128,75 @@ public class GenericService<T extends Audit> {
         return params;
     }
 
-    protected PageRequest getPageRequest(HttpServletRequest request) {
-        PageRequest pageRequest = null;
-        String page = getValueFromRequest(PAGE, request);
-        String limit = getValueFromRequest(LIMIT, request);
-        String orderBy = getValueFromRequest(ORDER_BY, request);
+    /**
+     * Get {@link Pageable} instance from {@link HttpServletRequest}.
+     *
+     * @param request {@link HttpServletRequest} http request
+     * @return {@link Pageable} instance
+     */
+    protected Pageable getPageRequest(HttpServletRequest request) {
+        String pageValue = getValueFromRequest(PAGE, request);
+        String limitValue = getValueFromRequest(LIMIT, request);
+        Integer page = null;
+        Integer limit = null;
+        String sortValue = getValueFromRequest(ORDER_BY, request);
         try {
-            if (!StringUtils.isEmpty(page) && !StringUtils.isEmpty(limit)) {
-                if (StringUtils.isEmpty(orderBy)) {
-                    pageRequest = buildPageRequest(Integer.parseInt(page), Integer.parseInt(limit));
-                } else {
-                    pageRequest = buildPageRequest(Integer.parseInt(page), Integer.parseInt(limit), orderBy);
-                }
+            if (!StringUtils.isEmpty(pageValue)) {
+                page = Integer.parseInt(pageValue);
+            }
+            if (!StringUtils.isEmpty(limitValue)) {
+                limit = Integer.parseInt(limitValue);
             }
         } catch (NumberFormatException e) {
             throw new GenericException("Cannot convert value for paging");
         }
-        return pageRequest;
+        return buildPageRequest(page, limit, sortValue);
     }
 
-    protected PageRequest buildPageRequest(Integer page, Integer limit) {
-        page = page == null ? 0 : page - this.defaultPage;
-        limit = limit == null ? this.defaultLimit : limit;
-        return PageRequest.of(page, limit);
-    }
-
-    protected PageRequest buildPageRequest(Integer page, Integer limit, String sort) {
-        if (StringUtils.isEmpty(sort)) {
-            return buildPageRequest(page, limit);
-        } else {
-            page = page == null ? 0 : page - this.defaultPage;
-            limit = limit == null ? this.defaultLimit : limit;
-            return PageRequest.of(page, limit, buildSort(sort));
+    /**
+     * Get sort from {@link HttpServletRequest}.
+     *
+     * @param request {@link HttpServletRequest} http request
+     * @return {@link Sort} instance
+     */
+    protected Sort getSortRequest(HttpServletRequest request) {
+        String sortValue = getValueFromRequest(ORDER_BY, request);
+        if (!StringUtils.isEmpty(sortValue)) {
+            return buildSort(sortValue);
         }
+        return Sort.unsorted();
+    }
+
+    /**
+     * Build page request.
+     *
+     * @param page  page
+     * @param limit limit
+     * @return {@link Pageable} instance
+     */
+    protected Pageable buildPageRequest(Integer page, Integer limit) {
+        return buildPageRequest(page, limit);
+    }
+
+    /**
+     * Build page request.
+     *
+     * @param page      page
+     * @param limit     limit
+     * @param sortValue sort column and direction
+     * @return {@link Pageable} instance
+     */
+    protected Pageable buildPageRequest(Integer page, Integer limit, String sortValue) {
+        Pageable pageable = Pageable.unpaged();
+        Sort sort = Sort.unsorted();
+        if (!StringUtils.isEmpty(sortValue)) {
+            sort = buildSort(sortValue);
+        }
+        if (null != page) {
+            limit = null != limit ? limit : defaultLimit;
+            pageable = PageRequest.of(page - defaultPage, limit, sort);
+        }
+        return pageable;
     }
 
     /**
