@@ -3,11 +3,13 @@ package org.example.genericcontroller.support.generic.proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
 import org.example.genericcontroller.support.generic.APICreate;
-import org.example.genericcontroller.support.generic.utils.EntityUtils;
+import org.example.genericcontroller.support.generic.APIReadAll;
 import org.example.genericcontroller.utils.ObjectUtils;
-import org.springframework.aop.framework.ReflectiveMethodInvocation;
+import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint;
 
 import java.util.Map;
 
@@ -19,26 +21,59 @@ import java.util.Map;
 @Slf4j
 public class GenericAroundAdvice implements MethodInterceptor {
 
+    private final ProcessArgument processArgument;
+
+    public GenericAroundAdvice(ProcessArgument processArgument) {
+        this.processArgument = processArgument;
+    }
+
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         log.info("Proxy for " + invocation.getThis().getClass().getName() + "." + invocation.getMethod().getName());
+
+        ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) invocation;
+        ProceedingJoinPoint joinPoint = lazyGetProceedingJoinPoint(proxyMethodInvocation);
         Class<?> entityType = ObjectUtils.getGenericClass(invocation.getThis().getClass());
+
+        // Prepare data for create method
+        Object[] args = null;
         if (isCreateMethod(invocation)) {
-            Class<?> dtoType = EntityUtils.getCreateRequestDTO(entityType);
-            ReflectiveMethodInvocation reflectiveMethodInvocation = (ReflectiveMethodInvocation) invocation;
-            reflectiveMethodInvocation.setArguments(convertToDataTransferObject(invocation.getArguments()[0], dtoType));
+            args = processArgument.prepareArgumentsForCreateMethod(invocation.getArguments(), entityType);
+        } else if (isReadAllMethod(invocation)) {
+            args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType);
         }
-        return invocation.proceed();
+
+        return joinPoint.proceed(args);
+    }
+
+    /**
+     * Lazy get proceeding join point.
+     *
+     * @param rmi {@link ProxyMethodInvocation} instance
+     * @return {@link ProceedingJoinPoint} instance
+     */
+    protected ProceedingJoinPoint lazyGetProceedingJoinPoint(ProxyMethodInvocation rmi) {
+        return new MethodInvocationProceedingJoinPoint(rmi);
     }
 
     /**
      * Checking method is create API or not.
      *
-     * @param invocation Method Invocation
+     * @param invocation {@link MethodInvocation} instance
      * @return true if method is create API
      */
     private boolean isCreateMethod(MethodInvocation invocation) {
         return ObjectUtils.hasAnnotation(invocation.getMethod(), APICreate.class);
+    }
+
+    /**
+     * Checking method is read all API or not.
+     *
+     * @param invocation {@link MethodInvocation} instance
+     * @return true if method is read all method
+     */
+    private boolean isReadAllMethod(MethodInvocation invocation) {
+        return ObjectUtils.hasAnnotation(invocation.getMethod(), APIReadAll.class);
     }
 
     /**

@@ -15,6 +15,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ProxyConfiguration {
 
+    private final ProcessArgument processArgument;
+
+    public ProxyConfiguration(ProcessArgument processArgument) {
+        this.processArgument = processArgument;
+    }
+
     /**
      * Create Auto Proxy Creator bean.
      *
@@ -27,7 +33,7 @@ public class ProxyConfiguration {
             protected Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName,
                                                             TargetSource customTargetSource) throws BeansException {
                 if (GenericRestController.class.isAssignableFrom(beanClass)) {
-                    return new Object[]{genericAroundAdvice()};
+                    return new Object[]{genericAroundAdvice(processArgument)};
                 } else {
                     return DO_NOT_PROXY;
                 }
@@ -39,10 +45,11 @@ public class ProxyConfiguration {
     /**
      * Create Generic Around Advice.
      *
-     * @return Generic Around Advice instance
+     * @param processArgument {@link ProcessArgument} instance
+     * @return {@link GenericAroundAdvice} instance
      */
     @Bean
-    public GenericAroundAdvice genericAroundAdvice() {
-        return new GenericAroundAdvice();
+    public GenericAroundAdvice genericAroundAdvice(ProcessArgument processArgument) {
+        return new GenericAroundAdvice(processArgument);
     }
 }
