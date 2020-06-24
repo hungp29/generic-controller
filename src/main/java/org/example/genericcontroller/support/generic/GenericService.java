@@ -38,8 +38,6 @@ public class GenericService<T extends Audit> {
      */
     @Transactional
     public Object createAndSave(Object createRequestDTO) {
-        @SuppressWarnings("unchecked")
-        Class<T> entityClass = getEntityConfigMapping();
         return genericRepository.saveDataTransferObject(createRequestDTO);
     }
 

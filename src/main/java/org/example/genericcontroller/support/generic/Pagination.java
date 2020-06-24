@@ -6,6 +6,11 @@ import lombok.Setter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+/**
+ * Pagination.
+ *
+ * @author hungp
+ */
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
