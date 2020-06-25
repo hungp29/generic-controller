@@ -229,6 +229,9 @@ public class MappingUtils {
         if (!entityType.isAssignableFrom(entityTypeDTO)) {
             throw new ConfigurationInvalidException("Repository of class '" + entityType.getName() + "' cannot process for '" + entityTypeDTO.getName() + "' class");
         }
+
+        Map<String, Object> mapEntityAndValue = DataTransferObjectUtils.convertToEntityMappingFieldAndValue(dto);
+        T entity = EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityAndValue, entityType);
         return null;
     }
 }

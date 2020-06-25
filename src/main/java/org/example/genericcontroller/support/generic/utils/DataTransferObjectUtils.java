@@ -14,10 +14,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,19 +61,6 @@ public class DataTransferObjectUtils {
     public static Class<? extends Audit> getEntityType(Class<?> dtoType) {
         if (null != dtoType && ObjectUtils.hasAnnotation(dtoType, MappingClass.class)) {
             return ObjectUtils.getAnnotation(dtoType, MappingClass.class).value();
-        }
-        return null;
-    }
-
-    /**
-     * Get field converter class.
-     *
-     * @param field field
-     * @return field converter class
-     */
-    public static Class<?> getFieldConverterClass(Field field) {
-        if (ObjectUtils.hasAnnotation(field, MappingField.class)) {
-            return ObjectUtils.getAnnotation(field, MappingField.class).converter();
         }
         return null;
     }
@@ -440,7 +424,7 @@ public class DataTransferObjectUtils {
                             + dto.getClass().getSimpleName() + "." + field.getName(), e);
                 }
             } else if (MappingUtils.isKeepField(entityFieldPath, filter)) {
-                Class<?> fieldConverter = getFieldConverterClass(field);
+                Class<?> fieldConverter = getFieldConverterType(field);
                 reValue = convertField(fieldConverter, record.get(entityFieldPath));
             }
         }
@@ -454,13 +438,29 @@ public class DataTransferObjectUtils {
      * @param value              value of Data Transfer Object
      * @return value of Entity
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static Object convertField(Class<?> fieldConverterType, Object value) {
+        return convertField(fieldConverterType, value, false);
+    }
+
+    /**
+     * Convert field from Data Transfer Object to Entity.
+     *
+     * @param fieldConverterType field converter type
+     * @param value              value of Data Transfer Object
+     * @param convertToEntity    flag to detect convert from Data Transfer Object to Entity
+     * @return value of Entity
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Object convertField(Class<?> fieldConverterType, Object value, boolean convertToEntity) {
         if (null != fieldConverterType) {
             if (FieldConverter.class.isAssignableFrom(fieldConverterType)) {
                 try {
                     FieldConverter fieldConverter = (FieldConverter) ObjectUtils.newInstance(fieldConverterType);
-                    value = fieldConverter.convertToFieldDataTransferObject(value);
+                    if (!convertToEntity) {
+                        value = fieldConverter.convertToFieldDataTransferObject(value);
+                    } else {
+                        value = fieldConverter.convertToFieldEntity(value);
+                    }
                 } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
                     throw new ConverterFieldException("Cannot convert field " + value.getClass().getName() + " with " + fieldConverterType.getName() + " converter");
                 }
@@ -517,5 +517,66 @@ public class DataTransferObjectUtils {
             return mappingField.converter();
         }
         return null;
+    }
+
+    /**
+     * Convert Data Transfer Object to map entity field path and value.
+     *
+     * @param dto   Data Transfer Object instance
+     * @param field field of Data Transfer Object
+     * @return map entity field path and value
+     */
+    public static Map<String, Object> convertToEntityMappingFieldAndValue(Object dto, Field field) {
+        Map<String, Object> mapData = new HashMap<>();
+        if (null != dto && null != field) {
+            Object valueOfField = null;
+            try {
+                valueOfField = ObjectUtils.getValueOfField(dto, field.getName());
+            } catch (IllegalAccessException e) {
+                throw new FieldInaccessibleException("Cannot get value for field "
+                        + dto.getClass().getSimpleName() + "." + field.getName(), e);
+            }
+
+            if (validate(MappingUtils.getFieldType(field))) {
+                if (!ObjectUtils.fieldIsCollection(field)) {
+                    Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(valueOfField);
+                    for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
+                        mapData.put(field.getName() + Constants.DOT + entry.getKey(), entry.getValue());
+                    }
+                } else {
+                    Collection<?> collection = (Collection<?>) valueOfField;
+                    int index = 0;
+                    for (Object innerDTO : collection) {
+                        Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(innerDTO);
+                        for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
+                            mapData.put(field.getName() + "[" + index + "]" + Constants.DOT + entry.getKey(), entry.getValue());
+                        }
+                        index++;
+                    }
+                }
+            } else {
+                Class<?> fieldConverter = getFieldConverterType(field);
+                Object convertValue = convertField(fieldConverter, valueOfField, true);
+                mapData.put(getEntityMappingFieldPath(field), convertValue);
+            }
+        }
+        return mapData;
+    }
+
+    /**
+     * Convert Data Transfer Object to map entity field path and value.
+     *
+     * @param dto Data Transfer Object instance
+     * @return map entity field path and value
+     */
+    public static Map<String, Object> convertToEntityMappingFieldAndValue(Object dto) {
+        Map<String, Object> mapData = new HashMap<>();
+        if (null != dto) {
+            List<Field> fields = ObjectUtils.getFields(dto.getClass(), true);
+            for (Field field : fields) {
+                mapData.putAll(convertToEntityMappingFieldAndValue(dto, field));
+            }
+        }
+        return mapData;
     }
 }

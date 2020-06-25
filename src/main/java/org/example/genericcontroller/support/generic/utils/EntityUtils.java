@@ -2,20 +2,23 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
+import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
 import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Entity Utils.
@@ -160,6 +163,103 @@ public class EntityUtils {
         DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
         if (null != dataTransferObjectMapping) {
             return dataTransferObjectMapping.forRead();
+        }
+        return null;
+    }
+
+    /**
+     * Count length of array of field from Map Data.
+     *
+     * @param prefix  prefix field path
+     * @param mapData map field and data of entity
+     * @return length of array of field
+     */
+    private static int countLengthOfArray(String prefix, Map<String, Object> mapData) {
+        int length = 0;
+        if (!StringUtils.isEmpty(prefix) && !CollectionUtils.isEmpty(mapData)) {
+            for (String key : mapData.keySet()) {
+                Matcher matcher = Pattern.compile("^" + prefix + "\\[(\\d+)\\](.*)").matcher(key);
+                if (matcher.matches() && matcher.groupCount() > 1) {
+                    length = Math.max(length, Integer.parseInt(matcher.group(1)) + 1);
+                }
+            }
+        }
+        return length;
+    }
+
+    /**
+     * Get value of entity field.
+     *
+     * @param prefix  prefix of field path
+     * @param mapData map field path and data of entity
+     * @param field   field of entity
+     * @return value of field
+     */
+    public static Object convertMapEntityPathAndValueToEntity(String prefix, Map<String, Object> mapData, Field field) {
+        if (null != mapData && null != field) {
+            if (!StringUtils.isEmpty(prefix)) {
+                prefix += Constants.DOT;
+            }
+            Class<?> fieldType = MappingUtils.getFieldType(field);
+            if (validate(fieldType)) {
+                if (!ObjectUtils.fieldIsCollection(field)) {
+                    return convertMapEntityPathAndValueToEntity(prefix + field.getName(), mapData, fieldType);
+                } else {
+                    int length = countLengthOfArray(prefix + field.getName(), mapData);
+                    if (length > 0) {
+                        try {
+                            @SuppressWarnings("unchecked")
+                            Collection<Object> collection = ObjectUtils.newInstanceCollection(field.getType());
+                            for (int i = 0; i < length; i++) {
+                                Object innerEntity = convertMapEntityPathAndValueToEntity(prefix + field.getName() + "[" + i + "]", mapData, fieldType);
+                                if (null != innerEntity) {
+                                    collection.add(innerEntity);
+                                }
+                            }
+                            return collection;
+                        } catch (NoSuchMethodException e) {
+                            throw new ConstructorInvalidException("Cannot new collection instance for field " + field.getName(), e);
+                        }
+                    }
+                }
+            } else {
+                return mapData.get(prefix + field.getName());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert map field path and value to entity.
+     *
+     * @param prefix     prefix of field path
+     * @param mapData    map data and value of entity
+     * @param entityType entity type
+     * @param <T>        generic of entity
+     * @return entity
+     */
+    public static <T> T convertMapEntityPathAndValueToEntity(String prefix, Map<String, Object> mapData, Class<T> entityType) {
+        if (null != mapData && null != entityType) {
+            validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+
+            T entity;
+            try {
+                entity = ObjectUtils.newInstance(entityType);
+            } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+                throw new ConstructorInvalidException("Cannot found default constructor for " + entityType.getSimpleName(), e);
+            }
+
+            List<Field> fields = ObjectUtils.getFields(entityType, true);
+            for (Field field : fields) {
+                try {
+                    Object fieldValue = convertMapEntityPathAndValueToEntity(prefix, mapData, field);
+                    ObjectUtils.setValueForField(entity, field.getName(), fieldValue);
+                } catch (IllegalAccessException e) {
+                    throw new FieldInaccessibleException("Cannot set value for field "
+                            + entity.getClass().getSimpleName() + "." + field.getName(), e);
+                }
+            }
+            return entity;
         }
         return null;
     }
