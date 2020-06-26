@@ -141,36 +141,6 @@ public class EntityUtils {
         return field;
     }
 
-//    /**
-//     * Get Create Request DTO.
-//     *
-//     * @param entityType Entity type
-//     * @return Create Request DTO
-//     */
-//    public static Class<?> getCreateRequestDTO(Class<?> entityType) {
-//        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
-//        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
-//        if (null != dataTransferObjectMapping) {
-//            return dataTransferObjectMapping.forCreateRequest();
-//        }
-//        return null;
-//    }
-//
-//    /**
-//     * Get Read Response DTO.
-//     *
-//     * @param entityType Entity type
-//     * @return Create Request DTO
-//     */
-//    public static Class<?> getReadResponseDTO(Class<?> entityType) {
-//        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
-//        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
-//        if (null != dataTransferObjectMapping) {
-//            return dataTransferObjectMapping.forRead();
-//        }
-//        return null;
-//    }
-
     /**
      * Count length of array of field from Map Data.
      *

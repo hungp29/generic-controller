@@ -15,10 +15,6 @@ import java.util.List;
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
-//@DataTransferObjectMapping(
-//        forRead = BookBasicInfo.class,
-//        forCreateRequest = BookCreateRequest.class
-//)
 public class Book extends Audit {
 
     private String name;
