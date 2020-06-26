@@ -231,7 +231,6 @@ public class MappingUtils {
         }
 
         Map<String, Object> mapEntityAndValue = DataTransferObjectUtils.convertToEntityMappingFieldAndValue(dto);
-        T entity = EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityAndValue, entityType);
-        return null;
+        return EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityAndValue, entityType);
     }
 }

@@ -369,9 +369,18 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         return new PageImpl<>(content, pageable, totalSupplier.getAsLong());
     }
 
+    /**
+     * Convert Data Transfer Object to Entity and save it.
+     *
+     * @param dto data
+     * @return entity after saved
+     */
     @Override
     public T saveDataTransferObject(Object dto) {
         T entity = MappingUtils.convertDataTransferObjectToEntity(dto, getDomainClass());
-        return null;
+        if (null != entity) {
+            entity = save(entity);
+        }
+        return entity;
     }
 }
