@@ -4,13 +4,17 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
 import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
-import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -137,35 +141,35 @@ public class EntityUtils {
         return field;
     }
 
-    /**
-     * Get Create Request DTO.
-     *
-     * @param entityType Entity type
-     * @return Create Request DTO
-     */
-    public static Class<?> getCreateRequestDTO(Class<?> entityType) {
-        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
-        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
-        if (null != dataTransferObjectMapping) {
-            return dataTransferObjectMapping.forCreateRequest();
-        }
-        return null;
-    }
-
-    /**
-     * Get Read Response DTO.
-     *
-     * @param entityType Entity type
-     * @return Create Request DTO
-     */
-    public static Class<?> getReadResponseDTO(Class<?> entityType) {
-        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
-        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
-        if (null != dataTransferObjectMapping) {
-            return dataTransferObjectMapping.forRead();
-        }
-        return null;
-    }
+//    /**
+//     * Get Create Request DTO.
+//     *
+//     * @param entityType Entity type
+//     * @return Create Request DTO
+//     */
+//    public static Class<?> getCreateRequestDTO(Class<?> entityType) {
+//        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+//        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
+//        if (null != dataTransferObjectMapping) {
+//            return dataTransferObjectMapping.forCreateRequest();
+//        }
+//        return null;
+//    }
+//
+//    /**
+//     * Get Read Response DTO.
+//     *
+//     * @param entityType Entity type
+//     * @return Create Request DTO
+//     */
+//    public static Class<?> getReadResponseDTO(Class<?> entityType) {
+//        validateThrow(entityType, new ConfigurationInvalidException(entityType.getName() + ": Entity configuration is invalid"));
+//        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(entityType, DataTransferObjectMapping.class);
+//        if (null != dataTransferObjectMapping) {
+//            return dataTransferObjectMapping.forRead();
+//        }
+//        return null;
+//    }
 
     /**
      * Count length of array of field from Map Data.

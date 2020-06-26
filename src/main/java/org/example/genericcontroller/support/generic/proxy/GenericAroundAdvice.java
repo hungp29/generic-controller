@@ -33,14 +33,15 @@ public class GenericAroundAdvice implements MethodInterceptor {
 
         ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) invocation;
         ProceedingJoinPoint joinPoint = lazyGetProceedingJoinPoint(proxyMethodInvocation);
-        Class<?> entityType = ObjectUtils.getGenericClass(invocation.getThis().getClass());
+        Class<?> controllerType = invocation.getThis().getClass();
+        Class<?> entityType = ObjectUtils.getGenericClass(controllerType);
 
         // Prepare data for create method
         Object[] args = null;
         if (isCreateMethod(invocation)) {
-            args = processArgument.prepareArgumentsForCreateMethod(invocation.getArguments(), entityType);
+            args = processArgument.prepareArgumentsForCreateMethod(invocation.getArguments(), entityType, controllerType);
         } else if (isReadAllMethod(invocation)) {
-            args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType);
+            args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType, controllerType);
         }
 
         return joinPoint.proceed(args);

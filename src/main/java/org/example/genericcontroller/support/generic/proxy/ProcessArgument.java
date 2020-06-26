@@ -2,10 +2,12 @@ package org.example.genericcontroller.support.generic.proxy;
 
 import org.apache.catalina.connector.RequestFacade;
 import org.example.genericcontroller.exception.generic.ArgumentException;
+import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
+import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.support.generic.Pagination;
-import org.example.genericcontroller.support.generic.utils.EntityUtils;
+import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.data.domain.PageRequest;
@@ -40,10 +42,10 @@ public class ProcessArgument {
      * @param entityType Entity type
      * @return array argument
      */
-    public Object[] prepareArgumentsForCreateMethod(Object[] args, Class<?> entityType) {
+    public Object[] prepareArgumentsForCreateMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
         Object createRequestDTO = null;
         if (null != args && args.length > 0 && null != entityType) {
-            Class<?> dtoType = EntityUtils.getCreateRequestDTO(entityType);
+            Class<?> dtoType = getCreateRequestDTO(controllerType);
             createRequestDTO = convertToDataTransferObject(args[0], dtoType);
         }
         return new Object[]{createRequestDTO};
@@ -60,7 +62,7 @@ public class ProcessArgument {
      * @param entityType Entity type
      * @return array arguments
      */
-    public Object[] prepareArgumentsForReadAllMethod(Object[] args, Class<?> entityType) {
+    public Object[] prepareArgumentsForReadAllMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
         Class<?> readDTOType = null;
         Map<String, String> params = null;
         Pagination pagination = null;
@@ -69,7 +71,7 @@ public class ProcessArgument {
 
         if (null != args && args.length > 0 && null != entityType) {
             // 1. ReadDTOType
-            readDTOType = EntityUtils.getReadResponseDTO(entityType);
+            readDTOType = getReadResponseDTO(controllerType);
             request = getHttpServletRequest(args);
             if (null != request) {
                 // 2. Map params
@@ -86,6 +88,36 @@ public class ProcessArgument {
         }
 
         return new Object[]{readDTOType, params, pagination, filter, request};
+    }
+
+    /**
+     * Get Create Request DTO.
+     *
+     * @param controllerType Controller type
+     * @return Create Request DTO
+     */
+    public static Class<?> getCreateRequestDTO(Class<?> controllerType) {
+        ControllerUtils.validateThrow(controllerType, new ConfigurationInvalidException(controllerType.getName() + ": Controller configuration is invalid"));
+        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(controllerType, DataTransferObjectMapping.class);
+        if (null != dataTransferObjectMapping) {
+            return dataTransferObjectMapping.forCreateRequest();
+        }
+        return null;
+    }
+
+    /**
+     * Get Read Response DTO.
+     *
+     * @param controllerType Controller type
+     * @return Create Request DTO
+     */
+    public static Class<?> getReadResponseDTO(Class<?> controllerType) {
+        ControllerUtils.validateThrow(controllerType, new ConfigurationInvalidException(controllerType.getName() + ": Controller configuration is invalid"));
+        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(controllerType, DataTransferObjectMapping.class);
+        if (null != dataTransferObjectMapping) {
+            return dataTransferObjectMapping.forRead();
+        }
+        return null;
     }
 
 

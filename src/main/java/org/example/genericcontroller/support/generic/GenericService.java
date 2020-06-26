@@ -1,8 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.utils.Validator;
-import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,19 +68,19 @@ public class GenericService<T extends Audit> {
         }
     }
 
-    /**
-     * Get Entity class and validate entity has configuration DataTransferObjectMapping.
-     *
-     * @return entity type
-     */
-    private Class<T> getEntityConfigMapping() {
-        @SuppressWarnings("unchecked")
-        Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
-
-        // Validate configurations of entity
-        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
-        return entityClass;
-    }
+//    /**
+//     * Get Entity class and validate entity has configuration DataTransferObjectMapping.
+//     *
+//     * @return entity type
+//     */
+//    private Class<T> getEntityConfigMapping() {
+//        @SuppressWarnings("unchecked")
+//        Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
+//
+//        // Validate configurations of entity
+//        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
+//        return entityClass;
+//    }
 
     @Autowired
     public void setGenericRepository(GenericRepository<T> genericRepository) {
