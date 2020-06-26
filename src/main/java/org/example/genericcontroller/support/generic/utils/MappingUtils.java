@@ -225,16 +225,26 @@ public class MappingUtils {
      * @return Entity
      */
     public static <T> T convertDataTransferObjectToEntity(Object dto, Class<T> entityType) {
-        Class<?> entityTypeDTO = DataTransferObjectUtils.getEntityType(dto.getClass());
-        if (!entityType.isAssignableFrom(entityTypeDTO)) {
-            throw new ConfigurationInvalidException("Repository of class '" + entityType.getName() + "' cannot process for '" + entityTypeDTO.getName() + "' class");
-        }
+        if (null != dto && null != entityType) {
+            DataTransferObjectUtils.validateThrow(dto.getClass(), new ConfigurationInvalidException(dto.getClass().getName() + ": Data Transfer Object configuration is invalid"));
+            Class<?> entityTypeDTO = DataTransferObjectUtils.getEntityType(dto.getClass());
+            if (!entityType.isAssignableFrom(entityTypeDTO)) {
+                throw new ConfigurationInvalidException("Repository of class '" + entityType.getName() + "' cannot process for '" + entityTypeDTO.getName() + "' class");
+            }
 
-        Map<String, Object> mapEntityAndValue = DataTransferObjectUtils.convertToEntityMappingFieldAndValue(dto);
-        return EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityAndValue, entityType);
+            Map<String, Object> mapEntityFieldAndValue = DataTransferObjectUtils.convertToEntityMappingFieldAndValue(dto);
+            return EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityFieldAndValue, entityType);
+        }
+        return null;
     }
 
-    public static <T> Object convertEntityToDataTransferObject(T entity) {
+    public static Object convertEntityToDataTransferObject(Object entity, Class<?> dtoType) {
+        if (null != entity && null != dtoType) {
+            DataTransferObjectUtils.validateThrow(dtoType, new ConfigurationInvalidException(dtoType.getName() + ": Data Transfer Object configuration is invalid"));
+            Map<String, Object> mapEntityFieldAndValue = EntityUtils.convertToEntityMappingFieldAndValue(Constants.EMPTY_STRING, entity);
+
+            return DataTransferObjectUtils.convertMapEntityPathAndValueToDTO(Constants.EMPTY_STRING, mapEntityFieldAndValue, dtoType);
+        }
         return null;
     }
 }

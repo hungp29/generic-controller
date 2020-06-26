@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @DataTransferObjectMapping(
         forRead = BookBasicInfo.class,
-        forCreateRequest = BookCreateRequest.class
+        forCreateRequest = BookCreateRequest.class,
+        forCreateResponse = BookBasicInfo.class
 )
 public class BookController extends GenericRestController<Book> {
 }

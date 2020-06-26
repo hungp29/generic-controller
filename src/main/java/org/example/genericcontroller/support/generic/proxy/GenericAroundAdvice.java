@@ -22,9 +22,11 @@ import java.util.Map;
 public class GenericAroundAdvice implements MethodInterceptor {
 
     private final ProcessArgument processArgument;
+    private final ProcessResponse processResponse;
 
-    public GenericAroundAdvice(ProcessArgument processArgument) {
+    public GenericAroundAdvice(ProcessArgument processArgument, ProcessResponse processResponse) {
         this.processArgument = processArgument;
+        this.processResponse = processResponse;
     }
 
     @Override
@@ -36,15 +38,20 @@ public class GenericAroundAdvice implements MethodInterceptor {
         Class<?> controllerType = invocation.getThis().getClass();
         Class<?> entityType = ObjectUtils.getGenericClass(controllerType);
 
+        Object result;
         // Prepare data for create method
-        Object[] args = null;
+        Object[] args;
         if (isCreateMethod(invocation)) {
             args = processArgument.prepareArgumentsForCreateMethod(invocation.getArguments(), entityType, controllerType);
+            result = processResponse.convertResponseForCreateMethod(joinPoint.proceed(args), controllerType);
         } else if (isReadAllMethod(invocation)) {
             args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType, controllerType);
+            result = joinPoint.proceed(args);
+        } else {
+            result = joinPoint.proceed();
         }
 
-        return joinPoint.proceed(args);
+        return result;
     }
 
     /**

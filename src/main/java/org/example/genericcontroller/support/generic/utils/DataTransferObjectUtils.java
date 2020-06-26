@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
 import org.example.genericcontroller.exception.generic.ConverterFieldException;
 import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
@@ -19,6 +20,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -533,7 +536,7 @@ public class DataTransferObjectUtils {
     public static Map<String, Object> convertToEntityMappingFieldAndValue(Object dto, Field field) {
         Map<String, Object> mapData = new HashMap<>();
         if (null != dto && null != field) {
-            Object valueOfField = null;
+            Object valueOfField;
             try {
                 valueOfField = ObjectUtils.getValueOfField(dto, field.getName());
             } catch (IllegalAccessException e) {
@@ -550,12 +553,14 @@ public class DataTransferObjectUtils {
                 } else {
                     Collection<?> collection = (Collection<?>) valueOfField;
                     int index = 0;
-                    for (Object innerDTO : collection) {
-                        Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(innerDTO);
-                        for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
-                            mapData.put(field.getName() + "[" + index + "]" + Constants.DOT + entry.getKey(), entry.getValue());
+                    if (!CollectionUtils.isEmpty(collection)) {
+                        for (Object innerDTO : collection) {
+                            Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(innerDTO);
+                            for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
+                                mapData.put(field.getName() + "[" + index + "]" + Constants.DOT + entry.getKey(), entry.getValue());
+                            }
+                            index++;
                         }
-                        index++;
                     }
                 }
             } else {
@@ -582,5 +587,81 @@ public class DataTransferObjectUtils {
             }
         }
         return mapData;
+    }
+
+
+    public static Object convertMapEntityPathAndValueToDTO(String prefix, Map<String, Object> mapData, Field field) {
+        if (null != mapData && null != field) {
+            String mappingField = getEntityMappingFieldPath(field);
+            if (!StringUtils.isEmpty(prefix)) {
+                prefix += Constants.DOT;
+            }
+            Class<?> fieldType = MappingUtils.getFieldType(field);
+            if (validate(fieldType)) {
+                if (!ObjectUtils.fieldIsCollection(field)) {
+                    return convertMapEntityPathAndValueToDTO(prefix + mappingField, mapData, fieldType);
+                } else {
+                    int length = countLengthOfArray(prefix + mappingField, mapData);
+                    if (length > 0) {
+                        try {
+                            @SuppressWarnings("unchecked")
+                            Collection<Object> collection = ObjectUtils.newInstanceCollection(field.getType());
+                            for (int i = 0; i < length; i++) {
+                                Object innerEntity = convertMapEntityPathAndValueToDTO(prefix + mappingField + "[" + i + "]", mapData, fieldType);
+                                if (null != innerEntity) {
+                                    collection.add(innerEntity);
+                                }
+                            }
+                            return collection;
+                        } catch (NoSuchMethodException e) {
+                            throw new ConstructorInvalidException("Cannot new collection instance for field " + field.getName(), e);
+                        }
+                    }
+                }
+            } else {
+                Class<?> fieldConverter = getFieldConverterType(field);
+                return convertField(fieldConverter, mapData.get(prefix + mappingField));
+            }
+        }
+        return null;
+    }
+
+    public static Object convertMapEntityPathAndValueToDTO(String prefix, Map<String, Object> mapData, Class<?> dtoType) {
+        if (null != mapData && null != dtoType) {
+            validateThrow(dtoType, new ConfigurationInvalidException(dtoType.getName() + ": Data Transfer Object configuration is invalid"));
+
+            Object dto;
+            try {
+                dto = ObjectUtils.newInstance(dtoType);
+            } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+                throw new ConstructorInvalidException("Cannot found default constructor for " + dtoType.getSimpleName(), e);
+            }
+
+            List<Field> fields = ObjectUtils.getFields(dtoType, true);
+            for (Field field : fields) {
+                try {
+                    Object fieldValue = convertMapEntityPathAndValueToDTO(prefix, mapData, field);
+                    ObjectUtils.setValueForField(dto, field.getName(), fieldValue);
+                } catch (IllegalAccessException e) {
+                    throw new FieldInaccessibleException("Cannot set value for field "
+                            + dto.getClass().getSimpleName() + "." + field.getName(), e);
+                }
+            }
+            return dto;
+        }
+        return null;
+    }
+
+    private static int countLengthOfArray(String prefix, Map<String, Object> mapData) {
+        int length = 0;
+        if (!StringUtils.isEmpty(prefix) && !CollectionUtils.isEmpty(mapData)) {
+            for (String key : mapData.keySet()) {
+                Matcher matcher = Pattern.compile("^" + prefix + "\\[(\\d+)\\](.*)").matcher(key);
+                if (matcher.matches() && matcher.groupCount() > 1) {
+                    length = Math.max(length, Integer.parseInt(matcher.group(1)) + 1);
+                }
+            }
+        }
+        return length;
     }
 }

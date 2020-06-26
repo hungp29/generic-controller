@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -236,6 +237,56 @@ public class EntityUtils {
             return entity;
         }
         return null;
+    }
+
+    public static Map<String, Object> convertToEntityMappingFieldAndValue(String prefix, Object entity, Field field) {
+        Map<String, Object> mapData = new HashMap<>();
+        if (null != entity && null != field) {
+            if (!StringUtils.isEmpty(prefix)) {
+                prefix = prefix + Constants.DOT;
+            }
+            Object valueOfField;
+            try {
+                valueOfField = ObjectUtils.getValueOfField(entity, field.getName());
+            } catch (IllegalAccessException e) {
+                throw new FieldInaccessibleException("Cannot get value for field "
+                        + entity.getClass().getSimpleName() + "." + field.getName(), e);
+            }
+            if (validate(MappingUtils.getFieldType(field))) {
+                if (!ObjectUtils.fieldIsCollection(field)) {
+                    Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(prefix + field.getName(), valueOfField);
+                    for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
+                        mapData.put(field.getName() + Constants.DOT + entry.getKey(), entry.getValue());
+                    }
+                } else {
+                    Collection<?> collection = (Collection<?>) valueOfField;
+                    int index = 0;
+                    if (!CollectionUtils.isEmpty(collection)) {
+                        for (Object innerEntity : collection) {
+                            Map<String, Object> innerMapData = convertToEntityMappingFieldAndValue(prefix + field.getName(), innerEntity);
+                            for (Map.Entry<String, Object> entry : innerMapData.entrySet()) {
+                                mapData.put(field.getName() + "[" + index + "]" + Constants.DOT + entry.getKey(), entry.getValue());
+                            }
+                            index++;
+                        }
+                    }
+                }
+            } else {
+                mapData.put(field.getName(), valueOfField);
+            }
+        }
+        return mapData;
+    }
+
+    public static Map<String, Object> convertToEntityMappingFieldAndValue(String prefix, Object entity) {
+        Map<String, Object> mapData = new HashMap<>();
+        if (null != entity && validate(entity.getClass())) {
+            List<Field> fields = ObjectUtils.getFields(entity.getClass(), true);
+            for (Field field : fields) {
+                mapData.putAll(convertToEntityMappingFieldAndValue(prefix, entity, field));
+            }
+        }
+        return mapData;
     }
 
 }

@@ -23,6 +23,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Process Argument.
+ *
+ * @author hungp
+ */
 @Component
 public class ProcessArgument {
 
@@ -45,7 +50,7 @@ public class ProcessArgument {
     public Object[] prepareArgumentsForCreateMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
         Object createRequestDTO = null;
         if (null != args && args.length > 0 && null != entityType) {
-            Class<?> dtoType = getCreateRequestDTO(controllerType);
+            Class<?> dtoType = ControllerUtils.getCreateRequestDTO(controllerType);
             createRequestDTO = convertToDataTransferObject(args[0], dtoType);
         }
         return new Object[]{createRequestDTO};
@@ -71,7 +76,7 @@ public class ProcessArgument {
 
         if (null != args && args.length > 0 && null != entityType) {
             // 1. ReadDTOType
-            readDTOType = getReadResponseDTO(controllerType);
+            readDTOType = ControllerUtils.getReadResponseDTO(controllerType);
             request = getHttpServletRequest(args);
             if (null != request) {
                 // 2. Map params
@@ -89,37 +94,6 @@ public class ProcessArgument {
 
         return new Object[]{readDTOType, params, pagination, filter, request};
     }
-
-    /**
-     * Get Create Request DTO.
-     *
-     * @param controllerType Controller type
-     * @return Create Request DTO
-     */
-    public static Class<?> getCreateRequestDTO(Class<?> controllerType) {
-        ControllerUtils.validateThrow(controllerType, new ConfigurationInvalidException(controllerType.getName() + ": Controller configuration is invalid"));
-        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(controllerType, DataTransferObjectMapping.class);
-        if (null != dataTransferObjectMapping) {
-            return dataTransferObjectMapping.forCreateRequest();
-        }
-        return null;
-    }
-
-    /**
-     * Get Read Response DTO.
-     *
-     * @param controllerType Controller type
-     * @return Create Request DTO
-     */
-    public static Class<?> getReadResponseDTO(Class<?> controllerType) {
-        ControllerUtils.validateThrow(controllerType, new ConfigurationInvalidException(controllerType.getName() + ": Controller configuration is invalid"));
-        DataTransferObjectMapping dataTransferObjectMapping = ObjectUtils.getAnnotation(controllerType, DataTransferObjectMapping.class);
-        if (null != dataTransferObjectMapping) {
-            return dataTransferObjectMapping.forRead();
-        }
-        return null;
-    }
-
 
     /**
      * Get map parameters from Http Servlet Request.
