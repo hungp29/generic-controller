@@ -1,14 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation for mapping Create.
@@ -16,47 +11,47 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@RequestMapping(method = RequestMethod.POST)
+@APIGeneric(method = RequestMethod.POST, genericMethod = APIGeneric.APIGenericMethod.CREATE)
 public @interface APICreate {
     /**
-     * Alias for {@link RequestMapping#name}.
+     * Alias for {@link APIGeneric#name}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String name() default "";
 
     /**
-     * Alias for {@link RequestMapping#value}.
+     * Alias for {@link APIGeneric#value}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] value() default {};
 
     /**
-     * Alias for {@link RequestMapping#path}.
+     * Alias for {@link APIGeneric#path}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] path() default {};
 
     /**
-     * Alias for {@link RequestMapping#params}.
+     * Alias for {@link APIGeneric#params}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] params() default {};
 
     /**
-     * Alias for {@link RequestMapping#headers}.
+     * Alias for {@link APIGeneric#headers}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] headers() default {};
 
     /**
-     * Alias for {@link RequestMapping#consumes}.
+     * Alias for {@link APIGeneric#consumes}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] consumes() default {};
 
     /**
-     * Alias for {@link RequestMapping#produces}.
+     * Alias for {@link APIGeneric#produces}.
      */
-    @AliasFor(annotation = RequestMapping.class)
+    @AliasFor(annotation = APIGeneric.class)
     String[] produces() default {};
 }
