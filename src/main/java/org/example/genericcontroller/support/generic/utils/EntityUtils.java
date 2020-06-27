@@ -9,28 +9,17 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 /**
  * Entity Utils.
  *
  * @author hungp
  */
-public class EntityUtils {
+public class EntityUtils extends CommonUtils {
 
     /**
      * Prevent new instance.
@@ -143,26 +132,6 @@ public class EntityUtils {
     }
 
     /**
-     * Count length of array of field from Map Data.
-     *
-     * @param prefix  prefix field path
-     * @param mapData map field and data of entity
-     * @return length of array of field
-     */
-    private static int countLengthOfArray(String prefix, Map<String, Object> mapData) {
-        int length = 0;
-        if (!StringUtils.isEmpty(prefix) && !CollectionUtils.isEmpty(mapData)) {
-            for (String key : mapData.keySet()) {
-                Matcher matcher = Pattern.compile("^" + prefix + "\\[(\\d+)\\](.*)").matcher(key);
-                if (matcher.matches() && matcher.groupCount() > 1) {
-                    length = Math.max(length, Integer.parseInt(matcher.group(1)) + 1);
-                }
-            }
-        }
-        return length;
-    }
-
-    /**
      * Get value of entity field.
      *
      * @param prefix  prefix of field path
@@ -239,6 +208,14 @@ public class EntityUtils {
         return null;
     }
 
+    /**
+     * Convert entity to map field path and value.
+     *
+     * @param prefix prefix of field path
+     * @param entity entity instance
+     * @param field  field of entity
+     * @return map entity field path and value
+     */
     public static Map<String, Object> convertToEntityMappingFieldAndValue(String prefix, Object entity, Field field) {
         Map<String, Object> mapData = new HashMap<>();
         if (null != entity && null != field) {
@@ -278,6 +255,13 @@ public class EntityUtils {
         return mapData;
     }
 
+    /**
+     * Convert entity to map field path and value.
+     *
+     * @param prefix prefix of field path
+     * @param entity entity instance
+     * @return map entity field path and value
+     */
     public static Map<String, Object> convertToEntityMappingFieldAndValue(String prefix, Object entity) {
         Map<String, Object> mapData = new HashMap<>();
         if (null != entity && validate(entity.getClass())) {

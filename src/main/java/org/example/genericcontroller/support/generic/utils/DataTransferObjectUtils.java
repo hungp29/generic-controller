@@ -15,13 +15,7 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +23,7 @@ import java.util.stream.Collectors;
  *
  * @author hungp
  */
-public class DataTransferObjectUtils {
+public class DataTransferObjectUtils extends CommonUtils {
 
     /**
      * Prevent new instance.
@@ -590,6 +584,14 @@ public class DataTransferObjectUtils {
     }
 
 
+    /**
+     * Convert Map entity path and value to Data Transfer Object.
+     *
+     * @param prefix  prefix of field path
+     * @param mapData map entity path and value
+     * @param field   field of entity
+     * @return Data Transfer Object instance
+     */
     public static Object convertMapEntityPathAndValueToDTO(String prefix, Map<String, Object> mapData, Field field) {
         if (null != mapData && null != field) {
             String mappingField = getEntityMappingFieldPath(field);
@@ -626,6 +628,14 @@ public class DataTransferObjectUtils {
         return null;
     }
 
+    /**
+     * Convert map entity field path and value to Data Transfer Object.
+     *
+     * @param prefix  prefix of field path
+     * @param mapData map entity field path and value
+     * @param dtoType Data Transfer Object type
+     * @return Data Transfer Object instance
+     */
     public static Object convertMapEntityPathAndValueToDTO(String prefix, Map<String, Object> mapData, Class<?> dtoType) {
         if (null != mapData && null != dtoType) {
             validateThrow(dtoType, new ConfigurationInvalidException(dtoType.getName() + ": Data Transfer Object configuration is invalid"));
@@ -650,18 +660,5 @@ public class DataTransferObjectUtils {
             return dto;
         }
         return null;
-    }
-
-    private static int countLengthOfArray(String prefix, Map<String, Object> mapData) {
-        int length = 0;
-        if (!StringUtils.isEmpty(prefix) && !CollectionUtils.isEmpty(mapData)) {
-            for (String key : mapData.keySet()) {
-                Matcher matcher = Pattern.compile("^" + prefix + "\\[(\\d+)\\](.*)").matcher(key);
-                if (matcher.matches() && matcher.groupCount() > 1) {
-                    length = Math.max(length, Integer.parseInt(matcher.group(1)) + 1);
-                }
-            }
-        }
-        return length;
     }
 }
