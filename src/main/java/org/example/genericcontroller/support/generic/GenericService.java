@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,13 +55,15 @@ public class GenericService<T extends Audit> {
     /**
      * Get all entity by condition and pagination.
      *
-     * @param readDTOType Read Data Transfer Object type
-     * @param params      request params
-     * @param pagination  pagination info
-     * @param filter      filter fields
+     * @param readDTOType     Read Data Transfer Object type
+     * @param params          request params
+     * @param pagination      pagination info
+     * @param disabledCaching flag to detect disabled caching
+     * @param filter          filter fields
      * @return page data
      */
-    public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter) {
+    @Cacheable(value = "findAll", key = "#params", condition = "!#disabledCaching")
+    public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter, boolean disabledCaching) {
         if (!pagination.isUnPaged()) {
             return genericRepository.findAll(readDTOType, filter, params, pagination.getPageable());
         } else {

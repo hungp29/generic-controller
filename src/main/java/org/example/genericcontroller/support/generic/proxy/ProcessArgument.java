@@ -2,10 +2,8 @@ package org.example.genericcontroller.support.generic.proxy;
 
 import org.apache.catalina.connector.RequestFacade;
 import org.example.genericcontroller.exception.generic.ArgumentException;
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
-import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.support.generic.Pagination;
 import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
@@ -35,7 +33,8 @@ public class ProcessArgument {
     public static final String LIMIT = "limit";
     public static final String FILTER = "filter";
     public static final String ORDER_BY = "orderBy";
-    public static final String[] NOT_PARAM_FIELDS = {PAGE, LIMIT, ORDER_BY, FILTER};
+    public static final String DISABLED_CACHING = "disabledCaching";
+    public static final String[] NOT_PARAM_FIELDS = {PAGE, LIMIT, ORDER_BY, FILTER, DISABLED_CACHING};
 
     private int defaultPage = 1;
     private int defaultLimit = 10;
@@ -73,6 +72,7 @@ public class ProcessArgument {
         Pagination pagination = null;
         String[] filter = null;
         HttpServletRequest request = null;
+        boolean disabledCaching = false;
 
         if (null != args && args.length > 0 && null != entityType) {
             // 1. ReadDTOType
@@ -87,12 +87,28 @@ public class ProcessArgument {
                 pagination = new Pagination(pageable, sort);
                 // 4. Filter field array
                 filter = getFilterFields(request);
+                // 5. Disabled Caching
+                disabledCaching = getDisabledCaching(request);
             } else {
                 throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
             }
         }
 
-        return new Object[]{readDTOType, params, pagination, filter, request};
+        return new Object[]{readDTOType, params, pagination, filter, disabledCaching, request};
+    }
+
+    /**
+     * Get disabled caching.
+     *
+     * @param request Http Servlet Request
+     * @return enabled caching
+     */
+    private boolean getDisabledCaching(HttpServletRequest request) {
+        String disabledCachingValue = getValueFromRequest(DISABLED_CACHING, request);
+        if (!StringUtils.isEmpty(disabledCachingValue)) {
+            return Boolean.parseBoolean(disabledCachingValue);
+        }
+        return false;
     }
 
     /**

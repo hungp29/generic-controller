@@ -5,6 +5,7 @@ import org.example.genericcontroller.app.book.BookCustomRepository;
 import org.example.genericcontroller.entity.Author;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.entity.Publisher;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class OldBookService {
     private final OldBookRepository oldBookRepository;
     private final BookCustomRepository bookCustomRepository;
 
+    @Cacheable("oneBook")
     public void get(int id) {
         bookCustomRepository.get(id);
     }

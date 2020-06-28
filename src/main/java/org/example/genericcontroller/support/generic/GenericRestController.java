@@ -41,17 +41,18 @@ public class GenericRestController<T extends Audit> {
     /**
      * Get all entity by condition and pagination.
      *
-     * @param readDTOType Read Data Transfer Object type
-     * @param params      request params
-     * @param pagination  pagination info
-     * @param filter      filter fields
-     * @param request     {@link HttpServletRequest} instance (don't remove this)
+     * @param readDTOType     Read Data Transfer Object type
+     * @param params          request params
+     * @param pagination      pagination info
+     * @param filter          filter fields
+     * @param disabledCaching flag to detect disabled caching
+     * @param request         {@link HttpServletRequest} instance (don't remove this)
      * @return page data
      */
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
-                                               String[] filter, HttpServletRequest request) {
-        return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
+                                               String[] filter, boolean disabledCaching, HttpServletRequest request) {
+        return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter, disabledCaching));
     }
 
     @Autowired
