@@ -62,7 +62,7 @@ public class GenericService<T extends Audit> {
      * @param filter          filter fields
      * @return page data
      */
-    @Cacheable(value = "findAll", key = "#params", condition = "!#disabledCaching")
+    @Cacheable(value = "findAll", key = "#params")
     public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter, boolean disabledCaching) {
         if (!pagination.isUnPaged()) {
             return genericRepository.findAll(readDTOType, filter, params, pagination.getPageable());

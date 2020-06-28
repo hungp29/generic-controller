@@ -29,11 +29,17 @@ public class DeactivatableCache implements Cache {
 
     @Override
     public String getName() {
+        if (isCacheDisabled()) {
+            return noOpCache.getName();
+        }
         return delegate.getName();
     }
 
     @Override
     public Object getNativeCache() {
+        if (isCacheDisabled()) {
+            return noOpCache.getNativeCache();
+        }
         return delegate.getNativeCache();
     }
 
