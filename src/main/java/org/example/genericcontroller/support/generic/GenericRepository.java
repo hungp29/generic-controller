@@ -54,6 +54,17 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
     Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort);
 
     /**
+     * Find one entity by id.
+     *
+     * @param id      the id of entity
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter fields
+     * @param <ID>    generic of id
+     * @return Data Transfer Object of entity
+     */
+    <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter);
+
+    /**
      * Save Data Transfer Object.
      *
      * @param dto data

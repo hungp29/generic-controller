@@ -1,9 +1,14 @@
 package org.example.genericcontroller.support.generic;
 
+import org.example.genericcontroller.support.generic.APIGeneric.APIGenericMethod;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Annotation for mapping Read All.
@@ -11,7 +16,7 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@APIGeneric(method = RequestMethod.GET, genericMethod = APIGeneric.APIGenericMethod.READ_ALL)
+@APIGeneric(method = RequestMethod.GET, genericMethod = APIGenericMethod.READ_ALL)
 public @interface APIReadAll {
     /**
      * Alias for {@link APIGeneric#name}.

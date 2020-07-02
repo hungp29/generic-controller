@@ -7,6 +7,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
 import org.example.genericcontroller.support.generic.APICreate;
 import org.example.genericcontroller.support.generic.APIReadAll;
+import org.example.genericcontroller.support.generic.APIReadOne;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint;
@@ -47,6 +48,9 @@ public class GenericAroundAdvice implements MethodInterceptor {
         } else if (isReadAllMethod(invocation)) {
             args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType, controllerType);
             result = joinPoint.proceed(args);
+        } else if (isReadOneMethod(invocation)) {
+            args = processArgument.prepareArgumentsForReadOneMethod(invocation.getArguments(), entityType, controllerType);
+            result = joinPoint.proceed(args);
         } else {
             result = joinPoint.proceed();
         }
@@ -82,6 +86,16 @@ public class GenericAroundAdvice implements MethodInterceptor {
      */
     private boolean isReadAllMethod(MethodInvocation invocation) {
         return ObjectUtils.hasAnnotation(invocation.getMethod(), APIReadAll.class);
+    }
+
+    /**
+     * Checking method is read one API or not.
+     *
+     * @param invocation {@link MethodInvocation} instance
+     * @return true if method is read all method
+     */
+    private boolean isReadOneMethod(MethodInvocation invocation) {
+        return ObjectUtils.hasAnnotation(invocation.getMethod(), APIReadOne.class);
     }
 
     /**

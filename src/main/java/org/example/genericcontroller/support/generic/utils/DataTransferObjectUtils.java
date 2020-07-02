@@ -15,7 +15,11 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -291,6 +295,26 @@ public class DataTransferObjectUtils extends CommonUtils {
                     .append(Constants.UNDERSCORE);
         }
         return finalKey.deleteCharAt(finalKey.length() - 1).toString(); // remove last underscore
+    }
+
+    /**
+     * Get Field mapping with Entity key.
+     *
+     * @param dtoType Data Transfer Object type
+     * @return name of field mapping with Entity key
+     */
+    public static String getFieldMappingEntityKey(Class<?> dtoType) {
+        if (null != dtoType) {
+            List<String> keys = EntityUtils.getPrimaryKey(getEntityType(dtoType));
+            List<Field> fields = ObjectUtils.getFields(dtoType, true);
+            for (Field field : fields) {
+                String mappingField = getEntityMappingFieldPath(field);
+                if (keys.contains(mappingField)) {
+                    return mappingField;
+                }
+            }
+        }
+        return null;
     }
 
     /**

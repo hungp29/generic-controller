@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -22,6 +25,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
@@ -367,6 +371,22 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         }
 
         return new PageImpl<>(content, pageable, totalSupplier.getAsLong());
+    }
+
+    @Override
+    public <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter) {
+        String keyField = DataTransferObjectUtils.getFieldMappingEntityKey(dtoType);
+        if (null != id && !StringUtils.isEmpty(keyField)) {
+            Map<String, String> params = new HashMap<>();
+            params.put(keyField, id.toString());
+            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, Sort.unsorted());
+            List<Map<String, Object>> records = readData(query, dtoType, filter);
+            List<Object> lstDTO = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
+            if (!CollectionUtils.isEmpty(lstDTO)) {
+                return lstDTO.get(0);
+            }
+        }
+        return null;
     }
 
     /**

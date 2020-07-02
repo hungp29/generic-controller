@@ -41,7 +41,7 @@ public class VersionRequestMappingHandlerMapping extends RequestMappingHandlerMa
         APIGeneric apiGeneric = ObjectUtils.getAnnotation(method, APIGeneric.class, true);
         if (null != genericDisabled && null != apiGeneric) {
             return (CREATE.equals(apiGeneric.genericMethod()) && genericDisabled.create()) ||
-                    (READ.equals(apiGeneric.genericMethod()) && genericDisabled.read()) ||
+                    (READ_ONE.equals(apiGeneric.genericMethod()) && genericDisabled.read()) ||
                     (READ_ALL.equals(apiGeneric.genericMethod()) && genericDisabled.readAll()) ||
                     (UPDATE.equals(apiGeneric.genericMethod()) && genericDisabled.update()) ||
                     (DELETE.equals(apiGeneric.genericMethod()) && genericDisabled.delete());

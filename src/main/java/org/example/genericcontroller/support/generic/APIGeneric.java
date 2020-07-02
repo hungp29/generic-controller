@@ -70,7 +70,7 @@ public @interface APIGeneric {
      */
     enum APIGenericMethod {
         CREATE,
-        READ,
+        READ_ONE,
         READ_ALL,
         UPDATE,
         DELETE

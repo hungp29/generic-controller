@@ -2,10 +2,8 @@ package org.example.genericcontroller.support.generic.proxy;
 
 import org.apache.catalina.connector.RequestFacade;
 import org.example.genericcontroller.exception.generic.ArgumentException;
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
-import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.support.generic.Pagination;
 import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
@@ -93,6 +91,39 @@ public class ProcessArgument {
         }
 
         return new Object[]{readDTOType, params, pagination, filter, request};
+    }
+
+    /**
+     * Prepare arguments for read one method.
+     * 1. ID
+     * 2. ReadDTOType
+     * 3. Filter field array
+     *
+     * @param args       array arguments
+     * @param entityType Entity type
+     * @return array arguments
+     */
+    public Object[] prepareArgumentsForReadOneMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
+        Class<?> readDTOType = null;
+        Object id = null;
+        String[] filter = null;
+        HttpServletRequest request = null;
+
+        if (null != args && args.length > 0 && null != entityType) {
+            // 1. ID
+            id = args[0];
+            // 2. ReadDTOType
+            readDTOType = ControllerUtils.getReadResponseDTO(controllerType);
+            request = getHttpServletRequest(args);
+            if (null != request) {
+                // 3. Filter field array
+                filter = getFilterFields(request);
+            } else {
+                throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
+            }
+        }
+
+        return new Object[]{id, readDTOType, filter, request};
     }
 
     /**

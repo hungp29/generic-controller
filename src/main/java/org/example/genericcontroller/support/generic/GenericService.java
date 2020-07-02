@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -42,13 +41,14 @@ public class GenericService<T extends Audit> {
     /**
      * Get one entity data.
      *
-     * @param id      id of entity
-     * @param request Http Servlet Request
-     * @param <ID>    generic of Id
+     * @param id          id of entity
+     * @param readDTOType Read Data Transfer Object type
+     * @param filter      filter fields
+     * @param <ID>        generic of Id
      * @return Data Transfer Object of Entity
      */
-    public <ID extends Serializable> Object get(ID id, HttpServletRequest request) {
-        return null;
+    public <ID extends Serializable> Object get(ID id, Class<?> readDTOType, String[] filter) {
+        return genericRepository.findOneById(id, readDTOType, filter);
     }
 
     /**

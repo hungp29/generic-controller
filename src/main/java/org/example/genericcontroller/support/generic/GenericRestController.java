@@ -4,7 +4,6 @@ import org.example.genericcontroller.entity.Audit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -33,9 +32,20 @@ public class GenericRestController<T extends Audit> {
         return ResponseEntity.ok(genericService.createAndSave(createRequestDTO));
     }
 
-    @GetMapping("/{id}")
-    public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, HttpServletRequest request) {
-        return ResponseEntity.ok(genericService.get(id, request));
+
+    /**
+     * Get one entity by id.
+     *
+     * @param id          the id of entity
+     * @param readDTOType Read Data Transfer Object type
+     * @param filter      filter fields
+     * @param request     {@link HttpServletRequest} instance (don't remove this)
+     * @param <ID>        generic of id
+     * @return Data Transfer Object of entity
+     */
+    @APIReadOne("/{id}")
+    public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, Class<?> readDTOType, String[] filter, HttpServletRequest request) {
+        return ResponseEntity.ok(genericService.get(id, readDTOType, filter));
     }
 
     /**
