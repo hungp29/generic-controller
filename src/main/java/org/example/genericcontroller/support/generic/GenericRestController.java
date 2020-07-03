@@ -61,7 +61,7 @@ public class GenericRestController<T extends Audit> {
      */
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
-                                               String[] filter) {
+                                               String[] filter, SearchExtractor searchExtractor) {
         return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
     }
 

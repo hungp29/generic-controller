@@ -8,13 +8,14 @@ import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.converter.LocalDateTimeConverter;
+import org.example.genericcontroller.support.generic.dtotemplate.DTOTemplate;
 
 import java.util.List;
 
 @Data
 @MappingClass(Book.class)
 @NoArgsConstructor
-public class BookBasicInfo {
+public class BookBasicInfo extends DTOTemplate {
 
     private Integer id;
 

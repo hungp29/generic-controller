@@ -5,6 +5,7 @@ import org.example.genericcontroller.exception.generic.ArgumentException;
 import org.example.genericcontroller.exception.generic.GenericException;
 import org.example.genericcontroller.exception.generic.ParamInvalidException;
 import org.example.genericcontroller.support.generic.Pagination;
+import org.example.genericcontroller.support.generic.SearchExtractor;
 import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
@@ -71,26 +72,30 @@ public class ProcessArgument {
         Pagination pagination = null;
         String[] filter = null;
         HttpServletRequest request = null;
+        SearchExtractor searchExtractor = new SearchExtractor();
 
         if (null != args && args.length > 0 && null != entityType) {
             // 1. ReadDTOType
             readDTOType = ControllerUtils.getReadResponseDTO(controllerType);
+            searchExtractor.setDtoType(readDTOType);
             request = getHttpServletRequest(args);
             if (null != request) {
                 // 2. Map params
                 params = getParameters(request);
+                searchExtractor.setParams(params);
                 // 3. Pagination info
                 Sort sort = getSortRequest(request);
                 Pageable pageable = getPageRequest(request, sort);
                 pagination = new Pagination(pageable, sort);
                 // 4. Filter field array
                 filter = getFilterFields(request);
+                searchExtractor.setFilter(filter);
             } else {
                 throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
             }
         }
 
-        return new Object[]{readDTOType, params, pagination, filter};
+        return new Object[]{readDTOType, params, pagination, filter, searchExtractor};
     }
 
     /**
