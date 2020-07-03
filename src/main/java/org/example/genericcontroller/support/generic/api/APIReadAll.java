@@ -1,6 +1,6 @@
-package org.example.genericcontroller.support.generic;
+package org.example.genericcontroller.support.generic.api;
 
-import org.example.genericcontroller.support.generic.APIGeneric.APIGenericMethod;
+import org.example.genericcontroller.support.generic.api.APIGeneric.APIGenericMethod;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMethod;
 

@@ -7,7 +7,7 @@ import org.example.genericcontroller.app.publisher.dto.PublisherDTO;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
-import org.example.genericcontroller.support.generic.fieldconverter.LocalDateTimeConverter;
+import org.example.genericcontroller.support.generic.converter.LocalDateTimeConverter;
 
 import java.util.List;
 

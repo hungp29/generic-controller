@@ -90,7 +90,7 @@ public class ProcessArgument {
             }
         }
 
-        return new Object[]{readDTOType, params, pagination, filter, request};
+        return new Object[]{readDTOType, params, pagination, filter};
     }
 
     /**
@@ -123,7 +123,7 @@ public class ProcessArgument {
             }
         }
 
-        return new Object[]{id, readDTOType, filter, request};
+        return new Object[]{id, readDTOType, filter};
     }
 
     /**

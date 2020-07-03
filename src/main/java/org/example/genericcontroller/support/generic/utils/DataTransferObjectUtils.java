@@ -6,8 +6,8 @@ import org.example.genericcontroller.exception.generic.ConstructorInvalidExcepti
 import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
-import org.example.genericcontroller.support.generic.fieldconverter.FieldConverter;
-import org.example.genericcontroller.support.generic.fieldconverter.FieldConverterFactory;
+import org.example.genericcontroller.support.generic.converter.FieldConverter;
+import org.example.genericcontroller.support.generic.converter.FieldConverterFactory;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;

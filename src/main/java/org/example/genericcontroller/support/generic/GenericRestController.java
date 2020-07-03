@@ -1,6 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.api.APICreate;
+import org.example.genericcontroller.support.generic.api.APIReadAll;
+import org.example.genericcontroller.support.generic.api.APIReadOne;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -39,12 +42,11 @@ public class GenericRestController<T extends Audit> {
      * @param id          the id of entity
      * @param readDTOType Read Data Transfer Object type
      * @param filter      filter fields
-     * @param request     {@link HttpServletRequest} instance (don't remove this)
      * @param <ID>        generic of id
      * @return Data Transfer Object of entity
      */
     @APIReadOne("/{id}")
-    public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, Class<?> readDTOType, String[] filter, HttpServletRequest request) {
+    public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, Class<?> readDTOType, String[] filter) {
         return ResponseEntity.ok(genericService.get(id, readDTOType, filter));
     }
 
@@ -55,12 +57,11 @@ public class GenericRestController<T extends Audit> {
      * @param params      request params
      * @param pagination  pagination info
      * @param filter      filter fields
-     * @param request     {@link HttpServletRequest} instance (don't remove this)
      * @return page data
      */
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
-                                               String[] filter, HttpServletRequest request) {
+                                               String[] filter) {
         return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
     }
 

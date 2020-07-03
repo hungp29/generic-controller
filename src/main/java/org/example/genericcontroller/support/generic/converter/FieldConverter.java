@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic.fieldconverter;
+package org.example.genericcontroller.support.generic.converter;
 
 
 /**

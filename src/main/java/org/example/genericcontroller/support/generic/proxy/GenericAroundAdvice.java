@@ -3,16 +3,21 @@ package org.example.genericcontroller.support.generic.proxy;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.catalina.connector.RequestFacade;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.example.genericcontroller.exception.generic.ParamInvalidException;
-import org.example.genericcontroller.support.generic.APICreate;
-import org.example.genericcontroller.support.generic.APIReadAll;
-import org.example.genericcontroller.support.generic.APIReadOne;
+import org.example.genericcontroller.support.generic.api.APIGeneric;
+import org.example.genericcontroller.support.generic.api.APIGeneric.APIGenericMethod;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Generic around advice.
@@ -41,21 +46,48 @@ public class GenericAroundAdvice implements MethodInterceptor {
 
         Object result;
         // Prepare data for create method
-        Object[] args;
-        if (isCreateMethod(invocation)) {
-            args = processArgument.prepareArgumentsForCreateMethod(invocation.getArguments(), entityType, controllerType);
+        Object[] args = buildArguments(invocation);
+        if (isMethod(invocation, APIGenericMethod.CREATE)) {
+            args = processArgument.prepareArgumentsForCreateMethod(args, entityType, controllerType);
             result = processResponse.convertResponseForCreateMethod(joinPoint.proceed(args), controllerType);
-        } else if (isReadAllMethod(invocation)) {
-            args = processArgument.prepareArgumentsForReadAllMethod(invocation.getArguments(), entityType, controllerType);
+        } else if (isMethod(invocation, APIGenericMethod.READ_ALL)) {
+            args = processArgument.prepareArgumentsForReadAllMethod(args, entityType, controllerType);
             result = joinPoint.proceed(args);
-        } else if (isReadOneMethod(invocation)) {
-            args = processArgument.prepareArgumentsForReadOneMethod(invocation.getArguments(), entityType, controllerType);
+        } else if (isMethod(invocation, APIGenericMethod.READ_ONE)) {
+            args = processArgument.prepareArgumentsForReadOneMethod(args, entityType, controllerType);
             result = joinPoint.proceed(args);
         } else {
             result = joinPoint.proceed();
         }
 
         return result;
+    }
+
+    /**
+     * Build Arguments.
+     *
+     * @param invocation {@link MethodInvocation} instance
+     * @return array arguments
+     */
+    private Object[] buildArguments(MethodInvocation invocation) {
+        List<Object> args = Arrays.stream(invocation.getArguments())
+                .filter(arg -> null == arg || !RequestFacade.class.isAssignableFrom(arg.getClass()))
+                .collect(Collectors.toList());
+        args.add(getHttpServletRequest());
+        return args.toArray();
+    }
+
+    /**
+     * Get {@link HttpServletRequest} from {@link RequestContextHolder}.
+     *
+     * @return {@link HttpServletRequest}
+     */
+    protected HttpServletRequest getHttpServletRequest() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (null != requestAttributes) {
+            return ((ServletRequestAttributes) requestAttributes).getRequest();
+        }
+        return null;
     }
 
     /**
@@ -69,47 +101,14 @@ public class GenericAroundAdvice implements MethodInterceptor {
     }
 
     /**
-     * Checking method is create API or not.
+     * Check API generic method is match with {@link APIGenericMethod} param.
      *
-     * @param invocation {@link MethodInvocation} instance
-     * @return true if method is create API
+     * @param invocation    {@link MethodInvocation} instance
+     * @param genericMethod {@link APIGenericMethod} method need check
+     * @return true if method is match {@link APIGenericMethod} specify
      */
-    private boolean isCreateMethod(MethodInvocation invocation) {
-        return ObjectUtils.hasAnnotation(invocation.getMethod(), APICreate.class);
-    }
-
-    /**
-     * Checking method is read all API or not.
-     *
-     * @param invocation {@link MethodInvocation} instance
-     * @return true if method is read all method
-     */
-    private boolean isReadAllMethod(MethodInvocation invocation) {
-        return ObjectUtils.hasAnnotation(invocation.getMethod(), APIReadAll.class);
-    }
-
-    /**
-     * Checking method is read one API or not.
-     *
-     * @param invocation {@link MethodInvocation} instance
-     * @return true if method is read all method
-     */
-    private boolean isReadOneMethod(MethodInvocation invocation) {
-        return ObjectUtils.hasAnnotation(invocation.getMethod(), APIReadOne.class);
-    }
-
-    /**
-     * Convert Map data to Data Transfer Object.
-     *
-     * @param data    map data
-     * @param dtoType Data Transfer Object type
-     * @return Data Transfer Object instance
-     */
-    @SuppressWarnings("unchecked")
-    private Object convertToDataTransferObject(Object data, Class<?> dtoType) {
-        if (Map.class.isAssignableFrom(data.getClass())) {
-            return ObjectUtils.convertMapToObject((Map<String, ?>) data, dtoType);
-        }
-        throw new ParamInvalidException("Cannot parse '" + data.getClass().getName() + "' to '" + dtoType.getName() + "'");
+    private boolean isMethod(MethodInvocation invocation, APIGenericMethod genericMethod) {
+        APIGeneric apiGeneric = ObjectUtils.getAnnotation(invocation.getMethod(), APIGeneric.class, true);
+        return null != apiGeneric && apiGeneric.genericMethod().equals(genericMethod);
     }
 }
