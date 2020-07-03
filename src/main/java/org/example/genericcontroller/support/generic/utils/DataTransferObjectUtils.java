@@ -3,11 +3,11 @@ package org.example.genericcontroller.support.generic.utils;
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
 import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
-import org.example.genericcontroller.exception.generic.ConverterFieldException;
 import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
-import org.example.genericcontroller.support.generic.FieldConverter;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
+import org.example.genericcontroller.support.generic.fieldconverter.FieldConverter;
+import org.example.genericcontroller.support.generic.fieldconverter.FieldConverterFactory;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -477,18 +477,12 @@ public class DataTransferObjectUtils extends CommonUtils {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Object convertField(Class<?> fieldConverterType, Object value, boolean convertToEntity) {
-        if (null != fieldConverterType) {
-            if (FieldConverter.class.isAssignableFrom(fieldConverterType)) {
-                try {
-                    FieldConverter fieldConverter = (FieldConverter) ObjectUtils.newInstance(fieldConverterType);
-                    if (!convertToEntity) {
-                        value = fieldConverter.convertToFieldDataTransferObject(value);
-                    } else {
-                        value = fieldConverter.convertToFieldEntity(value);
-                    }
-                } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-                    throw new ConverterFieldException("Cannot convert field " + value.getClass().getName() + " with " + fieldConverterType.getName() + " converter");
-                }
+        FieldConverter<Object, Object> fieldConverter = FieldConverterFactory.getFieldConverter(fieldConverterType);
+        if (null != fieldConverter) {
+            if (!convertToEntity) {
+                value = fieldConverter.convertToFieldDataTransferObject(value);
+            } else {
+                value = fieldConverter.convertToFieldEntity(value);
             }
         }
         return value;

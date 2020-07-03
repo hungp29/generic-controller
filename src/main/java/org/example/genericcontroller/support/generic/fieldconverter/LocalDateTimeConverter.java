@@ -1,7 +1,7 @@
 package org.example.genericcontroller.support.generic.fieldconverter;
 
-import org.example.genericcontroller.support.generic.FieldConverter;
 import org.example.genericcontroller.utils.DateTimeUtils;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  *
  * @author hungp
  */
+@Component
 public class LocalDateTimeConverter implements FieldConverter<LocalDateTime, Long> {
 
     @Override
