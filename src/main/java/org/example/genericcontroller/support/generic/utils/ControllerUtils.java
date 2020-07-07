@@ -1,6 +1,6 @@
 package org.example.genericcontroller.support.generic.utils;
 
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.support.generic.DataTransferObjectMapping;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.web.bind.annotation.RestController;

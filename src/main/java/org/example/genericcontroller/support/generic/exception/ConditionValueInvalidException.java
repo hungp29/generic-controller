@@ -1,4 +1,4 @@
-package org.example.genericcontroller.exception.generic;
+package org.example.genericcontroller.support.generic.exception;
 
 /**
  * Condition Value Invalid Exception.

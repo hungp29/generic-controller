@@ -1,6 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.support.generic.dtotemplate.DTOTemplate;
 
 import java.util.Map;

@@ -1,9 +1,9 @@
 package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
-import org.example.genericcontroller.exception.generic.ConstructorInvalidException;
-import org.example.genericcontroller.exception.generic.FieldInaccessibleException;
+import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.exception.ConstructorInvalidException;
+import org.example.genericcontroller.support.generic.exception.FieldInaccessibleException;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.converter.FieldConverter;

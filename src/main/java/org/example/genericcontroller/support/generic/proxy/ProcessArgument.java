@@ -1,9 +1,9 @@
 package org.example.genericcontroller.support.generic.proxy;
 
 import org.apache.catalina.connector.RequestFacade;
-import org.example.genericcontroller.exception.generic.ArgumentException;
-import org.example.genericcontroller.exception.generic.GenericException;
-import org.example.genericcontroller.exception.generic.ParamInvalidException;
+import org.example.genericcontroller.support.generic.exception.ArgumentException;
+import org.example.genericcontroller.support.generic.exception.GenericException;
+import org.example.genericcontroller.support.generic.exception.ParamInvalidException;
 import org.example.genericcontroller.support.generic.Pagination;
 import org.example.genericcontroller.support.generic.SearchExtractor;
 import org.example.genericcontroller.support.generic.utils.ControllerUtils;

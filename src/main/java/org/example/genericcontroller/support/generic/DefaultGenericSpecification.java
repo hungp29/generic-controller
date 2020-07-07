@@ -2,9 +2,9 @@ package org.example.genericcontroller.support.generic;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.ConditionValueInvalidException;
-import org.example.genericcontroller.exception.generic.GenericFieldNameIncorrectException;
-import org.example.genericcontroller.exception.generic.WhereConditionNotSupportException;
+import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
+import org.example.genericcontroller.support.generic.exception.GenericFieldNameIncorrectException;
+import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;

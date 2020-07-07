@@ -1,7 +1,7 @@
 package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;

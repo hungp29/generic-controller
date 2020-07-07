@@ -2,8 +2,8 @@ package org.example.genericcontroller.support.generic;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.example.genericcontroller.exception.generic.OperatorNotSupportException;
-import org.example.genericcontroller.exception.generic.OperatorPatternInvalidException;
+import org.example.genericcontroller.support.generic.exception.OperatorNotSupportException;
+import org.example.genericcontroller.support.generic.exception.OperatorPatternInvalidException;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
