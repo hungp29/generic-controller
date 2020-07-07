@@ -2,7 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.app.book.dto.BookRead;
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.dtotemplate.MappingExtractor;
+import org.example.genericcontroller.support.generic.template.MappingExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;

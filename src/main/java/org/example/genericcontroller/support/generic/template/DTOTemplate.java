@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic.dtotemplate;
+package org.example.genericcontroller.support.generic.template;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;

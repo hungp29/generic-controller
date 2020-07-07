@@ -5,6 +5,7 @@ import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.converter.LocalDateTimeConverter;
+import org.example.genericcontroller.support.generic.template.DTOTemplate;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
  */
 @Data
 @MappingClass(Book.class)
-public class BookCreateRequest {
+public class BookCreateRequest extends DTOTemplate {
 
     private String name;
 

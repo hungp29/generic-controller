@@ -3,10 +3,11 @@ package org.example.genericcontroller.app.publisher.dto;
 import lombok.Data;
 import org.example.genericcontroller.entity.Publisher;
 import org.example.genericcontroller.support.generic.MappingClass;
+import org.example.genericcontroller.support.generic.template.DTOTemplate;
 
 @Data
 @MappingClass(Publisher.class)
-public class PublisherDTO {
+public class PublisherDTO extends DTOTemplate {
 
     private int id;
 

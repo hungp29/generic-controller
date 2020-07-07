@@ -4,13 +4,13 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.api.APICreate;
 import org.example.genericcontroller.support.generic.api.APIReadAll;
 import org.example.genericcontroller.support.generic.api.APIReadOne;
+import org.example.genericcontroller.support.generic.template.SearchExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -62,6 +62,7 @@ public class GenericRestController<T extends Audit> {
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
                                                String[] filter, SearchExtractor searchExtractor) {
+        searchExtractor.getEntityMappingFieldPath();
         return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
     }
 
