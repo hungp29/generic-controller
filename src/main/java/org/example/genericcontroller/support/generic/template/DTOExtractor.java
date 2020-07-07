@@ -1,5 +1,7 @@
 package org.example.genericcontroller.support.generic.template;
 
+import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
@@ -18,7 +20,8 @@ import java.util.List;
  */
 public class DTOExtractor {
 
-    private Class<?> dtoType;
+    private Class<? extends DTOTemplate> dtoType;
+    private Class<? extends Audit> entityType;
     private List<Field> fields;
 
     /**
@@ -31,11 +34,13 @@ public class DTOExtractor {
         return dtoType;
     }
 
+    @SuppressWarnings("unchecked")
     public void setDtoType(Class<?> dtoType) {
         if (!DTOTemplate.class.isAssignableFrom(dtoType)) {
             throw new ConfigurationInvalidException(dtoType.getName() + " don't extended " + DTOTemplate.class.getName());
         }
-        this.dtoType = dtoType;
+        this.dtoType = (Class<? extends DTOTemplate>) dtoType;
+        this.entityType = getEntityMapping();
         this.fields = ObjectUtils.getFields(dtoType, true);
     }
 
@@ -63,6 +68,14 @@ public class DTOExtractor {
                     }
                 });
             }
+        }
+        return paths;
+    }
+
+    public List<String> getMappingPrimaryFieldPath(boolean includeCollection) {
+        List<String> paths = new ArrayList<>();
+        for (Field field : fields) {
+
         }
         return paths;
     }
@@ -108,6 +121,19 @@ public class DTOExtractor {
             innerClass = ObjectUtils.getGenericField(field);
         }
         return innerClass;
+    }
+
+    /**
+     * Get entity mapping.
+     *
+     * @return entity type
+     */
+    public Class<? extends Audit> getEntityMapping() {
+        MappingClass mappingClass = ObjectUtils.getAnnotation(dtoType, MappingClass.class);
+        if (null != mappingClass) {
+            return mappingClass.value();
+        }
+        throw new ConfigurationInvalidException(this.getClass().getName() + " isn't config MappingClass");
     }
 
     /**

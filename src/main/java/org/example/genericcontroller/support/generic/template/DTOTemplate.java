@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.template;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.support.generic.MappingClass;
@@ -21,6 +22,7 @@ public class DTOTemplate implements Serializable {
      *
      * @return Entity class
      */
+    @JsonIgnore
     public Class<? extends Audit> getEntityMapping() {
         MappingClass mappingClass = ObjectUtils.getAnnotation(this.getClass(), MappingClass.class);
         if (null != mappingClass) {
@@ -34,6 +36,7 @@ public class DTOTemplate implements Serializable {
      *
      * @return list {@link Field}
      */
+    @JsonIgnore
     public List<Field> getFields() {
         return ObjectUtils.getFields(this.getClass(), true);
     }

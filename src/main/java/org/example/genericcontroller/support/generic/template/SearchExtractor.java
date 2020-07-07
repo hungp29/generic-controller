@@ -29,7 +29,7 @@ public class SearchExtractor {
         this.params = params;
     }
 
-    public List<String> getEntityMappingFieldPath(boolean includeCollection) {
+    public List<String> getEntityMappingFieldPath(boolean filter, boolean includeCollection) {
         return dtoExtractor.getMappingFieldPath(true, includeCollection);
     }
 }
