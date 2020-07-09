@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic.api;
+package org.example.genericcontroller.support.generic.annotation;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;

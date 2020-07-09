@@ -1,10 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.api.APICreate;
-import org.example.genericcontroller.support.generic.api.APIReadAll;
-import org.example.genericcontroller.support.generic.api.APIReadOne;
-import org.example.genericcontroller.support.generic.template.SearchExtractor;
+import org.example.genericcontroller.support.generic.annotation.APICreate;
+import org.example.genericcontroller.support.generic.annotation.APIReadAll;
+import org.example.genericcontroller.support.generic.annotation.APIReadOne;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -61,8 +60,8 @@ public class GenericRestController<T extends Audit> {
      */
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
-                                               String[] filter, SearchExtractor searchExtractor) {
-        searchExtractor.getEntityMappingFieldPath(true, true);
+                                               String[] filter, FilterData filterData) {
+        filterData.getEntityMappingFieldPath(true, true);
         return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
     }
 

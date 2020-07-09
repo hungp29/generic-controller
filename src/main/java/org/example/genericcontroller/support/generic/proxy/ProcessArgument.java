@@ -5,7 +5,7 @@ import org.example.genericcontroller.support.generic.exception.ArgumentException
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.exception.ParamInvalidException;
 import org.example.genericcontroller.support.generic.Pagination;
-import org.example.genericcontroller.support.generic.template.SearchExtractor;
+import org.example.genericcontroller.support.generic.FilterData;
 import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
@@ -90,9 +90,9 @@ public class ProcessArgument {
                 throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
             }
         }
-        SearchExtractor searchExtractor = new SearchExtractor(readDTOType, filter, params);
+        FilterData filterData = new FilterData(readDTOType, filter, params);
 
-        return new Object[]{readDTOType, params, pagination, filter, searchExtractor};
+        return new Object[]{readDTOType, params, pagination, filter, filterData};
     }
 
     /**

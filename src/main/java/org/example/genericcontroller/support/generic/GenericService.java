@@ -1,8 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
-import org.example.genericcontroller.app.book.dto.BookRead;
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.template.MappingExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,8 +61,6 @@ public class GenericService<T extends Audit> {
      * @return page data
      */
     public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter) {
-        MappingExtractor<BookRead> extractor = new MappingExtractor<>(new BookRead());
-        extractor.getEntityMapping();
         if (!pagination.isUnPaged()) {
             return genericRepository.findAll(readDTOType, filter, params, pagination.getPageable());
         } else {

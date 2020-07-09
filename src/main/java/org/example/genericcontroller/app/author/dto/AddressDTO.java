@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.genericcontroller.entity.Address;
 import org.example.genericcontroller.support.generic.MappingClass;
-import org.example.genericcontroller.support.generic.template.DTOTemplate;
+import org.example.genericcontroller.support.generic.dto.DTOTemplate;
 
 @Data
 @NoArgsConstructor

@@ -1,6 +1,7 @@
-package org.example.genericcontroller.support.generic.template;
+package org.example.genericcontroller.support.generic;
 
 import lombok.Data;
+import org.example.genericcontroller.support.generic.dto.Extractor;
 
 import java.util.List;
 import java.util.Map;
@@ -11,25 +12,25 @@ import java.util.Map;
  * @author hungp
  */
 @Data
-public class SearchExtractor {
+public class FilterData {
 
-    private DTOExtractor dtoExtractor;
+    private Extractor extractor;
     private String[] filter;
     private Map<String, String> params;
 
     /**
      * Purpose for app new instance in controller.
      */
-    public SearchExtractor() {
+    public FilterData() {
     }
 
-    public SearchExtractor(Class<?> dtoType, String[] filter, Map<String, String> params) {
-        dtoExtractor = DTOExtractor.of(dtoType);
+    public FilterData(Class<?> dtoType, String[] filter, Map<String, String> params) {
+        extractor = Extractor.of(dtoType);
         this.filter = filter;
         this.params = params;
     }
 
     public List<String> getEntityMappingFieldPath(boolean filter, boolean includeCollection) {
-        return dtoExtractor.getMappingFieldPath(true, includeCollection);
+        return extractor.getMappingFieldPath(true, includeCollection);
     }
 }

@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic.template;
+package org.example.genericcontroller.support.generic.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.example.genericcontroller.entity.Audit;

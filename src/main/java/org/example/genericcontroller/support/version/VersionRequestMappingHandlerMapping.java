@@ -1,7 +1,7 @@
 package org.example.genericcontroller.support.version;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.genericcontroller.support.generic.api.APIGeneric;
+import org.example.genericcontroller.support.generic.annotation.APIGeneric;
 import org.example.genericcontroller.support.generic.GenericDisabled;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -9,7 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import java.lang.reflect.Method;
 
-import static org.example.genericcontroller.support.generic.api.APIGeneric.APIGenericMethod.*;
+import static org.example.genericcontroller.support.generic.annotation.APIGeneric.APIGenericMethod.*;
 
 /**
  * Version Request Mapping Handler.

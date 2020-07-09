@@ -1,6 +1,6 @@
-package org.example.genericcontroller.support.generic.api;
+package org.example.genericcontroller.support.generic.annotation;
 
-import org.example.genericcontroller.support.generic.api.APIGeneric.APIGenericMethod;
+import org.example.genericcontroller.support.generic.annotation.APIGeneric.APIGenericMethod;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -11,13 +11,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for mapping Create.
+ * Annotation for mapping Read One.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@APIGeneric(method = RequestMethod.POST, genericMethod = APIGenericMethod.CREATE)
-public @interface APICreate {
+@APIGeneric(method = RequestMethod.GET, genericMethod = APIGenericMethod.READ_ONE)
+public @interface APIReadOne {
     /**
      * Alias for {@link APIGeneric#name}.
      */

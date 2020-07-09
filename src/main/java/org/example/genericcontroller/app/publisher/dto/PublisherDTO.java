@@ -3,7 +3,7 @@ package org.example.genericcontroller.app.publisher.dto;
 import lombok.Data;
 import org.example.genericcontroller.entity.Publisher;
 import org.example.genericcontroller.support.generic.MappingClass;
-import org.example.genericcontroller.support.generic.template.DTOTemplate;
+import org.example.genericcontroller.support.generic.dto.DTOTemplate;
 
 @Data
 @MappingClass(Publisher.class)

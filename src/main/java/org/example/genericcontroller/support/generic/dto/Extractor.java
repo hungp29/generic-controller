@@ -1,4 +1,4 @@
-package org.example.genericcontroller.support.generic.template;
+package org.example.genericcontroller.support.generic.dto;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.MappingClass;
@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @author hungp
  */
-public class DTOExtractor {
+public class Extractor {
 
     private Class<? extends DTOTemplate> dtoType;
     private Class<? extends Audit> entityType;
@@ -27,7 +27,7 @@ public class DTOExtractor {
     /**
      * Prevent new instance.
      */
-    private DTOExtractor() {
+    private Extractor() {
     }
 
     public Class<?> getDtoType() {
@@ -61,7 +61,7 @@ public class DTOExtractor {
             if (!lookingInner(field, lookingInner, includeCollection)) {
                 paths.add(fieldName);
             } else {
-                DTOExtractor.of(fieldType).getMappingFieldPath(true, includeCollection).forEach(innerFieldPath -> {
+                Extractor.of(fieldType).getMappingFieldPath(true, includeCollection).forEach(innerFieldPath -> {
                     String fieldPath = fieldName + Constants.DOT + innerFieldPath;
                     if (!paths.contains(fieldPath)) {
                         paths.add(fieldPath);
@@ -137,13 +137,13 @@ public class DTOExtractor {
     }
 
     /**
-     * Create new instance {@link DTOExtractor} instance from DTO type.
+     * Create new instance {@link Extractor} instance from DTO type.
      *
      * @param dtoType DTO Type
-     * @return {@link DTOExtractor} instance
+     * @return {@link Extractor} instance
      */
-    public static DTOExtractor of(Class<?> dtoType) {
-        DTOExtractor extractor = new DTOExtractor();
+    public static Extractor of(Class<?> dtoType) {
+        Extractor extractor = new Extractor();
         extractor.setDtoType(dtoType);
         return extractor;
     }
