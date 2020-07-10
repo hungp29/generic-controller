@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.example.genericcontroller.entity.Book;
 import org.example.genericcontroller.support.generic.MappingClass;
-import org.example.genericcontroller.support.generic.dto.DTOTemplate;
+import org.example.genericcontroller.support.generic.obj.DTOTemplate;
 
 @Data
 @MappingClass(Book.class)

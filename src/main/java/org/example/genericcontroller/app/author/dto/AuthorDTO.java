@@ -3,7 +3,7 @@ package org.example.genericcontroller.app.author.dto;
 import lombok.Data;
 import org.example.genericcontroller.entity.Author;
 import org.example.genericcontroller.support.generic.MappingClass;
-import org.example.genericcontroller.support.generic.dto.DTOTemplate;
+import org.example.genericcontroller.support.generic.obj.DTOTemplate;
 
 import java.time.LocalDate;
 import java.util.List;

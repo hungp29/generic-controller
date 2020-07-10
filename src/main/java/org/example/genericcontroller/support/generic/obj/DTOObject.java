@@ -1,6 +1,5 @@
 package org.example.genericcontroller.support.generic.obj;
 
-import org.example.genericcontroller.support.generic.dto.DTOTemplate;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;

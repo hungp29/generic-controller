@@ -2,7 +2,7 @@ package org.example.genericcontroller.app.book.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.example.genericcontroller.support.generic.dto.DTOTemplate;
+import org.example.genericcontroller.support.generic.obj.DTOTemplate;
 
 @Data
 @AllArgsConstructor
