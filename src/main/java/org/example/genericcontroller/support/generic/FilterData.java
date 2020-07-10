@@ -1,7 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import lombok.Data;
-import org.example.genericcontroller.support.generic.dto.Extractor;
+import org.example.genericcontroller.support.generic.obj.DTOObject;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.Map;
 @Data
 public class FilterData {
 
-    private Extractor extractor;
+    private DTOObject dtoObject;
     private String[] filter;
     private Map<String, String> params;
 
@@ -25,12 +25,22 @@ public class FilterData {
     }
 
     public FilterData(Class<?> dtoType, String[] filter, Map<String, String> params) {
-        extractor = Extractor.of(dtoType);
+        this.dtoObject = DTOObject.of(dtoType);
         this.filter = filter;
         this.params = params;
     }
 
-    public List<String> getEntityMappingFieldPath(boolean filter, boolean includeCollection) {
-        return extractor.getMappingFieldPath(true, includeCollection);
+    public List<String> getMappingEntityFieldPath(boolean filter, boolean lookingInner, boolean includeCollection) {
+        List<String> paths = dtoObject.getMappingFieldPath();
+//        List<String> lstMappingEntityField = extractor.getMappingEntityFieldPath(lookingInner, includeCollection);
+//        if (filter && null != this.filter && this.filter.length > 0) {
+//            List<String> keys = extractor.getMappingEntityPrimaryFieldPath(false);
+//            List<String> keys2 = extractor.getMappingEntityPrimaryFieldPath(true);
+//            System.out.println("AD");
+//        }
+//        return lstMappingEntityField;
+        return null;
     }
+
+
 }
