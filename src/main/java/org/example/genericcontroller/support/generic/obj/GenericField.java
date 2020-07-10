@@ -8,10 +8,25 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Field;
 import java.util.List;
 
+/**
+ * Generic Field.
+ *
+ * @author hungp
+ */
 public abstract class GenericField {
 
     protected Field field;
 
+    protected boolean isCollection;
+
+    protected boolean isInnerDTO;
+
+
+    /**
+     * Get Mapping field name.
+     *
+     * @return mappinf field name
+     */
     public String getMappingFieldName() {
         String fieldPath = Constants.EMPTY_STRING;
         if (null != field) {
@@ -24,6 +39,18 @@ public abstract class GenericField {
         return fieldPath;
     }
 
+    /**
+     * Get list mapping field.
+     *
+     * @return list mapping field
+     */
     public abstract List<String> getMappingFieldPath();
 
+    public boolean isCollection() {
+        return isCollection;
+    }
+
+    public boolean isInnerDTO() {
+        return isInnerDTO;
+    }
 }

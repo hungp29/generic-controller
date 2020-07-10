@@ -4,6 +4,11 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * DTO Field.
+ *
+ * @author hungp
+ */
 public class DTOField extends GenericField {
 
     /**

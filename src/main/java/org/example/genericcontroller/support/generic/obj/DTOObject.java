@@ -10,6 +10,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DTO Object.
+ *
+ * @author hungp
+ */
 public class DTOObject extends GenericField {
 
     private static final String DTO_TYPE_MUST_BE_NOT_NOT = "DTO Type must be not null";
@@ -17,8 +22,12 @@ public class DTOObject extends GenericField {
 
     private Class<? extends DTOTemplate> type;
     private List<GenericField> dtoFields;
-    private boolean isCollection;
 
+    /**
+     * New instance {@link DTOObject} from Class.
+     *
+     * @param type DTO type
+     */
     @SuppressWarnings("unchecked")
     private DTOObject(Class<?> type) {
         if (!validate(type)) {
@@ -28,6 +37,12 @@ public class DTOObject extends GenericField {
         this.dtoFields = buildDTOField();
     }
 
+    /**
+     * New instance {@link DTOObject} from {@link Field}.
+     *
+     * @param field        {@link Field}
+     * @param isCollection is collection field
+     */
     @SuppressWarnings("unchecked")
     private DTOObject(Field field, boolean isCollection) {
         Class<?> type = getFieldType(field);
@@ -38,8 +53,14 @@ public class DTOObject extends GenericField {
         this.dtoFields = buildDTOField();
         this.field = field;
         this.isCollection = isCollection;
+        this.isInnerDTO = true;
     }
 
+    /**
+     * Build {@link DTOField}.
+     *
+     * @return list {@link DTOField}
+     */
     private List<GenericField> buildDTOField() {
         List<GenericField> dtoFields = new ArrayList<>();
         for (Field field : ObjectUtils.getFields(type, true)) {
@@ -55,10 +76,22 @@ public class DTOObject extends GenericField {
         return dtoFields;
     }
 
+    /**
+     * Validate DTO Type.
+     *
+     * @param dtoType DTO Type
+     * @return true if DTO Type was extended {@link DTOTemplate}
+     */
     private boolean validate(Class<?> dtoType) {
         return null != dtoType && DTOTemplate.class.isAssignableFrom(dtoType);
     }
 
+    /**
+     * Get field type.
+     *
+     * @param field {@link Field} instance
+     * @return Field type
+     */
     private Class<?> getFieldType(Field field) {
         Class<?> innerClass = field.getType();
         // Override inner class if field is collection
@@ -99,6 +132,13 @@ public class DTOObject extends GenericField {
         return new DTOObject(dtoType);
     }
 
+    /**
+     * Create new instance {@link DTOObject} instance from DTO type.
+     *
+     * @param field        {@link Field} instance
+     * @param isCollection field is collection
+     * @return {@link DTOObject} instance
+     */
     public static DTOObject of(Field field, boolean isCollection) {
         Assert.notNull(field, FIELD_MUST_BE_NOT_NOT);
         return new DTOObject(field, isCollection);
