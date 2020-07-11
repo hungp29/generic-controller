@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -22,6 +25,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
@@ -82,6 +86,22 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
             page = readPage(dtoType, filter, params, query, getDomainClass(), pageable);
         }
         return page;
+    }
+
+    /**
+     * Find all entity.
+     *
+     * @param dtoType Data Transfer Object type
+     * @param filter  filter fields
+     * @param params  request params
+     * @param sort    Sort instance
+     * @return page data
+     */
+    @Override
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort) {
+        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, sort);
+        List<Map<String, Object>> records = readData(query, dtoType, filter);
+        return new PageImpl<>(MappingUtils.convertToListDataTransferObject(records, dtoType, filter));
     }
 
     /**
@@ -351,5 +371,36 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         }
 
         return new PageImpl<>(content, pageable, totalSupplier.getAsLong());
+    }
+
+    @Override
+    public <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter) {
+        String keyField = DataTransferObjectUtils.getFieldMappingEntityKey(dtoType);
+        if (null != id && !StringUtils.isEmpty(keyField)) {
+            Map<String, String> params = new HashMap<>();
+            params.put(keyField, id.toString());
+            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, Sort.unsorted());
+            List<Map<String, Object>> records = readData(query, dtoType, filter);
+            List<Object> lstDTO = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
+            if (!CollectionUtils.isEmpty(lstDTO)) {
+                return lstDTO.get(0);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert Data Transfer Object to Entity and save it.
+     *
+     * @param dto data
+     * @return entity after saved
+     */
+    @Override
+    public T saveDataTransferObject(Object dto) {
+        T entity = MappingUtils.convertDataTransferObjectToEntity(dto, getDomainClass());
+        if (null != entity) {
+            entity = save(entity);
+        }
+        return entity;
     }
 }

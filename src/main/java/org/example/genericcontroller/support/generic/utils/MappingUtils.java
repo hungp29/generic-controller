@@ -2,7 +2,6 @@ package org.example.genericcontroller.support.generic.utils;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.exception.generic.ConfigurationInvalidException;
-import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -128,7 +127,7 @@ public class MappingUtils {
      * @return list Data Transfer Object
      */
     public static List<Object> convertToListDataTransferObject(List<Map<String, Object>> records, Class<?> dtoType, String[] filter) {
-        Map<String, Object> mapDTO = new HashMap<>();
+        Map<String, Object> mapDTO = new LinkedHashMap<>();
         if (!CollectionUtils.isEmpty(records) && null != dtoType) {
             for (Map<String, Object> record : records) {
                 String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);
@@ -213,28 +212,46 @@ public class MappingUtils {
         return null;
     }
 
-    public static final String ENTITY_FIELD_PATH_KEY = "entityFieldPath";
-    public static final String ENTITY_FIELD_KEY = "entityField";
-    public static final String CONVERTER_KEY = "converter";
-
-    public static Map<String, Map<String, Object>> prepareDataForRequestParams(Class<?> dtoType, Set<String> fieldPaths) {
-        Map<String, Map<String, Object>> dataPrepared = new HashMap<>();
-        if (null != dtoType && !CollectionUtils.isEmpty(fieldPaths)) {
-            Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-            for (String fieldPath : fieldPaths) {
-                Map<String, Object> dataParam = new HashMap<>();
-                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, fieldPath);
-                dataParam.put(ENTITY_FIELD_PATH_KEY, entityFieldPath);
-                dataParam.put(ENTITY_FIELD_KEY, EntityUtils.getFieldByPath(entityType, entityFieldPath));
-                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, fieldPath);
-                MappingField mappingField = ObjectUtils.getAnnotation(dtoField, MappingField.class);
-                if (null != mappingField) {
-                    dataParam.put(CONVERTER_KEY, mappingField.converter());
-                }
-
-                dataPrepared.put(fieldPath, dataParam);
+    /**
+     * Convert Data Transfer Object to Entity.
+     *
+     * @param dto        Data Transfer Object instance
+     * @param entityType Entity type
+     * @param <T>        generic of entity
+     * @return Entity
+     */
+    public static <T> T convertDataTransferObjectToEntity(Object dto, Class<T> entityType) {
+        if (null != dto && null != entityType) {
+            DataTransferObjectUtils.validateThrow(dto.getClass(), new ConfigurationInvalidException(dto.getClass().getName() + ": Data Transfer Object configuration is invalid"));
+            Class<?> dtoTypeMapEntity = DataTransferObjectUtils.getEntityType(dto.getClass());
+            if (!entityType.isAssignableFrom(dtoTypeMapEntity)) {
+                throw new ConfigurationInvalidException("Entity type '" + entityType.getName() + "' don't support for '" + dtoTypeMapEntity.getName() + "' class");
             }
+
+            Map<String, Object> mapEntityFieldAndValue = DataTransferObjectUtils.convertToEntityMappingFieldAndValue(dto);
+            return EntityUtils.convertMapEntityPathAndValueToEntity(Constants.EMPTY_STRING, mapEntityFieldAndValue, entityType);
         }
-        return dataPrepared;
+        return null;
+    }
+
+    /**
+     * Convert entity to Data Transfer Object.
+     *
+     * @param entity  entity instance
+     * @param dtoType Data Transfer Object type
+     * @return Data Transfer Object
+     */
+    public static Object convertEntityToDataTransferObject(Object entity, Class<?> dtoType) {
+        if (null != entity && null != dtoType) {
+            DataTransferObjectUtils.validateThrow(dtoType, new ConfigurationInvalidException(dtoType.getName() + ": Data Transfer Object configuration is invalid"));
+            Class<?> entityTypeDTO = DataTransferObjectUtils.getEntityType(dtoType);
+            if (!entity.getClass().isAssignableFrom(entityTypeDTO)) {
+                throw new ConfigurationInvalidException("Entity type '" + entity.getClass().getName() + "' don't support for '" + entityTypeDTO.getName() + "' class");
+            }
+
+            Map<String, Object> mapEntityFieldAndValue = EntityUtils.convertToEntityMappingFieldAndValue(Constants.EMPTY_STRING, entity);
+            return DataTransferObjectUtils.convertMapEntityPathAndValueToDTO(Constants.EMPTY_STRING, mapEntityFieldAndValue, dtoType);
+        }
+        return null;
     }
 }

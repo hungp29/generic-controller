@@ -1,6 +1,6 @@
 package org.example.genericcontroller.exception.generic;
 
-public class GenericSelectionEmptyException extends RuntimeException {
+public class GenericSelectionEmptyException extends GenericException {
 
     public GenericSelectionEmptyException(String message) {
         super(message);

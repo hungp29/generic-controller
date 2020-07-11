@@ -5,7 +5,7 @@ package org.example.genericcontroller.exception.generic;
  *
  * @author hungp
  */
-public class WhereConditionNotSupportException extends RuntimeException {
+public class WhereConditionNotSupportException extends GenericException {
 
     public WhereConditionNotSupportException(String message) {
         super(message);

@@ -1,6 +1,6 @@
 package org.example.genericcontroller.exception.generic;
 
-public class GenericClassInvalidException extends RuntimeException {
+public class GenericClassInvalidException extends GenericException {
 
     public GenericClassInvalidException(String message) {
         super(message);

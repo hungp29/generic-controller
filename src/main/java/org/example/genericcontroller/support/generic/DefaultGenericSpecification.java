@@ -14,7 +14,15 @@ import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,7 +127,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
         if (null != path && null != criteriaBuilder && null != operator) {
             Object convertValue = DataTransferObjectUtils.convertField(fieldConverterType, operator.getValue());
             if (!Comparable.class.isAssignableFrom(convertValue.getClass())) {
-                throw new ConditionValueInvalidException("Condition value '" + value + "' is invalid");
+                throw new ConditionValueInvalidException("Condition value '" + value + "' is not Comparable class");
             }
             Comparable comparableValue = (Comparable) convertValue;
 

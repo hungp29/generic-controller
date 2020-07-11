@@ -1,6 +1,9 @@
 package org.example.genericcontroller.exception.generic;
 
-public class GenericFieldNameIncorrectException extends RuntimeException {
+/**
+ * Generic Field Name Incorrect Exception.
+ */
+public class GenericFieldNameIncorrectException extends GenericException {
 
     public GenericFieldNameIncorrectException(String message) {
         super(message);

@@ -1,5 +1,7 @@
 package org.example.genericcontroller.utils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -19,6 +21,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
@@ -417,5 +420,21 @@ public class ObjectUtils {
                 long.class.equals(field.getType()) ||
                 float.class.equals(field.getType()) ||
                 double.class.equals(field.getType());
+    }
+
+    /**
+     * Convert map data to object.
+     *
+     * @param mapData map data
+     * @param type    object class
+     * @return new instance of object
+     */
+    public static Object convertMapToObject(Map<String, ?> mapData, Class<?> type) {
+        if (null != mapData && null != type) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return mapper.convertValue(mapData, type);
+        }
+        return null;
     }
 }

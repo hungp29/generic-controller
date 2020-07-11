@@ -5,7 +5,7 @@ package org.example.genericcontroller.exception.generic;
  *
  * @author hungp
  */
-public class ConstructorInvalidException extends RuntimeException {
+public class ConstructorInvalidException extends GenericException {
 
     public ConstructorInvalidException(String message) {
         super(message);

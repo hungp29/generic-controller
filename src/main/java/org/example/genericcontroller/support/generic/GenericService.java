@@ -1,23 +1,12 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.exception.generic.GenericException;
-import org.example.genericcontroller.support.generic.utils.Validator;
-import org.example.genericcontroller.utils.ObjectUtils;
-import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Default Service.
@@ -38,111 +27,60 @@ public class GenericService<T extends Audit> {
     private int defaultPage = 1;
     private int defaultLimit = 10;
 
-
-    public <ID extends Serializable> Object getEntity(ID id, HttpServletRequest request) {
-        return null;
+    /**
+     * Create and save new entity.
+     *
+     * @param createRequestDTO data
+     * @return response instance
+     */
+    @Transactional
+    public Object createAndSave(Object createRequestDTO) {
+        return genericRepository.saveDataTransferObject(createRequestDTO);
     }
 
-    public Page<Object> getAllEntity(HttpServletRequest request) {
-        @SuppressWarnings("unchecked")
-        Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
-
-        // Validate configurations of entity
-        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
-
-        Class<?> readDTOClass = ObjectUtils.getAnnotation(entityClass, DataTransferObjectMapping.class).forRead();
-
-        // Validate configurations of dto
-//        Validator.validateObjectConfiguration(readDTOClass, MappingClass.class);
-
-        // Build page request.
-        PageRequest pageRequest = getPageRequest(request);
-        // Get all request param
-        Map<String, String> params = getParameters(request);
-        // Get list filter field
-        String[] filter = getFilterFields(request);
-
-        return genericRepository.findAll(readDTOClass, filter, params, pageRequest);
+    /**
+     * Get one entity data.
+     *
+     * @param id          id of entity
+     * @param readDTOType Read Data Transfer Object type
+     * @param filter      filter fields
+     * @param <ID>        generic of Id
+     * @return Data Transfer Object of Entity
+     */
+    public <ID extends Serializable> Object get(ID id, Class<?> readDTOType, String[] filter) {
+        return genericRepository.findOneById(id, readDTOType, filter);
     }
 
-    protected String[] getFilterFields(HttpServletRequest request) {
-        String filterFieldsValue = request.getParameter(FILTER);
-        if (!StringUtils.isEmpty(filterFieldsValue)) {
-            return StringUtils.trimArrayElements(filterFieldsValue.split(Constants.COMMA));
-        }
-        return null;
-    }
-
-    protected Map<String, String> getParameters(HttpServletRequest request) {
-        Map<String, String> params = new HashMap<>();
-        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-            String paramName = entry.getKey();
-            if (!Arrays.asList(NOT_PARAM_FIELDS).contains(paramName)) {
-                String paramValue = null != entry.getValue() ? String.join(Constants.COMMA, entry.getValue()) : Constants.EMPTY_STRING;
-                params.put(paramName, paramValue);
-            }
-        }
-        return params;
-    }
-
-    protected PageRequest getPageRequest(HttpServletRequest request) {
-        PageRequest pageRequest = null;
-        String page = getValueFromRequest(PAGE, request);
-        String limit = getValueFromRequest(LIMIT, request);
-        String orderBy = getValueFromRequest(ORDER_BY, request);
-        try {
-            if (!StringUtils.isEmpty(page) && !StringUtils.isEmpty(limit)) {
-                if (StringUtils.isEmpty(orderBy)) {
-                    pageRequest = buildPageRequest(Integer.parseInt(page), Integer.parseInt(limit));
-                } else {
-                    pageRequest = buildPageRequest(Integer.parseInt(page), Integer.parseInt(limit), orderBy);
-                }
-            }
-        } catch (NumberFormatException e) {
-            throw new GenericException("Cannot convert value for paging");
-        }
-        return pageRequest;
-    }
-
-    protected PageRequest buildPageRequest(Integer page, Integer limit) {
-        page = page == null ? 0 : page - this.defaultPage;
-        limit = limit == null ? this.defaultLimit : limit;
-        return PageRequest.of(page, limit);
-    }
-
-    protected PageRequest buildPageRequest(Integer page, Integer limit, String sort) {
-        if (StringUtils.isEmpty(sort)) {
-            return buildPageRequest(page, limit);
+    /**
+     * Get all entity by condition and pagination.
+     *
+     * @param readDTOType Read Data Transfer Object type
+     * @param params      request params
+     * @param pagination  pagination info
+     * @param filter      filter fields
+     * @return page data
+     */
+    public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter) {
+        if (!pagination.isUnPaged()) {
+            return genericRepository.findAll(readDTOType, filter, params, pagination.getPageable());
         } else {
-            page = page == null ? 0 : page - this.defaultPage;
-            limit = limit == null ? this.defaultLimit : limit;
-            return PageRequest.of(page, limit, buildSort(sort));
+            return genericRepository.findAll(readDTOType, filter, params, pagination.getSort());
         }
     }
 
-    protected Sort buildSort(String sort) {
-        Sort sortBuild = null;
-        if (!StringUtils.isEmpty(sort)) {
-            Matcher matcher = Pattern.compile("\\[(.*)\\](.*)").matcher(sort);
-
-            if (matcher.matches() && matcher.groupCount() == 2) {
-                sortBuild = Sort.by(matcher.group(2)).ascending();
-
-                if ("desc".equalsIgnoreCase(matcher.group(1))) {
-                    sortBuild = sortBuild.descending();
-                }
-            }
-        }
-
-        return sortBuild;
-    }
-
-    protected String getValueFromRequest(String key, HttpServletRequest request) {
-        if (!StringUtils.isEmpty(key) && null != request) {
-            return request.getParameter(key);
-        }
-        return null;
-    }
+//    /**
+//     * Get Entity class and validate entity has configuration DataTransferObjectMapping.
+//     *
+//     * @return entity type
+//     */
+//    private Class<T> getEntityConfigMapping() {
+//        @SuppressWarnings("unchecked")
+//        Class<T> entityClass = (Class<T>) ObjectUtils.getGenericClass(this.getClass());
+//
+//        // Validate configurations of entity
+//        Validator.validateObjectConfiguration(entityClass, DataTransferObjectMapping.class);
+//        return entityClass;
+//    }
 
     @Autowired
     public void setGenericRepository(GenericRepository<T> genericRepository) {
