@@ -1,5 +1,7 @@
 package org.example.genericcontroller.support.generic.obj;
 
+import org.springframework.util.Assert;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
  * @author hungp
  */
 public class DTOField extends GenericField {
+
+    private static final String FIELD_MUST_BE_NOT_NULL = "Field must be not null";
 
     /**
      * Prevent new instance.
@@ -29,7 +33,8 @@ public class DTOField extends GenericField {
     }
 
     @Override
-    public List<String> getMappingFieldPath() {
+    public List<String> getMappingFieldPath(boolean lookingInner, boolean includeCollection) {
+        Assert.notNull(field, FIELD_MUST_BE_NOT_NULL);
         return Collections.singletonList(getMappingFieldName());
     }
 }

@@ -102,7 +102,7 @@ public class DTOObject extends GenericField {
     }
 
     @Override
-    public List<String> getMappingFieldPath() {
+    public List<String> getMappingFieldPath(boolean lookingInner, boolean includeCollection) {
         List<String> paths = new ArrayList<>();
         String mappingFieldName = getMappingFieldName();
         if (!StringUtils.isEmpty(mappingFieldName)) {
@@ -110,14 +110,24 @@ public class DTOObject extends GenericField {
         }
 
         final String finalMappingFieldName = mappingFieldName;
-        for (GenericField dtoField : dtoFields) {
-            dtoField.getMappingFieldPath().forEach(innerPath -> {
-                String path = finalMappingFieldName + innerPath;
-                if (!paths.contains(path)) {
-                    paths.add(path);
-                }
-            });
-        }
+        dtoFields.stream()
+                .filter(dtoField -> (!dtoField.isInnerDTO() || lookingInner) && (!dtoField.isCollection() || includeCollection))
+                .forEach(dtoField -> {
+                    dtoField.getMappingFieldPath(lookingInner, includeCollection).forEach(innerPath -> {
+                        String path = finalMappingFieldName + innerPath;
+                        if (!paths.contains(path)) {
+                            paths.add(path);
+                        }
+                    });
+                });
+//        for (GenericField dtoField : dtoFields) {
+//            dtoField.getMappingFieldPath(lookingInner, includeCollection).forEach(innerPath -> {
+//                String path = finalMappingFieldName + innerPath;
+//                if (!paths.contains(path)) {
+//                    paths.add(path);
+//                }
+//            });
+//        }
         return paths;
     }
 

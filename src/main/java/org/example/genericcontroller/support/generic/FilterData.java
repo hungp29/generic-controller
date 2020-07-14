@@ -31,7 +31,10 @@ public class FilterData {
     }
 
     public List<String> getMappingEntityFieldPath(boolean filter, boolean lookingInner, boolean includeCollection) {
-        List<String> paths = dtoObject.getMappingFieldPath();
+        List<String> paths = dtoObject.getMappingFieldPath(false, false);
+        List<String> paths2 = dtoObject.getMappingFieldPath(true, false);
+        List<String> paths3 = dtoObject.getMappingFieldPath(false, true);
+        List<String> paths4 = dtoObject.getMappingFieldPath(true, true);
 //        List<String> lstMappingEntityField = extractor.getMappingEntityFieldPath(lookingInner, includeCollection);
 //        if (filter && null != this.filter && this.filter.length > 0) {
 //            List<String> keys = extractor.getMappingEntityPrimaryFieldPath(false);

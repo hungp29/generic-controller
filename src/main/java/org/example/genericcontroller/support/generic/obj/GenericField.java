@@ -42,9 +42,11 @@ public abstract class GenericField {
     /**
      * Get list mapping field.
      *
+     * @param lookingInner      looking inner DTO
+     * @param includeCollection include field of collection field
      * @return list mapping field
      */
-    public abstract List<String> getMappingFieldPath();
+    public abstract List<String> getMappingFieldPath(boolean lookingInner, boolean includeCollection);
 
     public boolean isCollection() {
         return isCollection;
