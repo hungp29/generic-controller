@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
+import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -14,8 +15,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Import(GenericConfiguration.class)
+@Import(GenericConfigurationSelector.class)
 public @interface EnabledGeneric {
+
+    String SCAN_ATTRIBUTE = "scan";
 
     /**
      * Package to scan generic object
@@ -23,4 +26,6 @@ public @interface EnabledGeneric {
      * @return package
      */
     String scan() default "";
+
+    AdviceMode mode() default AdviceMode.PROXY;
 }

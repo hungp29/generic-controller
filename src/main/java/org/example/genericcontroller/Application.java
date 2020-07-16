@@ -8,8 +8,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.env.Environment;
 
 @SpringBootApplication
-@EnableCaching
-@EnabledGeneric
+//@EnableCaching
+//@EnabledGeneric
 public class Application {
 
     private final Environment env;

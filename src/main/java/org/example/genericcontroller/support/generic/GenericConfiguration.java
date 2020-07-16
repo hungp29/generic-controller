@@ -1,56 +1,98 @@
 package org.example.genericcontroller.support.generic;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.genericcontroller.support.generic.annotation.APIGeneric;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.beans.factory.xml.BeanDefinitionParser;
-import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AdviceMode;
-import org.springframework.context.annotation.AdviceModeImportSelector;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportAware;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.w3c.dom.Element;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-//@Configuration
-//@RequiredArgsConstructor
-public class GenericConfiguration extends AdviceModeImportSelector<EnabledGeneric> {
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+
+@Slf4j
+@Configuration
+@RequiredArgsConstructor
+public class GenericConfiguration implements ImportAware, InitializingBean {
+
+    @Nullable
+    protected AnnotationAttributes enableGeneric;
+
+    private final RequestMappingHandlerMapping handlerMapping;
+
+    protected String packageScan;
+
     @Override
-    protected String[] selectImports(AdviceMode adviceMode) {
-        return new String[0];
+    public void setImportMetadata(AnnotationMetadata importMetadata) {
+        this.enableGeneric = AnnotationAttributes.fromMap(
+                importMetadata.getAnnotationAttributes(EnabledGeneric.class.getName(), false));
+        if (this.enableGeneric == null) {
+            throw new IllegalArgumentException(
+                    "@EnabledGeneric is not present on importing class " + importMetadata.getClassName());
+        }
+        packageScan = enableGeneric.getString(EnabledGeneric.SCAN_ATTRIBUTE);
+        if (StringUtils.isEmpty(packageScan)) {
+            AnnotatedGenericBeanDefinition configBeanDef = new AnnotatedGenericBeanDefinition(importMetadata);
+            packageScan = resolveBasePackage(Objects.requireNonNull(configBeanDef.getBeanClassName()));
+        }
     }
-//    @Override
-//    public BeanDefinition parse(Element element, ParserContext parserContext) {
-//        System.out.println("#################################");
-//        return null;
-//    }
 
-//    private final ApplicationContext context;
+    private String resolveBasePackage(String beanClassName) {
+        return beanClassName.lastIndexOf(".") > 0 ? beanClassName.substring(0, beanClassName.lastIndexOf(".")) : "";
+    }
 
-//    @Bean
-//    public String test() {
-//        ConfigurableListableBeanFactory beanFactory = ((AnnotationConfigServletWebServerApplicationContext) context).getBeanFactory();
-//        BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
-//        String[] candidateNames = registry.getBeanDefinitionNames();
-//
-//        for (String beanName : candidateNames) {
-//            BeanDefinition beanDef = registry.getBeanDefinition(beanName);
-//            System.out.println(beanDef.getBeanClassName());
-//            if (!StringUtils.isEmpty(beanDef.getBeanClassName()) &&
-//                    RootBeanDefinition.class.isAssignableFrom(beanDef.getClass())) {
-//                Class<?> beanClass = ((RootBeanDefinition) beanDef).getBeanClass();
-//                if (AnnotatedElementUtils.hasAnnotation(beanClass, EnabledGeneric.class)) {
-//                    System.out.println("DEEEE");
-//                }
-//            }
-//            System.out.println("Asd");
-//        }
-//
-//        return "ASd";
-//    }
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (null == enableGeneric) {
+            List<RequestMappingInfo> unregister = new LinkedList<>();
+            handlerMapping.getHandlerMethods().forEach((requestMappingInfo, handlerMethod) -> {
+                if (AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), APIGeneric.class)) {
+                    log.debug("[Generic Endpoint] Disable API: " + requestMappingInfo.toString());
+                    unregister.add(requestMappingInfo);
+                }
+            });
+            unregister.forEach(handlerMapping::unregisterMapping);
+        }
+    }
+
+    @Bean
+    public String scanDTOBean() {
+        if (null != enableGeneric) {
+            return doScan(packageScan);
+        }
+        return null;
+    }
+
+    private String doScan(String packageScan) {
+        Assert.notNull(packageScan, "Package scan must be not null");
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(MappingClass.class));
+
+        List<Class<?>> result = new LinkedList<>();
+        for (BeanDefinition bd : scanner.findCandidateComponents(packageScan)) {
+            System.out.println(bd.getBeanClassName());
+            try {
+                result.add(Class.forName(bd.getBeanClassName()));
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return "";
+    }
 }
