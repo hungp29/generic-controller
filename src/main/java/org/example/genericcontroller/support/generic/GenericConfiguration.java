@@ -61,7 +61,7 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
             List<RequestMappingInfo> unregister = new LinkedList<>();
             handlerMapping.getHandlerMethods().forEach((requestMappingInfo, handlerMethod) -> {
                 if (AnnotatedElementUtils.hasAnnotation(handlerMethod.getMethod(), APIGeneric.class)) {
-                    log.debug("[Generic Endpoint] Disable API: " + requestMappingInfo.toString());
+                    log.info("[Generic Endpoint] Disable API: " + requestMappingInfo.toString());
                     unregister.add(requestMappingInfo);
                 }
             });
@@ -85,11 +85,11 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
 
         List<Class<?>> result = new LinkedList<>();
         for (BeanDefinition bd : scanner.findCandidateComponents(packageScan)) {
-            System.out.println(bd.getBeanClassName());
+            log.info("[Generic DTO] Building mapping DTO object {}", bd.getBeanClassName());
             try {
                 result.add(Class.forName(bd.getBeanClassName()));
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                log.warn("Cannot found class {}", bd.getBeanClassName());
             }
         }
 

@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
+import org.example.genericcontroller.support.generic.GenericConfigurationSelector;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
 
