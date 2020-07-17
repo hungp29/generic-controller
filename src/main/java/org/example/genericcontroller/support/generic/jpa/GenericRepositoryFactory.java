@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.jpa;
 
+import org.example.genericcontroller.support.generic.DTOMappingCache;
 import org.example.genericcontroller.support.generic.GenericSpecification;
 import org.example.genericcontroller.support.generic.SimpleGenericRepository;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -22,22 +23,27 @@ public class GenericRepositoryFactory extends JpaRepositoryFactory {
 
     private final GenericSpecification spec;
 
+    private final DTOMappingCache mappingCache;
+
     /**
      * Creates a new {@link JpaRepositoryFactory}.
      *
      * @param entityManager must not be {@literal null}
+     * @param spec          {@link GenericSpecification}
+     * @param mappingCache  {@link DTOMappingCache}
      */
-    public GenericRepositoryFactory(EntityManager entityManager, GenericSpecification spec) {
+    public GenericRepositoryFactory(EntityManager entityManager, GenericSpecification spec, DTOMappingCache mappingCache) {
         super(entityManager);
         this.entityManager = entityManager;
         this.spec = spec;
+        this.mappingCache = mappingCache;
     }
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected JpaRepositoryImplementation<?, ?> getTargetRepository(RepositoryInformation information, EntityManager entityManager) {
         JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-        return new SimpleGenericRepository(entityInformation, entityManager, spec);
+        return new SimpleGenericRepository(entityInformation, entityManager, spec, mappingCache);
     }
 
     @Override

@@ -44,12 +44,23 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
     private final EntityManager em;
     private final GenericSpecification spec;
     private final JpaEntityInformation<T, ?> entityInformation;
+    private final DTOMappingCache mappingCache;
 
-    public SimpleGenericRepository(JpaEntityInformation<T, ?> entityInformation, EntityManager em, GenericSpecification spec) {
+    /**
+     * New Simple Generic Repository.
+     *
+     * @param entityInformation Entity information
+     * @param em                {@link EntityManager} instance
+     * @param spec              {@link GenericSpecification} Generic Specification instance
+     * @param mappingCache      {@link DTOMappingCache} Mapping Cache
+     */
+    public SimpleGenericRepository(JpaEntityInformation<T, ?> entityInformation, EntityManager em,
+                                   GenericSpecification spec, DTOMappingCache mappingCache) {
         super(entityInformation, em);
         this.entityInformation = entityInformation;
         this.em = em;
         this.spec = spec;
+        this.mappingCache = mappingCache;
     }
 
     /**

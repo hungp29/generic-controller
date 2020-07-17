@@ -39,16 +39,15 @@ public class FieldTypeResolved {
     public Field getFieldByPath(Class<?> type, String path) {
         Assert.notNull(type, "Class type must be not null");
         Assert.hasLength(path, "Field path must be not empty");
-        Class<?> checkType = type;
         String[] segmentPath = path.split(Constants.DOT_REGEX);
         int index = 0;
         Field field;
         do {
             String segment = segmentPath[index];
-            field = ObjectUtils.getField(checkType, segment, true);
-            checkType = field.getType();
-            if (Collection.class.isAssignableFrom(checkType)) {
-                checkType = ObjectUtils.getGenericField(field);
+            field = ObjectUtils.getField(type, segment, true);
+            type = field.getType();
+            if (Collection.class.isAssignableFrom(type)) {
+                type = ObjectUtils.getGenericField(field);
             }
             index++;
         } while (index < segmentPath.length);
