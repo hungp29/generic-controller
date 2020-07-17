@@ -34,6 +34,22 @@ public class DTOMapping {
         return dtoType.getName();
     }
 
+    public String getEntityClassName() {
+        return entityType.getName();
+    }
+
+    public Class<?> getDtoType() {
+        return dtoType;
+    }
+
+    public Class<? extends Audit> getEntityType() {
+        return entityType;
+    }
+
+    public List<FieldMapping> getFields() {
+        return fields;
+    }
+
     public static DTOMapping of(Class<?> dtoType) {
         return new DTOMapping(dtoType);
     }

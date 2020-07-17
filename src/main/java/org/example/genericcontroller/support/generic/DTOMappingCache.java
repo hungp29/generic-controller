@@ -2,13 +2,15 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.support.generic.mapping.DTOMapping;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DTOMappingCache implements Map<String, DTOMapping> {
-    private LinkedHashMap<String, DTOMapping> cache = new LinkedHashMap<>();
+public class DTOMappingCache implements Map<List<String>, DTOMapping> {
+    private LinkedHashMap<List<String>, DTOMapping> cache = new LinkedHashMap<>();
 
     @Override
     public int size() {
@@ -22,7 +24,7 @@ public class DTOMappingCache implements Map<String, DTOMapping> {
 
     @Override
     public boolean containsKey(Object key) {
-        return cache.containsKey(key);
+        return cache.keySet().stream().flatMap(Collection::stream).anyMatch(k -> k.equals(key));
     }
 
     @Override
@@ -33,20 +35,23 @@ public class DTOMappingCache implements Map<String, DTOMapping> {
 
     @Override
     public DTOMapping get(Object key) {
-        return cache.get(key);
+        return cache.entrySet()
+                .stream()
+                .filter(listDTOMappingEntry -> listDTOMappingEntry.getKey().contains(key))
+                .map(Entry::getValue).findFirst().orElse(null);
     }
 
     public DTOMapping get(Class<?> classKey) {
-        return cache.get(classKey.getName());
+        return get(classKey.getName());
     }
 
     @Override
-    public DTOMapping put(String key, DTOMapping value) {
+    public DTOMapping put(List<String> key, DTOMapping value) {
         return cache.put(key, value);
     }
 
     public DTOMapping put(DTOMapping value) {
-        return cache.put(value.getDTOClassName(), value);
+        return put(Arrays.asList(value.getDTOClassName(), value.getEntityClassName()), value);
     }
 
     @Override
@@ -55,7 +60,7 @@ public class DTOMappingCache implements Map<String, DTOMapping> {
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends DTOMapping> m) {
+    public void putAll(Map<? extends List<String>, ? extends DTOMapping> m) {
         cache.putAll(m);
     }
 
@@ -65,7 +70,7 @@ public class DTOMappingCache implements Map<String, DTOMapping> {
     }
 
     @Override
-    public Set<String> keySet() {
+    public Set<List<String>> keySet() {
         return cache.keySet();
     }
 
@@ -75,7 +80,7 @@ public class DTOMappingCache implements Map<String, DTOMapping> {
     }
 
     @Override
-    public Set<Entry<String, DTOMapping>> entrySet() {
+    public Set<Entry<List<String>, DTOMapping>> entrySet() {
         return cache.entrySet();
     }
 }

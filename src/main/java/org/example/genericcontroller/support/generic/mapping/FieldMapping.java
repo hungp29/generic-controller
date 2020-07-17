@@ -1,7 +1,10 @@
 package org.example.genericcontroller.support.generic.mapping;
 
+import org.example.genericcontroller.support.generic.MappingClass;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
 
+import javax.persistence.Entity;
 import java.lang.reflect.Field;
 
 public class FieldMapping {
@@ -32,7 +35,22 @@ public class FieldMapping {
         return mappingPath;
     }
 
+    public boolean isDTOField() {
+        return AnnotatedElementUtils.hasAnnotation(dtoField.getClassDeclaring(), MappingClass.class);
+    }
+
+    public boolean isEntityField() {
+        return AnnotatedElementUtils.hasAnnotation(entityField.getClassDeclaring(), Entity.class);
+    }
+
     public static FieldMapping of(Field dtoField, Field entityField, String mappingPath) {
         return new FieldMapping(dtoField, entityField, mappingPath);
+    }
+
+    @Override
+    public String toString() {
+        return "FieldMapping{" +
+                "mappingPath='" + mappingPath + '\'' +
+                '}';
     }
 }

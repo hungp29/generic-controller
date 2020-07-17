@@ -5,6 +5,9 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
 import org.example.genericcontroller.support.generic.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
+import org.example.genericcontroller.support.generic.mapping.DTOMapping;
+import org.example.genericcontroller.support.generic.mapping.FieldMapping;
+import org.example.genericcontroller.support.generic.mapping.GenericField;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -72,18 +75,25 @@ public class DefaultGenericSpecification implements GenericSpecification {
             query.distinct(true);
         }
 
-        // Build selections
-        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-            List<Selection<?>> selections = new ArrayList<>();
-            for (String entityFieldPath : entityFieldPaths) {
-                Path<?> path = buildPath(root, entityFieldPath, entityType);
-                if (null != path) {
-                    selections.add(path.alias(entityFieldPath));
-                }
-            }
-
-            query.multiselect(selections);
+        List<Selection<?>> selections2 = new ArrayList<>();
+        DTOMapping dtoMapping = mappingCache.get(dtoType);
+        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
+            selections2.add(buildPath(root, fieldMapping));
         }
+        query.multiselect(selections2);
+
+        // Build selections
+//        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+//            List<Selection<?>> selections = new ArrayList<>();
+//            for (String entityFieldPath : entityFieldPaths) {
+//                Path<?> path = buildPath(root, entityFieldPath, entityType);
+//                if (null != path) {
+//                    selections.add(path.alias(entityFieldPath));
+//                }
+//            }
+//
+//            query.multiselect(selections);
+//        }
 
         // Build where clause
         Predicate predicate = null;
@@ -114,6 +124,48 @@ public class DefaultGenericSpecification implements GenericSpecification {
             predicate = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         }
         return predicate;
+    }
+
+    private Path<?> buildPath(From<?, ?> from, FieldMapping fieldMapping) {
+        if (null != fieldMapping) {
+            GenericField entityField = fieldMapping.getEntityField();
+            if (!fieldMapping.isEntityField()) {
+                return from.get(entityField.getFieldName());
+            } else {
+                // If join is exist, get join from From instance, otherwise create new join
+                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
+                if (null == join) {
+                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
+//                    return buildPath(join, )
+                }
+            }
+        }
+
+//        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
+//            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
+//
+//            Field entityField = ObjectUtils.getField(entityType, entityPaths[0], true);
+//            if (null != entityField) {
+//                if (entityPaths.length > 1 && EntityUtils.isForeignKey(entityField)) {
+//                    Class<?> innerClass = MappingUtils.getFieldType(entityField);
+//
+//                    // If join is exist, get join from From instance, otherwise create new join
+//                    Join<?, ?> join = DuplicateChecker.existJoin(from, innerClass);
+//                    if (null == join) {
+//                        join = from.join(entityPaths[0], JoinType.LEFT);
+//                    }
+//                    String nextPath = entityFieldPath.substring(entityFieldPath.indexOf(Constants.DOT) + 1);
+//
+//                    return buildPath(join, nextPath, innerClass);
+//                } else {
+//                    return from.get(entityPaths[0]);
+//                }
+//            } else {
+//                throw new GenericFieldNameIncorrectException(String
+//                        .format("Cannot found field '%s' in entity '%s'", entityPaths[0], entityType.getSimpleName()));
+//            }
+//        }
+        return null;
     }
 
     /**
