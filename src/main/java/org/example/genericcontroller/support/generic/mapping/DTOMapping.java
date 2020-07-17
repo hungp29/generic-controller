@@ -55,7 +55,7 @@ public class DTOMapping {
                 path = mappingField.entityField();
             }
             Field entityField = fieldTypeResolved.getFieldByPath(entityType, path);
-            fields.add(FieldMapping.of(field, entityField));
+            fields.add(FieldMapping.of(field, entityField, path));
         }
     }
 

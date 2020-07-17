@@ -42,7 +42,7 @@ public class GenericRepositoryFactoryBean<T extends JpaRepository<S, ID>, S, ID 
         if (null != spec) {
             this.spec = spec;
         } else {
-            this.spec = new DefaultGenericSpecification();
+            this.spec = new DefaultGenericSpecification(mappingCache);
         }
         this.mappingCache = mappingCache;
     }

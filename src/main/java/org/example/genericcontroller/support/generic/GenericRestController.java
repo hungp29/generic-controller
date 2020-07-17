@@ -46,7 +46,7 @@ public class GenericRestController<T extends Audit> {
      */
     @APIReadOne("/{id}")
     public <ID extends Serializable> ResponseEntity<Object> get(@PathVariable ID id, Class<?> readDTOType, String[] filter) {
-        return ResponseEntity.ok(genericService.get(id, readDTOType, filter));
+        return ResponseEntity.ok(genericService.get(id, readDTOType, filter, null));
     }
 
     /**
@@ -61,8 +61,7 @@ public class GenericRestController<T extends Audit> {
     @APIReadAll
     public ResponseEntity<Page<Object>> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination,
                                                String[] filter, FilterData filterData) {
-        filterData.getMappingEntityFieldPath(true, true, true);
-        return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter));
+        return ResponseEntity.ok(genericService.getAll(readDTOType, params, pagination, filter, filterData));
     }
 
     @Autowired

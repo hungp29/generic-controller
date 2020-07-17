@@ -47,8 +47,8 @@ public class GenericService<T extends Audit> {
      * @param <ID>        generic of Id
      * @return Data Transfer Object of Entity
      */
-    public <ID extends Serializable> Object get(ID id, Class<?> readDTOType, String[] filter) {
-        return genericRepository.findOneById(id, readDTOType, filter);
+    public <ID extends Serializable> Object get(ID id, Class<?> readDTOType, String[] filter, FilterData filterData) {
+        return genericRepository.findOneById(id, readDTOType, filter, filterData);
     }
 
     /**
@@ -60,11 +60,12 @@ public class GenericService<T extends Audit> {
      * @param filter      filter fields
      * @return page data
      */
-    public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter) {
+    public Page<Object> getAll(Class<?> readDTOType, Map<String, String> params, Pagination pagination, String[] filter,
+                               FilterData filterData) {
         if (!pagination.isUnPaged()) {
-            return genericRepository.findAll(readDTOType, filter, params, pagination.getPageable());
+            return genericRepository.findAll(readDTOType, filter, params, filterData, pagination.getPageable());
         } else {
-            return genericRepository.findAll(readDTOType, filter, params, pagination.getSort());
+            return genericRepository.findAll(readDTOType, filter, params, filterData, pagination.getSort());
         }
     }
 

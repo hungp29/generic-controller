@@ -72,8 +72,8 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @return list Data Transfer Object
      */
     @Override
-    public List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params) {
-        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, Sort.unsorted());
+    public List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData) {
+        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, Sort.unsorted());
         List<Map<String, Object>> records = readData(query, dtoType, filter);
         return MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
     }
@@ -88,12 +88,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @return page data
      */
     @Override
-    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable) {
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Pageable pageable) {
         Page<Object> page;
         if (isUnpaged(pageable)) {
-            page = new PageImpl<>(findAll(dtoType, filter, params));
+            page = new PageImpl<>(findAll(dtoType, filter, params, filterData));
         } else {
-            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, pageable);
+            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, pageable);
             page = readPage(dtoType, filter, params, query, getDomainClass(), pageable);
         }
         return page;
@@ -109,8 +109,8 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @return page data
      */
     @Override
-    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort) {
-        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, sort);
+    public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Sort sort) {
+        TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, sort);
         List<Map<String, Object>> records = readData(query, dtoType, filter);
         return new PageImpl<>(MappingUtils.convertToListDataTransferObject(records, dtoType, filter));
     }
@@ -124,8 +124,8 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param sort    Sort instance
      * @return TypeQuery instance
      */
-    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, Sort sort) {
-        return getQuery(dtoType, filter, params, getDomainClass(), sort);
+    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Sort sort) {
+        return getQuery(dtoType, filter, params, filterData, getDomainClass(), sort);
     }
 
     /**
@@ -139,7 +139,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param <S>         generic of entity
      * @return TypeQuery instance
      */
-    protected <S extends T> TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params,
+    protected <S extends T> TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData,
                                                        Class<S> domainClass, Sort sort) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
 
@@ -164,9 +164,9 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param pageable paging info
      * @return TypedQuery instance
      */
-    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, Pageable pageable) {
+    protected TypedQuery<Tuple> getQuery(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Pageable pageable) {
         Sort sort = pageable.isPaged() ? pageable.getSort() : Sort.unsorted();
-        return getQuery(dtoType, filter, params, getDomainClass(), sort);
+        return getQuery(dtoType, filter, params, filterData, getDomainClass(), sort);
     }
 
     /**
@@ -385,12 +385,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
     }
 
     @Override
-    public <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter) {
+    public <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter, FilterData filterData) {
         String keyField = DataTransferObjectUtils.getFieldMappingEntityKey(dtoType);
         if (null != id && !StringUtils.isEmpty(keyField)) {
             Map<String, String> params = new HashMap<>();
             params.put(keyField, id.toString());
-            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, Sort.unsorted());
+            TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, Sort.unsorted());
             List<Map<String, Object>> records = readData(query, dtoType, filter);
             List<Object> lstDTO = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
             if (!CollectionUtils.isEmpty(lstDTO)) {

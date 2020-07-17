@@ -37,6 +37,12 @@ import java.util.Optional;
 @Slf4j
 public class DefaultGenericSpecification implements GenericSpecification {
 
+    private final DTOMappingCache mappingCache;
+
+    public DefaultGenericSpecification(DTOMappingCache mappingCache) {
+        this.mappingCache = mappingCache;
+    }
+
     /**
      * Auto build criteria.
      *
