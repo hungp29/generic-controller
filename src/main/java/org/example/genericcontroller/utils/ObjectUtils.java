@@ -217,6 +217,8 @@ public class ObjectUtils {
                 } catch (NoSuchFieldException e) {
                     if (lookingSuper) {
                         checkingClass = checkingClass.getSuperclass();
+                    } else {
+                        checkingClass = null;
                     }
                 }
             } while (null != checkingClass);

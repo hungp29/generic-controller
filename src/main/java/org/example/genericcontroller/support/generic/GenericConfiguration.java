@@ -3,6 +3,7 @@ package org.example.genericcontroller.support.generic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.support.generic.annotation.APIGeneric;
+import org.example.genericcontroller.support.generic.mapping.DTOMapping;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -70,29 +71,29 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
     }
 
     @Bean
-    public String scanDTOBean() {
+    public DTOMappingCache scanDTOBean() {
         if (null != enableGeneric) {
             return doScan(packageScan);
         }
         return null;
     }
 
-    private String doScan(String packageScan) {
+    private DTOMappingCache doScan(String packageScan) {
         Assert.notNull(packageScan, "Package scan must be not null");
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(MappingClass.class));
 
-        List<Class<?>> result = new LinkedList<>();
+        DTOMappingCache dtoMappingCache = new DTOMappingCache();
         for (BeanDefinition bd : scanner.findCandidateComponents(packageScan)) {
             log.info("[Generic DTO] Building mapping DTO object {}", bd.getBeanClassName());
             try {
-                result.add(Class.forName(bd.getBeanClassName()));
+                dtoMappingCache.put(DTOMapping.of(Class.forName(bd.getBeanClassName())));
             } catch (ClassNotFoundException e) {
                 log.warn("Cannot found class {}", bd.getBeanClassName());
             }
         }
 
-        return "";
+        return dtoMappingCache;
     }
 }
