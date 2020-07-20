@@ -18,11 +18,8 @@ import java.util.Objects;
 public class DTOMapping {
 
     private Class<?> dtoType;
-
     private Class<? extends Audit> entityType;
-
     private List<FieldMapping> fields;
-
     private DTOMappingCache mappingCache;
 
     private FieldTypeResolved fieldTypeResolved = FieldTypeResolved.getInstance();
@@ -32,30 +29,6 @@ public class DTOMapping {
         this.dtoType = dtoType;
         this.mappingCache = mappingCache;
         afterSetProperties();
-    }
-
-    public String getDTOClassName() {
-        return dtoType.getName();
-    }
-
-    public String getEntityClassName() {
-        return entityType.getName();
-    }
-
-    public Class<?> getDtoType() {
-        return dtoType;
-    }
-
-    public Class<? extends Audit> getEntityType() {
-        return entityType;
-    }
-
-    public List<FieldMapping> getFields() {
-        return fields;
-    }
-
-    public static DTOMapping of(Class<?> dtoType, DTOMappingCache mappingCache) {
-        return new DTOMapping(dtoType, mappingCache);
     }
 
     private void afterSetProperties() {
@@ -77,6 +50,30 @@ public class DTOMapping {
             Field[] entityFieldPath = fieldTypeResolved.parseFieldByPath(entityType, path);
             fields.add(FieldMapping.of(path, mappingCache, field, entityFieldPath));
         }
+    }
+
+    public static DTOMapping of(Class<?> dtoType, DTOMappingCache mappingCache) {
+        return new DTOMapping(dtoType, mappingCache);
+    }
+
+    public String getDTOClassName() {
+        return dtoType.getName();
+    }
+
+    public String getEntityClassName() {
+        return entityType.getName();
+    }
+
+    public Class<?> getDtoType() {
+        return dtoType;
+    }
+
+    public Class<? extends Audit> getEntityType() {
+        return entityType;
+    }
+
+    public List<FieldMapping> getFields() {
+        return fields;
     }
 
     @Override

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * Default Generic Specification.
@@ -83,7 +84,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
 //        }
 //        query.multiselect(selections2);
-        List<Path<?>> p  = buildPath(root, dtoMapping);
+        List<Path<?>> p = buildPathForDTOMapping(root, dtoMapping);
 
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
@@ -129,7 +130,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
-    private List<Path<?>> buildPath(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
+    private List<Path<?>> buildPathForFieldMapping(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
         List<Path<?>> lstPath = new LinkedList<>();
         if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
             GenericField entityField = entityFieldQueue.poll();
@@ -142,48 +143,22 @@ public class DefaultGenericSpecification implements GenericSpecification {
                     join = from.join(entityField.getFieldName(), JoinType.LEFT);
                 }
                 if (entityFieldQueue.size() > 0) {
-                    lstPath.addAll(buildPath(join, dtoFieldType, entityFieldQueue));
+                    lstPath.addAll(buildPathForFieldMapping(join, dtoFieldType, entityFieldQueue));
                 } else {
-                    DTOMapping dtoMapping = mappingCache.getByDTOClass(dtoFieldType);
-                    lstPath.addAll(buildPath(join, dtoMapping));
+                    lstPath.addAll(buildPathForDTOMapping(join, mappingCache.getByDTOClass(dtoFieldType)));
                 }
             }
         }
         return lstPath;
     }
 
-    private List<Path<?>> buildPath(From<?, ?> from, DTOMapping dtoMapping) {
+    private List<Path<?>> buildPathForDTOMapping(From<?, ?> from, DTOMapping dtoMapping) {
         List<Path<?>> lstPath = new LinkedList<>();
         for (FieldMapping fieldMapping : dtoMapping.getFields()) {
-            lstPath.addAll(buildPath(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
+            lstPath.addAll(buildPathForFieldMapping(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
         }
-        System.out.println("ASD");
+        lstPath = lstPath.stream().distinct().collect(Collectors.toList());
 
-
-//        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
-//            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
-//
-//            Field entityField = ObjectUtils.getField(entityType, entityPaths[0], true);
-//            if (null != entityField) {
-//                if (entityPaths.length > 1 && EntityUtils.isForeignKey(entityField)) {
-//                    Class<?> innerClass = MappingUtils.getFieldType(entityField);
-//
-//                    // If join is exist, get join from From instance, otherwise create new join
-//                    Join<?, ?> join = DuplicateChecker.existJoin(from, innerClass);
-//                    if (null == join) {
-//                        join = from.join(entityPaths[0], JoinType.LEFT);
-//                    }
-//                    String nextPath = entityFieldPath.substring(entityFieldPath.indexOf(Constants.DOT) + 1);
-//
-//                    return buildPath(join, nextPath, innerClass);
-//                } else {
-//                    return from.get(entityPaths[0]);
-//                }
-//            } else {
-//                throw new GenericFieldNameIncorrectException(String
-//                        .format("Cannot found field '%s' in entity '%s'", entityPaths[0], entityType.getSimpleName()));
-//            }
-//        }
         return lstPath;
     }
 
