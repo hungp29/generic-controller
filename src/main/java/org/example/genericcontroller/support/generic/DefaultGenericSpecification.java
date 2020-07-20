@@ -83,7 +83,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
 //        }
 //        query.multiselect(selections2);
-        buildPath(root, dtoMapping);
+        List<Path<?>> p  = buildPath(root, dtoMapping);
 
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
@@ -129,34 +129,35 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
-    private List<Path<?>> buildPath(From<?, ?> from, Queue<GenericField> entityFieldQueue) {
+    private List<Path<?>> buildPath(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
         List<Path<?>> lstPath = new LinkedList<>();
-        if (null != entityFieldQueue) {
+        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
             GenericField entityField = entityFieldQueue.poll();
             if (!entityField.isInnerEntity()) {
                 lstPath.add(from.get(entityField.getFieldName()));
             } else {
                 // If join is exist, get join from From instance, otherwise create new join
                 Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
-                lstPath.addAll(buildPath(join, entityFieldQueue));
+                if (null == join) {
+                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
+                }
+                if (entityFieldQueue.size() > 0) {
+                    lstPath.addAll(buildPath(join, dtoFieldType, entityFieldQueue));
+                } else {
+                    DTOMapping dtoMapping = mappingCache.getByDTOClass(dtoFieldType);
+                    lstPath.addAll(buildPath(join, dtoMapping));
+                }
             }
         }
         return lstPath;
     }
 
     private List<Path<?>> buildPath(From<?, ?> from, DTOMapping dtoMapping) {
-//        List<Path<?>> lstPath = new LinkedList<>();
-//        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
-//            Queue<GenericField> entityFieldQueue = fieldMapping.getEntityFieldQueue();
-//            GenericField entityField = entityFieldQueue.peek();
-//            if (entityField.isInnerEntity() && entityFieldQueue.size() > 1) {
-//                DTOMapping innerDTOMapping = mappingCache.getByDTOClass(fieldMapping.getDtoField().getClassDeclaring());
-//                lstPath.addAll(buildPath(from, dtoMapping));
-//            } else {
-//                lstPath.addAll(buildPath(from, fieldMapping));
-//            }
-//        }
-//        System.out.println("ASD");
+        List<Path<?>> lstPath = new LinkedList<>();
+        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
+            lstPath.addAll(buildPath(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
+        }
+        System.out.println("ASD");
 
 
 //        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
@@ -183,7 +184,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //                        .format("Cannot found field '%s' in entity '%s'", entityPaths[0], entityType.getSimpleName()));
 //            }
 //        }
-        return null;
+        return lstPath;
     }
 
     /**
