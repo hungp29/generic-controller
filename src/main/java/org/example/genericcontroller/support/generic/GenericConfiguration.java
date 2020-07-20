@@ -18,6 +18,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -34,6 +35,8 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
     protected AnnotationAttributes enableGeneric;
 
     private final RequestMappingHandlerMapping handlerMapping;
+
+    private final GenericWebApplicationContext context;
 
     protected String packageScan;
 
@@ -84,16 +87,19 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(MappingClass.class));
 
-        DTOMappingCache dtoMappingCache = new DTOMappingCache();
+        DTOMappingCache mappingCache = new DTOMappingCache();
         for (BeanDefinition bd : scanner.findCandidateComponents(packageScan)) {
             log.info("[Generic DTO] Building mapping DTO object {}", bd.getBeanClassName());
             try {
-                dtoMappingCache.put(DTOMapping.of(Class.forName(bd.getBeanClassName())));
+                Class<?> clazz = Class.forName(bd.getBeanClassName());
+                DTOMapping dtoMapping = DTOMapping.of(Class.forName(bd.getBeanClassName()), mappingCache);
+//                context.registerBean(bd.getBeanClassName(), clazz, dtoMapping);
+                mappingCache.put(dtoMapping);
             } catch (ClassNotFoundException e) {
                 log.warn("Cannot found class {}", bd.getBeanClassName());
             }
         }
 
-        return dtoMappingCache;
+        return mappingCache;
     }
 }

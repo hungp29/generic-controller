@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.DTOMappingCache;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
@@ -22,11 +23,14 @@ public class DTOMapping {
 
     private List<FieldMapping> fields;
 
+    private DTOMappingCache mappingCache;
+
     private FieldTypeResolved fieldTypeResolved = FieldTypeResolved.getInstance();
 
-    private DTOMapping(Class<?> dtoType) {
+    private DTOMapping(Class<?> dtoType, DTOMappingCache mappingCache) {
         Assert.notNull(dtoType, "Data Transfer Object class must be not null");
         this.dtoType = dtoType;
+        this.mappingCache = mappingCache;
         afterSetProperties();
     }
 
@@ -50,8 +54,8 @@ public class DTOMapping {
         return fields;
     }
 
-    public static DTOMapping of(Class<?> dtoType) {
-        return new DTOMapping(dtoType);
+    public static DTOMapping of(Class<?> dtoType, DTOMappingCache mappingCache) {
+        return new DTOMapping(dtoType, mappingCache);
     }
 
     private void afterSetProperties() {
@@ -71,7 +75,7 @@ public class DTOMapping {
                 path = mappingField.entityField();
             }
             Field[] entityFieldPath = fieldTypeResolved.parseFieldByPath(entityType, path);
-            fields.add(FieldMapping.of(path, field, entityFieldPath));
+            fields.add(FieldMapping.of(path, mappingCache, field, entityFieldPath));
         }
     }
 

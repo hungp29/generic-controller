@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.mapping;
 
+import org.example.genericcontroller.support.generic.DTOMappingCache;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
@@ -19,23 +20,17 @@ public class FieldMapping {
 
     private String mappingPath;
 
-    private FieldMapping(Field dtoField, Field entityField, String mappingPath) {
-        Assert.notNull(dtoField, "Data Transfer Object field must be not null");
-        Assert.notNull(entityField, "Entity field must be not null");
-        this.mappingPath = mappingPath;
-        this.dtoField = GenericField.of(dtoField);
-        this.entityFieldQueue = new LinkedList<>();
-        this.entityFieldQueue.add(GenericField.of(entityField));
-    }
+    private DTOMappingCache mappingCache;
 
-    private FieldMapping(Field dtoField, List<Field> entityFields, String mappingPath) {
+    private FieldMapping(Field dtoField, List<Field> entityFields, String mappingPath, DTOMappingCache mappingCache) {
         Assert.notNull(dtoField, "Data Transfer Object field must be not null");
         Assert.notEmpty(entityFields, "Entity field must be not empty");
         this.mappingPath = mappingPath;
-        this.dtoField = GenericField.of(dtoField);
+        this.mappingCache = mappingCache;
+        this.dtoField = GenericField.of(dtoField, mappingCache);
         this.entityFieldQueue = new LinkedList<>();
         for (Field entityField : entityFields) {
-            this.entityFieldQueue.add(GenericField.of(entityField));
+            this.entityFieldQueue.add(GenericField.of(entityField, mappingCache));
         }
     }
 
@@ -51,12 +46,8 @@ public class FieldMapping {
         return mappingPath;
     }
 
-    public static FieldMapping of(String mappingPath, Field dtoField, Field entityField) {
-        return new FieldMapping(dtoField, entityField, mappingPath);
-    }
-
-    public static FieldMapping of(String mappingPath, Field dtoField, Field... entityField) {
-        return new FieldMapping(dtoField, Arrays.asList(entityField), mappingPath);
+    public static FieldMapping of(String mappingPath, DTOMappingCache mappingCache, Field dtoField, Field... entityField) {
+        return new FieldMapping(dtoField, Arrays.asList(entityField), mappingPath, mappingCache);
     }
 
     @Override
