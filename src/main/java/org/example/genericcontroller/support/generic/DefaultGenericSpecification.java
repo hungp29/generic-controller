@@ -7,6 +7,7 @@ import org.example.genericcontroller.support.generic.exception.GenericFieldNameI
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.mapping.DTOMapping;
 import org.example.genericcontroller.support.generic.mapping.FieldMapping;
+import org.example.genericcontroller.support.generic.mapping.GenericField;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -24,11 +25,14 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 
 /**
  * Default Generic Specification.
@@ -82,17 +86,17 @@ public class DefaultGenericSpecification implements GenericSpecification {
         buildPath(root, dtoMapping);
 
         // Build selections
-//        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-//            List<Selection<?>> selections = new ArrayList<>();
-//            for (String entityFieldPath : entityFieldPaths) {
-//                Path<?> path = buildPath(root, entityFieldPath, entityType);
-//                if (null != path) {
-//                    selections.add(path.alias(entityFieldPath));
-//                }
-//            }
-//
-//            query.multiselect(selections);
-//        }
+        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+            List<Selection<?>> selections = new ArrayList<>();
+            for (String entityFieldPath : entityFieldPaths) {
+                Path<?> path = buildPath(root, entityFieldPath, entityType);
+                if (null != path) {
+                    selections.add(path.alias(entityFieldPath));
+                }
+            }
+
+            query.multiselect(selections);
+        }
 
         // Build where clause
         Predicate predicate = null;
@@ -125,22 +129,35 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
-    private Path<?> buildPath(From<?, ?> from, DTOMapping dtoMapping) {
-        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
+    private List<Path<?>> buildPath(From<?, ?> from, Queue<GenericField> entityFieldQueue) {
+        List<Path<?>> lstPath = new LinkedList<>();
+        if (null != entityFieldQueue) {
+            GenericField entityField = entityFieldQueue.poll();
+            if (!entityField.isInnerEntity()) {
+                lstPath.add(from.get(entityField.getFieldName()));
+            } else {
+                // If join is exist, get join from From instance, otherwise create new join
+                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
+                lstPath.addAll(buildPath(join, entityFieldQueue));
+            }
         }
-//        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
-//            GenericField entityField = entityFieldQueue.poll();
-//            if (!entityField.isInnerEntity()) {
-//                return from.get(entityField.getFieldName());
+        return lstPath;
+    }
+
+    private List<Path<?>> buildPath(From<?, ?> from, DTOMapping dtoMapping) {
+//        List<Path<?>> lstPath = new LinkedList<>();
+//        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
+//            Queue<GenericField> entityFieldQueue = fieldMapping.getEntityFieldQueue();
+//            GenericField entityField = entityFieldQueue.peek();
+//            if (entityField.isInnerEntity() && entityFieldQueue.size() > 1) {
+//                DTOMapping innerDTOMapping = mappingCache.getByDTOClass(fieldMapping.getDtoField().getClassDeclaring());
+//                lstPath.addAll(buildPath(from, dtoMapping));
 //            } else {
-//                // If join is exist, get join from From instance, otherwise create new join
-//                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
-//                if (null == join) {
-//                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
-//                    return buildPath(join, entityFieldQueue);
-//                }
+//                lstPath.addAll(buildPath(from, fieldMapping));
 //            }
 //        }
+//        System.out.println("ASD");
+
 
 //        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
 //            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
