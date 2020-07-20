@@ -36,21 +36,23 @@ public class FieldTypeResolved {
         private static final FieldTypeResolved INSTANCE = new FieldTypeResolved();
     }
 
-    public Field getFieldByPath(Class<?> type, String path) {
+    public Field[] parseFieldByPath(Class<?> type, String path) {
         Assert.notNull(type, "Class type must be not null");
         Assert.hasLength(path, "Field path must be not empty");
         String[] segmentPath = path.split(Constants.DOT_REGEX);
+        Field[] fieldPath = new Field[segmentPath.length];
         int index = 0;
         Field field;
         do {
             String segment = segmentPath[index];
             field = ObjectUtils.getField(type, segment, true);
+            fieldPath[index] = field;
             type = field.getType();
             if (Collection.class.isAssignableFrom(type)) {
                 type = ObjectUtils.getGenericField(field);
             }
             index++;
         } while (index < segmentPath.length);
-        return field;
+        return fieldPath;
     }
 }

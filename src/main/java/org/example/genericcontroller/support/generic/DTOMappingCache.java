@@ -1,86 +1,105 @@
 package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.support.generic.mapping.DTOMapping;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.util.CollectionUtils;
 
-import java.util.Arrays;
+import javax.persistence.Entity;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-public class DTOMappingCache implements Map<List<String>, DTOMapping> {
-    private LinkedHashMap<List<String>, DTOMapping> cache = new LinkedHashMap<>();
+public class DTOMappingCache {
+    private LinkedHashMap<String, DTOMapping> cache = new LinkedHashMap<>();
+    private HashMap<String, List<String>> mapKey = new HashMap<>();
 
-    @Override
     public int size() {
         return cache.size();
     }
 
-    @Override
     public boolean isEmpty() {
         return cache.isEmpty();
     }
 
-    @Override
-    public boolean containsKey(Object key) {
-        return cache.keySet().stream().flatMap(Collection::stream).anyMatch(k -> k.equals(key));
+    public boolean containsDTOKey(String key) {
+        return cache.containsKey(key);
     }
 
-    @Override
-    public boolean containsValue(Object value) {
-        if (value == null || value.getClass() != DTOMapping.class) return false;
+    public boolean containsEntityKey(String key) {
+        return mapKey.containsKey(key);
+    }
+
+    public boolean containsValue(DTOMapping value) {
         return cache.containsValue(value);
     }
 
-    @Override
-    public DTOMapping get(Object key) {
-        return cache.entrySet()
-                .stream()
-                .filter(listDTOMappingEntry -> listDTOMappingEntry.getKey().contains(key))
-                .map(Entry::getValue).findFirst().orElse(null);
+    public DTOMapping getByDTOKey(String key) {
+        return cache.get(key);
     }
 
-    public DTOMapping get(Class<?> classKey) {
-        return get(classKey.getName());
+    public DTOMapping getByDTOClass(Class<?> classType) {
+        if (AnnotatedElementUtils.hasAnnotation(classType, MappingClass.class)) {
+            return getByDTOKey(classType.getName());
+        }
+        return null;
     }
 
-    @Override
-    public DTOMapping put(List<String> key, DTOMapping value) {
-        return cache.put(key, value);
+    public List<DTOMapping> getByEntityKey(String key) {
+        List<DTOMapping> result = new LinkedList<>();
+        List<String> keys = mapKey.get(key);
+        if (!CollectionUtils.isEmpty(keys)) {
+            keys.forEach(k -> result.add(cache.get(k)));
+        }
+        return result;
+    }
+
+    public List<DTOMapping> getByEntityClass(Class<?> classType) {
+        if (AnnotatedElementUtils.hasAnnotation(classType, Entity.class)) {
+            return getByEntityKey(classType.getName());
+        }
+        return null;
     }
 
     public DTOMapping put(DTOMapping value) {
-        return put(Arrays.asList(value.getDTOClassName(), value.getEntityClassName()), value);
+        String dtoKey = value.getDTOClassName();
+        cache.put(dtoKey, value);
+
+        String entityKey = value.getEntityClassName();
+        List<String> keys = mapKey.get(entityKey);
+        if (null == keys) {
+            keys = new LinkedList<>();
+        }
+        keys.add(dtoKey);
+        mapKey.put(entityKey, keys);
+        return null;
     }
 
-    @Override
-    public DTOMapping remove(Object key) {
-        return cache.remove(key);
+    public DTOMapping removeByDTOKey(String key) {
+        DTOMapping value = cache.remove(key);
+        if (null != value) {
+            List<String> keys = mapKey.get(value.getEntityClassName());
+            keys.remove(key);
+        }
+        return value;
     }
 
-    @Override
-    public void putAll(Map<? extends List<String>, ? extends DTOMapping> m) {
-        cache.putAll(m);
-    }
-
-    @Override
     public void clear() {
         cache.clear();
+        mapKey.clear();
     }
 
-    @Override
-    public Set<List<String>> keySet() {
+    public Set<String> keySetDTO() {
         return cache.keySet();
     }
 
-    @Override
-    public Collection<DTOMapping> values() {
-        return cache.values();
+    public Set<String> keySetEntity() {
+        return mapKey.keySet();
     }
 
-    @Override
-    public Set<Entry<List<String>, DTOMapping>> entrySet() {
-        return cache.entrySet();
+    public Collection<DTOMapping> values() {
+        return cache.values();
     }
 }

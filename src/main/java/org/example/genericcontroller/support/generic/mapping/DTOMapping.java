@@ -70,8 +70,8 @@ public class DTOMapping {
             if (null != mappingField && !StringUtils.isEmpty(mappingField.entityField())) {
                 path = mappingField.entityField();
             }
-            Field entityField = fieldTypeResolved.getFieldByPath(entityType, path);
-            fields.add(FieldMapping.of(field, entityField, path));
+            Field[] entityFieldPath = fieldTypeResolved.parseFieldByPath(entityType, path);
+            fields.add(FieldMapping.of(path, field, entityFieldPath));
         }
     }
 
@@ -86,5 +86,12 @@ public class DTOMapping {
     @Override
     public int hashCode() {
         return Objects.hash(dtoType, entityType, fields, fieldTypeResolved);
+    }
+
+    @Override
+    public String toString() {
+        return "DTOMapping{" +
+                "dtoType=" + dtoType.getName() +
+                '}';
     }
 }

@@ -7,7 +7,6 @@ import org.example.genericcontroller.support.generic.exception.GenericFieldNameI
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.mapping.DTOMapping;
 import org.example.genericcontroller.support.generic.mapping.FieldMapping;
-import org.example.genericcontroller.support.generic.mapping.GenericField;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -25,7 +24,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,12 +73,13 @@ public class DefaultGenericSpecification implements GenericSpecification {
             query.distinct(true);
         }
 
-        List<Selection<?>> selections2 = new ArrayList<>();
-        DTOMapping dtoMapping = mappingCache.get(dtoType);
-        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
-            selections2.add(buildPath(root, fieldMapping));
-        }
-        query.multiselect(selections2);
+//         List<Selection<?>> selections2 = new ArrayList<>();
+        DTOMapping dtoMapping = mappingCache.getByDTOClass(dtoType);
+//        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
+//            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
+//        }
+//        query.multiselect(selections2);
+        buildPath(root, dtoMapping);
 
         // Build selections
 //        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
@@ -126,20 +125,22 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
-    private Path<?> buildPath(From<?, ?> from, FieldMapping fieldMapping) {
-        if (null != fieldMapping) {
-            GenericField entityField = fieldMapping.getEntityField();
-            if (!fieldMapping.isEntityField()) {
-                return from.get(entityField.getFieldName());
-            } else {
-                // If join is exist, get join from From instance, otherwise create new join
-                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
-                if (null == join) {
-                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
-//                    return buildPath(join, )
-                }
-            }
+    private Path<?> buildPath(From<?, ?> from, DTOMapping dtoMapping) {
+        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
         }
+//        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
+//            GenericField entityField = entityFieldQueue.poll();
+//            if (!entityField.isInnerEntity()) {
+//                return from.get(entityField.getFieldName());
+//            } else {
+//                // If join is exist, get join from From instance, otherwise create new join
+//                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
+//                if (null == join) {
+//                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
+//                    return buildPath(join, entityFieldQueue);
+//                }
+//            }
+//        }
 
 //        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
 //            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);

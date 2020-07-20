@@ -1,8 +1,11 @@
 package org.example.genericcontroller.support.generic.mapping;
 
+import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.utils.ObjectUtils;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
 
+import javax.persistence.Entity;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
@@ -50,7 +53,22 @@ public class GenericField {
         return field.getName();
     }
 
+    public boolean isInnerDTO() {
+        return AnnotatedElementUtils.hasAnnotation(fieldType, MappingClass.class);
+    }
+
+    public boolean isInnerEntity() {
+        return AnnotatedElementUtils.hasAnnotation(fieldType, Entity.class);
+    }
+
     public static GenericField of(Field field) {
         return new GenericField(field);
+    }
+
+    @Override
+    public String toString() {
+        return "GenericField{" +
+                "field=" + field.getName() +
+                '}';
     }
 }
