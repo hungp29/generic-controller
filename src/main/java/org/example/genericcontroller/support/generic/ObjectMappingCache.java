@@ -1,6 +1,6 @@
 package org.example.genericcontroller.support.generic;
 
-import org.example.genericcontroller.support.generic.mapping.DTOMapping;
+import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -12,8 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class DTOMappingCache {
-    private LinkedHashMap<String, DTOMapping> cache = new LinkedHashMap<>();
+public class ObjectMappingCache {
+    private LinkedHashMap<String, ObjectMapping> cache = new LinkedHashMap<>();
     private HashMap<String, List<String>> mapKey = new HashMap<>();
 
     public int size() {
@@ -32,23 +32,23 @@ public class DTOMappingCache {
         return mapKey.containsKey(key);
     }
 
-    public boolean containsValue(DTOMapping value) {
+    public boolean containsValue(ObjectMapping value) {
         return cache.containsValue(value);
     }
 
-    public DTOMapping getByDTOKey(String key) {
+    public ObjectMapping getByDTOKey(String key) {
         return cache.get(key);
     }
 
-    public DTOMapping getByDTOClass(Class<?> classType) {
+    public ObjectMapping getByDTOClass(Class<?> classType) {
         if (AnnotatedElementUtils.hasAnnotation(classType, MappingClass.class)) {
             return getByDTOKey(classType.getName());
         }
         return null;
     }
 
-    public List<DTOMapping> getByEntityKey(String key) {
-        List<DTOMapping> result = new LinkedList<>();
+    public List<ObjectMapping> getByEntityKey(String key) {
+        List<ObjectMapping> result = new LinkedList<>();
         List<String> keys = mapKey.get(key);
         if (!CollectionUtils.isEmpty(keys)) {
             keys.forEach(k -> result.add(cache.get(k)));
@@ -56,14 +56,14 @@ public class DTOMappingCache {
         return result;
     }
 
-    public List<DTOMapping> getByEntityClass(Class<?> classType) {
+    public List<ObjectMapping> getByEntityClass(Class<?> classType) {
         if (AnnotatedElementUtils.hasAnnotation(classType, Entity.class)) {
             return getByEntityKey(classType.getName());
         }
         return null;
     }
 
-    public DTOMapping put(DTOMapping value) {
+    public ObjectMapping put(ObjectMapping value) {
         String dtoKey = value.getDTOClassName();
         cache.put(dtoKey, value);
 
@@ -77,8 +77,8 @@ public class DTOMappingCache {
         return null;
     }
 
-    public DTOMapping removeByDTOKey(String key) {
-        DTOMapping value = cache.remove(key);
+    public ObjectMapping removeByDTOKey(String key) {
+        ObjectMapping value = cache.remove(key);
         if (null != value) {
             List<String> keys = mapKey.get(value.getEntityClassName());
             keys.remove(key);
@@ -99,7 +99,7 @@ public class DTOMappingCache {
         return mapKey.keySet();
     }
 
-    public Collection<DTOMapping> values() {
+    public Collection<ObjectMapping> values() {
         return cache.values();
     }
 }

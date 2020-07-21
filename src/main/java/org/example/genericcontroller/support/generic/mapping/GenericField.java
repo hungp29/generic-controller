@@ -1,7 +1,7 @@
 package org.example.genericcontroller.support.generic.mapping;
 
-import org.example.genericcontroller.support.generic.DTOMappingCache;
 import org.example.genericcontroller.support.generic.MappingClass;
+import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
@@ -10,21 +10,22 @@ import javax.persistence.Entity;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
+/**
+ * Generic Field.
+ *
+ * @author hungp
+ */
 public class GenericField {
 
-    private DTOMappingCache mappingCache;
-
+    private ObjectMappingCache mappingCache;
     private Field field;
-
     private Class<?> fieldType;
-
     private boolean isCollection;
-
     @SuppressWarnings("rawtypes")
     private Class<? extends Collection> collectionType;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private GenericField(Field field, DTOMappingCache mappingCache) {
+    private GenericField(Field field, ObjectMappingCache mappingCache) {
         Assert.notNull(field, "Generic field must be not null");
         this.field = field;
         this.mappingCache = mappingCache;
@@ -65,7 +66,7 @@ public class GenericField {
         return AnnotatedElementUtils.hasAnnotation(fieldType, Entity.class);
     }
 
-    public static GenericField of(Field field, DTOMappingCache mappingCache) {
+    public static GenericField of(Field field, ObjectMappingCache mappingCache) {
         return new GenericField(field, mappingCache);
     }
 

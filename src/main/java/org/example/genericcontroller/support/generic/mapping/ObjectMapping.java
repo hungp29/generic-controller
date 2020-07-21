@@ -1,9 +1,9 @@
 package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.DTOMappingCache;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
+import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -14,23 +14,38 @@ import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class DTOMapping {
+/**
+ * Object Mapping.
+ *
+ * @author hungp
+ */
+public class ObjectMapping {
 
     private Class<?> dtoType;
     private Class<? extends Audit> entityType;
     private List<FieldMapping> fields;
-    private DTOMappingCache mappingCache;
+    private ObjectMappingCache mappingCache;
 
     private FieldTypeResolved fieldTypeResolved = FieldTypeResolved.getInstance();
 
-    private DTOMapping(Class<?> dtoType, DTOMappingCache mappingCache) {
+    /**
+     * New instance of {@link ObjectMapping}.
+     *
+     * @param dtoType      Class type of DTO
+     * @param mappingCache {@link ObjectMappingCache} object mapping cache
+     */
+    private ObjectMapping(Class<?> dtoType, ObjectMappingCache mappingCache) {
         Assert.notNull(dtoType, "Data Transfer Object class must be not null");
         this.dtoType = dtoType;
         this.mappingCache = mappingCache;
         afterSetProperties();
     }
 
+    /**
+     * Process another fields after set properties.
+     */
     private void afterSetProperties() {
         // Get entity mapping
         MappingClass mappingClass = AnnotatedElementUtils.findMergedAnnotation(dtoType, MappingClass.class);
@@ -40,6 +55,7 @@ public class DTOMapping {
         // Store entity type
         entityType = mappingClass.value();
 
+        // Generate list FieldMapping
         fields = new LinkedList<>();
         for (Field field : ObjectUtils.getFields(dtoType, true)) {
             String path = field.getName();
@@ -52,35 +68,84 @@ public class DTOMapping {
         }
     }
 
-    public static DTOMapping of(Class<?> dtoType, DTOMappingCache mappingCache) {
-        return new DTOMapping(dtoType, mappingCache);
+    /**
+     * Static method to new instance {@link ObjectMapping}.
+     *
+     * @param dtoType      Class type of DTO
+     * @param mappingCache {@link ObjectMappingCache} object mapping cache
+     * @return new instance of {@link ObjectMapping}
+     */
+    public static ObjectMapping of(Class<?> dtoType, ObjectMappingCache mappingCache) {
+        return new ObjectMapping(dtoType, mappingCache);
     }
 
+    /**
+     * Get class name of DTO.
+     *
+     * @return class name
+     */
     public String getDTOClassName() {
         return dtoType.getName();
     }
 
+    /**
+     * Get class name of Entity.
+     *
+     * @return class name
+     */
     public String getEntityClassName() {
         return entityType.getName();
     }
 
-    public Class<?> getDtoType() {
+    /**
+     * Get class type of DTO.
+     *
+     * @return class type
+     */
+    public Class<?> getDTOType() {
         return dtoType;
     }
 
+    /**
+     * Get class type of entity.
+     *
+     * @return class type
+     */
     public Class<? extends Audit> getEntityType() {
         return entityType;
     }
 
+    /**
+     * Get list {@link FieldMapping}.
+     *
+     * @return list {@link FieldMapping}
+     */
     public List<FieldMapping> getFields() {
         return fields;
     }
+
+    public List<String> getListFieldPath(boolean includeCollection) {
+        List<String> paths = new LinkedList<>();
+        for (FieldMapping fieldMapping : fields) {
+            paths.addAll(fieldMapping.getListFieldPath(includeCollection));
+        }
+        return paths.stream().distinct().collect(Collectors.toList());
+    }
+
+    public List<String> getListCollectionFieldPath() {
+        List<String> paths = new LinkedList<>();
+        for (FieldMapping fieldMapping : fields) {
+            paths.addAll(fieldMapping.getListCollectionFieldPath());
+        }
+        return paths.stream().distinct().collect(Collectors.toList());
+    }
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DTOMapping that = (DTOMapping) o;
+        ObjectMapping that = (ObjectMapping) o;
         return Objects.equals(dtoType.getName(), that.dtoType.getName());
     }
 
@@ -91,8 +156,9 @@ public class DTOMapping {
 
     @Override
     public String toString() {
-        return "DTOMapping{" +
+        return "ObjectMapping{" +
                 "dtoType=" + dtoType.getName() +
+                ", entityType=" + entityType.getName() +
                 '}';
     }
 }

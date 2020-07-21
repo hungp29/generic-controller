@@ -3,7 +3,7 @@ package org.example.genericcontroller.support.generic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.support.generic.annotation.APIGeneric;
-import org.example.genericcontroller.support.generic.mapping.DTOMapping;
+import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -74,27 +74,24 @@ public class GenericConfiguration implements ImportAware, InitializingBean {
     }
 
     @Bean
-    public DTOMappingCache scanDTOBean() {
+    public ObjectMappingCache scanDTOBean() {
         if (null != enableGeneric) {
             return doScan(packageScan);
         }
         return null;
     }
 
-    private DTOMappingCache doScan(String packageScan) {
+    private ObjectMappingCache doScan(String packageScan) {
         Assert.notNull(packageScan, "Package scan must be not null");
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(MappingClass.class));
 
-        DTOMappingCache mappingCache = new DTOMappingCache();
+        ObjectMappingCache mappingCache = new ObjectMappingCache();
         for (BeanDefinition bd : scanner.findCandidateComponents(packageScan)) {
             log.info("[Generic DTO] Building mapping DTO object {}", bd.getBeanClassName());
             try {
-                Class<?> clazz = Class.forName(bd.getBeanClassName());
-                DTOMapping dtoMapping = DTOMapping.of(Class.forName(bd.getBeanClassName()), mappingCache);
-//                context.registerBean(bd.getBeanClassName(), clazz, dtoMapping);
-                mappingCache.put(dtoMapping);
+                mappingCache.put(ObjectMapping.of(Class.forName(bd.getBeanClassName()), mappingCache));
             } catch (ClassNotFoundException e) {
                 log.warn("Cannot found class {}", bd.getBeanClassName());
             }

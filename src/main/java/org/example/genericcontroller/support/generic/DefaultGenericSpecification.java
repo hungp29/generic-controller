@@ -5,9 +5,7 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
 import org.example.genericcontroller.support.generic.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
-import org.example.genericcontroller.support.generic.mapping.DTOMapping;
-import org.example.genericcontroller.support.generic.mapping.FieldMapping;
-import org.example.genericcontroller.support.generic.mapping.GenericField;
+import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -28,12 +26,9 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.stream.Collectors;
 
 /**
  * Default Generic Specification.
@@ -43,9 +38,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DefaultGenericSpecification implements GenericSpecification {
 
-    private final DTOMappingCache mappingCache;
+    private final ObjectMappingCache mappingCache;
 
-    public DefaultGenericSpecification(DTOMappingCache mappingCache) {
+    public DefaultGenericSpecification(ObjectMappingCache mappingCache) {
         this.mappingCache = mappingCache;
     }
 
@@ -79,12 +74,15 @@ public class DefaultGenericSpecification implements GenericSpecification {
         }
 
 //         List<Selection<?>> selections2 = new ArrayList<>();
-        DTOMapping dtoMapping = mappingCache.getByDTOClass(dtoType);
+        ObjectMapping objectMapping = mappingCache.getByDTOClass(dtoType);
+        List<String> paths = objectMapping.getListFieldPath(false);
+        List<String> paths2 = objectMapping.getListFieldPath(true);
+        List<String> paths3 = objectMapping.getListCollectionFieldPath();
 //        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
 //            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
 //        }
 //        query.multiselect(selections2);
-        List<Path<?>> p = buildPathForDTOMapping(root, dtoMapping);
+//        List<Path<?>> p = buildPathForDTOMapping(root, objectMapping);
 
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
@@ -130,37 +128,37 @@ public class DefaultGenericSpecification implements GenericSpecification {
         return predicate;
     }
 
-    private List<Path<?>> buildPathForFieldMapping(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
-        List<Path<?>> lstPath = new LinkedList<>();
-        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
-            GenericField entityField = entityFieldQueue.poll();
-            if (!entityField.isInnerEntity()) {
-                lstPath.add(from.get(entityField.getFieldName()));
-            } else {
-                // If join is exist, get join from From instance, otherwise create new join
-                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
-                if (null == join) {
-                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
-                }
-                if (entityFieldQueue.size() > 0) {
-                    lstPath.addAll(buildPathForFieldMapping(join, dtoFieldType, entityFieldQueue));
-                } else {
-                    lstPath.addAll(buildPathForDTOMapping(join, mappingCache.getByDTOClass(dtoFieldType)));
-                }
-            }
-        }
-        return lstPath;
-    }
-
-    private List<Path<?>> buildPathForDTOMapping(From<?, ?> from, DTOMapping dtoMapping) {
-        List<Path<?>> lstPath = new LinkedList<>();
-        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
-            lstPath.addAll(buildPathForFieldMapping(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
-        }
-        lstPath = lstPath.stream().distinct().collect(Collectors.toList());
-
-        return lstPath;
-    }
+//    private List<Path<?>> buildPathForFieldMapping(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
+//        List<Path<?>> lstPath = new LinkedList<>();
+//        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
+//            GenericField entityField = entityFieldQueue.poll();
+//            if (!entityField.isInnerEntity()) {
+//                lstPath.add(from.get(entityField.getFieldName()));
+//            } else {
+//                // If join is exist, get join from From instance, otherwise create new join
+//                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
+//                if (null == join) {
+//                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
+//                }
+//                if (entityFieldQueue.size() > 0) {
+//                    lstPath.addAll(buildPathForFieldMapping(join, dtoFieldType, entityFieldQueue));
+//                } else {
+//                    lstPath.addAll(buildPathForDTOMapping(join, mappingCache.getByDTOClass(dtoFieldType)));
+//                }
+//            }
+//        }
+//        return lstPath;
+//    }
+//
+//    private List<Path<?>> buildPathForDTOMapping(From<?, ?> from, ObjectMapping objectMapping) {
+//        List<Path<?>> lstPath = new LinkedList<>();
+//        for (FieldMapping fieldMapping : objectMapping.getFields()) {
+//            lstPath.addAll(buildPathForFieldMapping(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
+//        }
+//        lstPath = lstPath.stream().distinct().collect(Collectors.toList());
+//
+//        return lstPath;
+//    }
 
     /**
      * Build predicate for operator.

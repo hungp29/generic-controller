@@ -1,6 +1,6 @@
 package org.example.genericcontroller.support.generic.jpa;
 
-import org.example.genericcontroller.support.generic.DTOMappingCache;
+import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.DefaultGenericSpecification;
 import org.example.genericcontroller.support.generic.GenericSpecification;
 import org.springframework.context.annotation.Lazy;
@@ -27,17 +27,17 @@ public class GenericRepositoryFactoryBean<T extends JpaRepository<S, ID>, S, ID 
      * Generic Specification.
      */
     private GenericSpecification spec;
-    private DTOMappingCache mappingCache;
+    private ObjectMappingCache mappingCache;
 
     /**
      * Creates a new {@link JpaRepositoryFactoryBean} for the given repository interface.
      *
      * @param repositoryInterface must not be {@literal null}.
      * @param spec                {@link GenericSpecification}
-     * @param mappingCache        {@link DTOMappingCache}
+     * @param mappingCache        {@link ObjectMappingCache}
      */
     public GenericRepositoryFactoryBean(Class<? extends T> repositoryInterface, @Nullable GenericSpecification spec,
-                                        @Lazy @Nullable DTOMappingCache mappingCache) {
+                                        @Lazy @Nullable ObjectMappingCache mappingCache) {
         super(repositoryInterface);
         if (null != spec) {
             this.spec = spec;
