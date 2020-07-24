@@ -20,7 +20,8 @@ public class AuthorService {
     private final PublisherService publisherService;
 
     public String getName(int id) {
-        return authorRepository.getFirstById(id).getName();
+//        return authorRepository.getFirstById(id).getName();
+        return authorRepository.getName(id);
     }
 
     public boolean create() {

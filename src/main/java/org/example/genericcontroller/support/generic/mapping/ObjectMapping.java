@@ -135,7 +135,9 @@ public class ObjectMapping {
     public List<String> getListCollectionFieldPath() {
         List<String> paths = new LinkedList<>();
         for (FieldMapping fieldMapping : fields) {
-            paths.addAll(fieldMapping.getListCollectionFieldPath());
+            if (fieldMapping.isCollection()) {
+                paths.addAll(fieldMapping.getListFieldPath(true));
+            }
         }
         return paths.stream().distinct().collect(Collectors.toList());
     }

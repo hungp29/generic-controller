@@ -77,6 +77,10 @@ public class FieldMapping {
         return mappingPath;
     }
 
+    public boolean isCollection() {
+        return dtoField.isCollection();
+    }
+
     public List<String> getListFieldPath(boolean includeCollection) {
         List<String> paths = new LinkedList<>();
         if (includeCollection || !dtoField.isCollection()) {
@@ -85,23 +89,6 @@ public class FieldMapping {
             } else {
                 final String finalMappingPath = mappingPath + Constants.DOT;
                 paths.addAll(mappingCache.getByDTOClass(dtoField.getClassDeclaring()).getListFieldPath(includeCollection)
-                        .stream()
-                        .map(finalMappingPath::concat)
-                        .distinct()
-                        .collect(Collectors.toList()));
-            }
-        }
-        return paths;
-    }
-
-    public List<String> getListCollectionFieldPath() {
-        List<String> paths = new LinkedList<>();
-        if (dtoField.isCollection()) {
-            if (!dtoField.isInnerDTO()) {
-                paths.add(mappingPath);
-            } else {
-                final String finalMappingPath = mappingPath + Constants.DOT;
-                paths.addAll(mappingCache.getByDTOClass(dtoField.getClassDeclaring()).getListCollectionFieldPath()
                         .stream()
                         .map(finalMappingPath::concat)
                         .distinct()
