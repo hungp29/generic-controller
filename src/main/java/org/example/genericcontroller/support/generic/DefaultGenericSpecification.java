@@ -84,6 +84,8 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //        query.multiselect(selections2);
 //        List<Path<?>> p = buildPathForDTOMapping(root, objectMapping);
 
+        List<Selection<?>> selections2 = objectMapping.getSelections(root);
+
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
             List<Selection<?>> selections = new ArrayList<>();
@@ -159,6 +161,10 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //
 //        return lstPath;
 //    }
+
+    private void buildPath(From<?, ?> from, ObjectMapping objectMapping) {
+
+    }
 
     /**
      * Build predicate for operator.

@@ -36,6 +36,13 @@ public class FieldTypeResolved {
         private static final FieldTypeResolved INSTANCE = new FieldTypeResolved();
     }
 
+    /**
+     * Parse path to array {@link Field}.
+     *
+     * @param type class type
+     * @param path path of field
+     * @return array {@link Field}
+     */
     public Field[] parseFieldByPath(Class<?> type, String path) {
         Assert.notNull(type, "Class type must be not null");
         Assert.hasLength(path, "Field path must be not empty");

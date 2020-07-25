@@ -5,12 +5,15 @@ import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
+import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.criteria.*;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -124,6 +127,12 @@ public class ObjectMapping {
         return fields;
     }
 
+    /**
+     * Get list field path.
+     *
+     * @param includeCollection flag to detect get collection fields
+     * @return list field path
+     */
     public List<String> getListFieldPath(boolean includeCollection) {
         List<String> paths = new LinkedList<>();
         for (FieldMapping fieldMapping : fields) {
@@ -132,6 +141,11 @@ public class ObjectMapping {
         return paths.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * Get only path of collection fields.
+     *
+     * @return list field path of collection fields
+     */
     public List<String> getListCollectionFieldPath() {
         List<String> paths = new LinkedList<>();
         for (FieldMapping fieldMapping : fields) {
@@ -142,6 +156,18 @@ public class ObjectMapping {
         return paths.stream().distinct().collect(Collectors.toList());
     }
 
+    public List<Selection<?>> getSelections(From<?, ?> from, String prefixAlias) {
+        List<Selection<?>> selections = new ArrayList<>();
+        List<Path<?>> temp = new ArrayList<>();
+        for (FieldMapping fieldMapping : fields) {
+            selections.addAll(fieldMapping.getSelections(from, prefixAlias));
+        }
+        return selections;
+    }
+
+    public List<Selection<?>> getSelections(From<?, ?> from) {
+        return getSelections(from, "");
+    }
 
     @Override
     public boolean equals(Object o) {
