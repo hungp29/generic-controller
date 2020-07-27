@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.mapping;
 
+import org.example.genericcontroller.support.generic.FilterData;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping.SelectionType;
@@ -191,7 +192,7 @@ public class FieldMapping {
      * @param prefixAlias   prefix of alias
      * @return list {@link Selection}
      */
-    public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, String prefixAlias) {
+    public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         int index = 0;
         for (GenericField entityFieldElement : entityFieldQueue) {
@@ -209,7 +210,7 @@ public class FieldMapping {
                             // If field is collection then selection type is ALL_FIELD, otherwise ID_FIELD to get only id of inner entity
                             selectionType = isCollection() ? SelectionType.ALL_FIELD : SelectionType.ID_FIELD;
                         }
-                        selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, prefixAlias + Constants.DOT));
+                        selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, filterData, prefixAlias + Constants.DOT));
                     }
                 }
             } else {

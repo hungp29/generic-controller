@@ -74,7 +74,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
     @Override
     public List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData) {
         TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, Sort.unsorted());
-        List<Map<String, Object>> records = readData(query, dtoType, filter);
+        List<Map<String, Object>> records = readData(query, dtoType, filter, filterData);
         return MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
     }
 
@@ -94,7 +94,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
             page = new PageImpl<>(findAll(dtoType, filter, params, filterData));
         } else {
             TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, pageable);
-            page = readPage(dtoType, filter, params, query, getDomainClass(), pageable);
+            page = readPage(dtoType, filter, params, filterData, query, getDomainClass(), pageable);
         }
         return page;
     }
@@ -111,7 +111,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
     @Override
     public Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Sort sort) {
         TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, sort);
-        List<Map<String, Object>> records = readData(query, dtoType, filter);
+        List<Map<String, Object>> records = readData(query, dtoType, filter, filterData);
         return new PageImpl<>(MappingUtils.convertToListDataTransferObject(records, dtoType, filter));
     }
 
@@ -146,7 +146,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, params, false);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, params, filterData, false);
 
         if (sort.isSorted()) {
             query.orderBy(toOrders(sort, root, builder));
@@ -179,14 +179,14 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param <S>         generic entity
      * @return collection query
      */
-    protected <S extends T> TypedQuery<Tuple> getCollectionQuery(Class<?> dtoType, String[] filter,
+    protected <S extends T> TypedQuery<Tuple> getCollectionQuery(Class<?> dtoType, String[] filter, FilterData filterData,
                                                                  Class<S> domainClass, List<Map<String, Object>> records) {
         Assert.notNull(dtoType, "DTO Type must not be null!");
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = builder.createQuery(Tuple.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, null, true);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, filter, null, filterData, true);
 
 //        if (sort.isSorted()) {
 //            query.orderBy(toOrders(sort, root, builder));
@@ -217,7 +217,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Long> query = builder.createQuery(Long.class);
 
-        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, null, params, false);
+        Root<S> root = applySpecificationToCriteria(domainClass, query, dtoType, null, params, null, false);
 
         if (query.isDistinct()) {
             query.select(builder.countDistinct(root));
@@ -245,7 +245,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      */
     private <S, U extends T> Root<U> applySpecificationToCriteria(Class<U> domainClass,
                                                                   CriteriaQuery<S> query, Class<?> dtoType,
-                                                                  String[] filter, Map<String, String> params, boolean collection) {
+                                                                  String[] filter, Map<String, String> params, FilterData filterData, boolean collection) {
 
         Assert.notNull(domainClass, "Domain class must not be null!");
         Assert.notNull(query, "CriteriaQuery must not be null!");
@@ -257,7 +257,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         }
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
-        Predicate predicate = spec.buildCriteria(root, query, builder, dtoType, filter, params, collection);
+        Predicate predicate = spec.buildCriteria(root, query, builder, dtoType, filter, params, filterData, collection);
 
         if (predicate != null) {
             query.where(predicate);
@@ -323,14 +323,14 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param pageable    paging info
      * @return page data
      */
-    protected Page<Object> readPage(Class<?> dtoType, String[] filter, Map<String, String> params, TypedQuery<Tuple> query, final Class<T> domainClass, Pageable pageable) {
+    protected Page<Object> readPage(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, TypedQuery<Tuple> query, final Class<T> domainClass, Pageable pageable) {
 
         if (pageable.isPaged()) {
             query.setFirstResult((int) pageable.getOffset());
             query.setMaxResults(pageable.getPageSize());
         }
 
-        List<Map<String, Object>> records = readData(query, dtoType, filter);
+        List<Map<String, Object>> records = readData(query, dtoType, filter, filterData);
         List<Object> contents = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
         return getPage(contents, pageable, () -> executeCountQuery(getCountQuery(dtoType, domainClass, params)));
     }
@@ -344,12 +344,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      * @param filter  filter field
      * @return map record
      */
-    private List<Map<String, Object>> readData(TypedQuery<Tuple> query, Class<?> dtoType, String[] filter) {
+    private List<Map<String, Object>> readData(TypedQuery<Tuple> query, Class<?> dtoType, String[] filter, FilterData filterData) {
         Assert.notNull(query, "TypedQuery must be not null!");
         List<Tuple> tuples = query.getResultList();
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
         if (records.size() > 0) {
-            List<Tuple> collectionTuples = getCollectionQuery(dtoType, filter, getDomainClass(), records).getResultList();
+            List<Tuple> collectionTuples = getCollectionQuery(dtoType, filter, filterData, getDomainClass(), records).getResultList();
             List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true));
             records = MappingUtils.merge(records, collectionRecords, dtoType);
         }
@@ -391,7 +391,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
             Map<String, String> params = new HashMap<>();
             params.put(keyField, id.toString());
             TypedQuery<Tuple> query = getQuery(dtoType, filter, params, filterData, Sort.unsorted());
-            List<Map<String, Object>> records = readData(query, dtoType, filter);
+            List<Map<String, Object>> records = readData(query, dtoType, filter, filterData);
             List<Object> lstDTO = MappingUtils.convertToListDataTransferObject(records, dtoType, filter);
             if (!CollectionUtils.isEmpty(lstDTO)) {
                 return lstDTO.get(0);

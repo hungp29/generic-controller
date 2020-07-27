@@ -59,14 +59,14 @@ public class DefaultGenericSpecification implements GenericSpecification {
      */
     @Override
     public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                                       Class<?> dtoType, String[] filter, Map<String, String> params, boolean collection) {
+                                       Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, boolean collection) {
         Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-        List<String> entityFieldPaths;
-        if (!collection) {
-            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
-        } else {
-            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
-        }
+//        List<String> entityFieldPaths;
+//        if (!collection) {
+//            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
+//        } else {
+//            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
+//        }
 
         // Distinct if params is not null
         if (!CollectionUtils.isEmpty(params)) {
@@ -75,9 +75,9 @@ public class DefaultGenericSpecification implements GenericSpecification {
 
 //         List<Selection<?>> selections2 = new ArrayList<>();
         ObjectMapping objectMapping = mappingCache.getByDTOClass(dtoType);
-        List<String> paths = objectMapping.getListFieldPath(false);
-        List<String> paths2 = objectMapping.getListFieldPath(true);
-        List<String> paths3 = objectMapping.getListCollectionFieldPath();
+//        List<String> paths = objectMapping.getListFieldPath(false);
+//        List<String> paths2 = objectMapping.getListFieldPath(true);
+//        List<String> paths3 = objectMapping.getListCollectionFieldPath();
 //        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
 //            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
 //        }
@@ -86,9 +86,9 @@ public class DefaultGenericSpecification implements GenericSpecification {
 
         List<Selection<?>> selections2;
         if (!collection) {
-            selections2 = objectMapping.getNoneCollectionSelections(root);
+            selections2 = objectMapping.getNoneCollectionSelections(root, filterData);
         } else {
-            selections2 = objectMapping.getCollectionSelections(root);
+            selections2 = objectMapping.getCollectionSelections(root, filterData);
         }
         query.multiselect(selections2);
 

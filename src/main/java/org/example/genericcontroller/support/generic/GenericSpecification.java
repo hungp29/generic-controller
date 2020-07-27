@@ -29,5 +29,5 @@ public interface GenericSpecification {
      */
     @Nullable
     <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                                Class<?> dtoType, String[] filter, Map<String, String> params, boolean collection);
+                                Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, boolean collection);
 }

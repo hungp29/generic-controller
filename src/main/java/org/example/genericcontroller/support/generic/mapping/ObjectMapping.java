@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.entity.Audit;
+import org.example.genericcontroller.support.generic.FilterData;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
@@ -164,16 +165,17 @@ public class ObjectMapping {
      * @param prefixAlias   prefix of alias
      * @return list {@link Selection} by selection type
      */
-    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, String prefixAlias) {
+    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
             // ALL_FIELD: Get all field
             // COLLECTION_FIELD: Get id, sub id and collection field
             // NONE_COLLECTION_FIELD: Get id and field which is not collection
-            if (fieldMapping.isId() || SelectionType.ALL_FIELD.equals(selectionType) ||
+            if (fieldMapping.isId() ||
+                    SelectionType.ALL_FIELD.equals(selectionType) ||
                     (SelectionType.COLLECTION_FIELD.equals(selectionType) && fieldMapping.isInnerObject()) ||
                     (SelectionType.NONE_COLLECTION_FIELD.equals(selectionType) && !fieldMapping.isCollection())) {
-                selections.addAll(fieldMapping.getSelections(from, selectionType, prefixAlias));
+                selections.addAll(fieldMapping.getSelections(from, selectionType, filterData, prefixAlias));
             }
         }
         return selections.stream().distinct().collect(Collectors.toList());
@@ -185,8 +187,8 @@ public class ObjectMapping {
      * @param from {@link From} instance
      * @return list {@link Selection}
      */
-    public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from) {
-        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, "");
+    public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from, FilterData filterData) {
+        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, filterData, "");
     }
 
     /**
@@ -195,8 +197,8 @@ public class ObjectMapping {
      * @param from {@link From} instance
      * @return list {@link Selection}
      */
-    public List<Selection<?>> getCollectionSelections(From<?, ?> from) {
-        return getSelections(from, SelectionType.COLLECTION_FIELD, "");
+    public List<Selection<?>> getCollectionSelections(From<?, ?> from, FilterData filterData) {
+        return getSelections(from, SelectionType.COLLECTION_FIELD, filterData, "");
     }
 
     @Override
