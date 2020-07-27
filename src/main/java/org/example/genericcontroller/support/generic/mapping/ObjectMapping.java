@@ -156,16 +156,33 @@ public class ObjectMapping {
         return paths.stream().distinct().collect(Collectors.toList());
     }
 
-    public List<Selection<?>> getSelections(From<?, ?> from, String prefixAlias) {
+    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
-            selections.addAll(fieldMapping.getSelections(from, prefixAlias));
+            if (fieldMapping.isId() || SelectionType.ALL.equals(selectionType) ||
+                    (SelectionType.COLLECTION.equals(selectionType) && fieldMapping.isCollection()) ||
+                    (SelectionType.NONE_COLLECTION.equals(selectionType) && !fieldMapping.isCollection())) {
+                selections.addAll(fieldMapping.getSelections(from, prefixAlias, false));
+            }
+//            if (fieldMapping.isId() || !fieldMapping.isCollection() || includeCollection) {
+//                selections.addAll(fieldMapping.getSelections(from, prefixAlias, false));
+//            }
         }
         return selections.stream().distinct().collect(Collectors.toList());
     }
 
-    public List<Selection<?>> getSelections(From<?, ?> from) {
-        return getSelections(from, "");
+    public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from) {
+        return getSelections(from, SelectionType.NONE_COLLECTION, "");
+    }
+
+    public List<Selection<?>> getCollectionSelections(From<?, ?> from) {
+        List<Selection<?>> selections = new ArrayList<>();
+        for (FieldMapping fieldMapping : fields) {
+            if (fieldMapping.isId() || fieldMapping.isCollection()) {
+                selections.addAll(fieldMapping.getSelections(from, "", true));
+            }
+        }
+        return selections.stream().distinct().collect(Collectors.toList());
     }
 
     @Override
@@ -187,5 +204,11 @@ public class ObjectMapping {
                 "dtoType=" + dtoType.getName() +
                 ", entityType=" + entityType.getName() +
                 '}';
+    }
+
+    public enum SelectionType {
+        ALL,
+        COLLECTION,
+        NONE_COLLECTION;
     }
 }

@@ -4,12 +4,20 @@ import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.utils.constant.Constants;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.*;
+import javax.persistence.Id;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 /**
@@ -22,6 +30,7 @@ public class FieldMapping {
     private GenericField dtoField;
     private LinkedList<GenericField> entityFieldQueue;
     private String mappingPath;
+    private boolean isId;
     private ObjectMappingCache mappingCache;
 
     /**
@@ -42,6 +51,7 @@ public class FieldMapping {
         for (Field entityField : entityFields) {
             this.entityFieldQueue.add(GenericField.of(entityField, mappingCache));
         }
+        this.isId = AnnotatedElementUtils.hasAnnotation(entityFieldQueue.getLast().getField(), Id.class);
         validate();
     }
 
@@ -132,6 +142,15 @@ public class FieldMapping {
     }
 
     /**
+     * Checking field is Id or not.
+     *
+     * @return true if field is Id;
+     */
+    public boolean isId() {
+        return isId;
+    }
+
+    /**
      * Get list field path of field.
      *
      * @param includeCollection flat to detect get path of collection field
@@ -154,7 +173,7 @@ public class FieldMapping {
         return paths;
     }
 
-    public List<Selection<?>> getSelections(From<?, ?> from, String prefixAlias) {
+    public List<Selection<?>> getSelections(From<?, ?> from, ObjectMapping.SelectionType selectionType, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         int index = 0;
         for (GenericField entityFieldElement : entityFieldQueue) {
@@ -166,7 +185,7 @@ public class FieldMapping {
                 } else {
                     ObjectMapping innerObj = mappingCache.getByDTOClass(dtoField.getFieldClass());
                     if (null != innerObj) {
-                        selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), prefixAlias + Constants.DOT));
+                        selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, prefixAlias + Constants.DOT));
                     }
                 }
             } else {

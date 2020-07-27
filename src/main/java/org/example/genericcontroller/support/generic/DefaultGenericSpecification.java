@@ -84,7 +84,12 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //        query.multiselect(selections2);
 //        List<Path<?>> p = buildPathForDTOMapping(root, objectMapping);
 
-        List<Selection<?>> selections2 = objectMapping.getSelections(root);
+        List<Selection<?>> selections2;
+        if (!collection) {
+            selections2 = objectMapping.getNoneCollectionSelections(root);
+        } else {
+            selections2 = objectMapping.getCollectionSelections(root);
+        }
 
         // Build selections
         if (!CollectionUtils.isEmpty(entityFieldPaths)) {
