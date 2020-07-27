@@ -156,33 +156,47 @@ public class ObjectMapping {
         return paths.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * Get selection method.
+     *
+     * @param from          {@link From} instance
+     * @param selectionType {@link SelectionType} selection type
+     * @param prefixAlias   prefix of alias
+     * @return list {@link Selection} by selection type
+     */
     List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
-            if (fieldMapping.isId() || SelectionType.ALL.equals(selectionType) ||
-                    (SelectionType.COLLECTION.equals(selectionType) && fieldMapping.isCollection()) ||
-                    (SelectionType.NONE_COLLECTION.equals(selectionType) && !fieldMapping.isCollection())) {
-                selections.addAll(fieldMapping.getSelections(from, prefixAlias, false));
+            // ALL_FIELD: Get all field
+            // COLLECTION_FIELD: Get id, sub id and collection field
+            // NONE_COLLECTION_FIELD: Get id and field which is not collection
+            if (fieldMapping.isId() || SelectionType.ALL_FIELD.equals(selectionType) ||
+                    (SelectionType.COLLECTION_FIELD.equals(selectionType) && fieldMapping.isInnerObject()) ||
+                    (SelectionType.NONE_COLLECTION_FIELD.equals(selectionType) && !fieldMapping.isCollection())) {
+                selections.addAll(fieldMapping.getSelections(from, selectionType, prefixAlias));
             }
-//            if (fieldMapping.isId() || !fieldMapping.isCollection() || includeCollection) {
-//                selections.addAll(fieldMapping.getSelections(from, prefixAlias, false));
-//            }
         }
         return selections.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * Get selection of fields which are not collection fields.
+     *
+     * @param from {@link From} instance
+     * @return list {@link Selection}
+     */
     public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from) {
-        return getSelections(from, SelectionType.NONE_COLLECTION, "");
+        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, "");
     }
 
+    /**
+     * Get selection of fields which are collection fields.
+     *
+     * @param from {@link From} instance
+     * @return list {@link Selection}
+     */
     public List<Selection<?>> getCollectionSelections(From<?, ?> from) {
-        List<Selection<?>> selections = new ArrayList<>();
-        for (FieldMapping fieldMapping : fields) {
-            if (fieldMapping.isId() || fieldMapping.isCollection()) {
-                selections.addAll(fieldMapping.getSelections(from, "", true));
-            }
-        }
-        return selections.stream().distinct().collect(Collectors.toList());
+        return getSelections(from, SelectionType.COLLECTION_FIELD, "");
     }
 
     @Override
@@ -207,8 +221,9 @@ public class ObjectMapping {
     }
 
     public enum SelectionType {
-        ALL,
-        COLLECTION,
-        NONE_COLLECTION;
+        ALL_FIELD,
+        ID_FIELD,
+        COLLECTION_FIELD,
+        NONE_COLLECTION_FIELD;
     }
 }

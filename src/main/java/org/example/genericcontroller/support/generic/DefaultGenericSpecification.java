@@ -90,19 +90,20 @@ public class DefaultGenericSpecification implements GenericSpecification {
         } else {
             selections2 = objectMapping.getCollectionSelections(root);
         }
+        query.multiselect(selections2);
 
         // Build selections
-        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-            List<Selection<?>> selections = new ArrayList<>();
-            for (String entityFieldPath : entityFieldPaths) {
-                Path<?> path = buildPath(root, entityFieldPath, entityType);
-                if (null != path) {
-                    selections.add(path.alias(entityFieldPath));
-                }
-            }
-
-            query.multiselect(selections);
-        }
+//        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
+//            List<Selection<?>> selections = new ArrayList<>();
+//            for (String entityFieldPath : entityFieldPaths) {
+//                Path<?> path = buildPath(root, entityFieldPath, entityType);
+//                if (null != path) {
+//                    selections.add(path.alias(entityFieldPath));
+//                }
+//            }
+//
+//            query.multiselect(selections);
+//        }
 
         // Build where clause
         Predicate predicate = null;

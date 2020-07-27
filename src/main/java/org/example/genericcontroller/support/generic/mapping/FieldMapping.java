@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.GenericException;
+import org.example.genericcontroller.support.generic.mapping.ObjectMapping.SelectionType;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -142,6 +143,15 @@ public class FieldMapping {
     }
 
     /**
+     * Checking field is inner object (DTO, Entity).
+     *
+     * @return true if field is inner object
+     */
+    public boolean isInnerObject() {
+        return dtoField.isInnerObject() || entityFieldQueue.getLast().isInnerObject();
+    }
+
+    /**
      * Checking field is Id or not.
      *
      * @return true if field is Id;
@@ -173,7 +183,15 @@ public class FieldMapping {
         return paths;
     }
 
-    public List<Selection<?>> getSelections(From<?, ?> from, ObjectMapping.SelectionType selectionType, String prefixAlias) {
+    /**
+     * Build {@link Selection} for {@link FieldMapping}.
+     *
+     * @param from          {@link From} instance
+     * @param selectionType {@link SelectionType} selection type
+     * @param prefixAlias   prefix of alias
+     * @return list {@link Selection}
+     */
+    public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
         int index = 0;
         for (GenericField entityFieldElement : entityFieldQueue) {
@@ -183,8 +201,14 @@ public class FieldMapping {
                 if (!entityFieldElement.isInnerEntity()) {
                     selections.add(from.get(entityFieldElement.getFieldName()).alias(prefixAlias));
                 } else {
+                    // If FieldMapping is inner Entity object
                     ObjectMapping innerObj = mappingCache.getByDTOClass(dtoField.getFieldClass());
                     if (null != innerObj) {
+                        // If selection type is COLLECTION_FIELD and field mapping is inner entity then change selection type
+                        if (SelectionType.COLLECTION_FIELD.equals(selectionType)) {
+                            // If field is collection then selection type is ALL_FIELD, otherwise ID_FIELD to get only id of inner entity
+                            selectionType = isCollection() ? SelectionType.ALL_FIELD : SelectionType.ID_FIELD;
+                        }
                         selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, prefixAlias + Constants.DOT));
                     }
                 }
@@ -196,6 +220,13 @@ public class FieldMapping {
         return selections;
     }
 
+    /**
+     * Get {@link Join} instance, if {@link Join} don't exist then create new LEFT JOIN.
+     *
+     * @param from        {@link From} instance
+     * @param entityField {@link GenericField} entity field
+     * @return {@link Join} instance
+     */
     private Join<?, ?> getJoin(From<?, ?> from, GenericField entityField) {
         Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getFieldClass());
         if (null == join) {
