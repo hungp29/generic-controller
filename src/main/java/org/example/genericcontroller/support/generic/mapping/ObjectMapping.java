@@ -5,13 +5,13 @@ import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
-import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Selection;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -158,11 +158,10 @@ public class ObjectMapping {
 
     public List<Selection<?>> getSelections(From<?, ?> from, String prefixAlias) {
         List<Selection<?>> selections = new ArrayList<>();
-        List<Path<?>> temp = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
             selections.addAll(fieldMapping.getSelections(from, prefixAlias));
         }
-        return selections;
+        return selections.stream().distinct().collect(Collectors.toList());
     }
 
     public List<Selection<?>> getSelections(From<?, ?> from) {
