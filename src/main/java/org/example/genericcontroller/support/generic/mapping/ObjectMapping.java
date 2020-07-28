@@ -166,17 +166,14 @@ public class ObjectMapping {
      * @return list {@link Selection} by selection type
      */
     List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
+        Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
         List<Selection<?>> selections = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
+            // SelectionType describe:
             // ALL_FIELD: Get all field
             // COLLECTION_FIELD: Get id, sub id and collection field
             // NONE_COLLECTION_FIELD: Get id and field which is not collection
-            if (fieldMapping.isId() ||
-                    SelectionType.ALL_FIELD.equals(selectionType) ||
-                    (SelectionType.COLLECTION_FIELD.equals(selectionType) && fieldMapping.isInnerObject()) ||
-                    (SelectionType.NONE_COLLECTION_FIELD.equals(selectionType) && !fieldMapping.isCollection())) {
-                selections.addAll(fieldMapping.getSelections(from, selectionType, filterData, prefixAlias));
-            }
+            selections.addAll(fieldMapping.getSelections(from, selectionType, filterData, prefixAlias));
         }
         return selections.stream().distinct().collect(Collectors.toList());
     }
@@ -222,10 +219,13 @@ public class ObjectMapping {
                 '}';
     }
 
+    /**
+     * Selection Type.
+     */
     public enum SelectionType {
-        ALL_FIELD,
-        ID_FIELD,
-        COLLECTION_FIELD,
-        NONE_COLLECTION_FIELD;
+        ALL_FIELD,              // Get all field
+        ID_FIELD,               // Get only id field
+        COLLECTION_FIELD,       // Get id and collection field
+        NONE_COLLECTION_FIELD   // Get id and normal field (ignore collection)
     }
 }

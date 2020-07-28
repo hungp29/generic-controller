@@ -73,37 +73,16 @@ public class DefaultGenericSpecification implements GenericSpecification {
             query.distinct(true);
         }
 
-//         List<Selection<?>> selections2 = new ArrayList<>();
         ObjectMapping objectMapping = mappingCache.getByDTOClass(dtoType);
-//        List<String> paths = objectMapping.getListFieldPath(false);
-//        List<String> paths2 = objectMapping.getListFieldPath(true);
-//        List<String> paths3 = objectMapping.getListCollectionFieldPath();
-//        for (FieldMapping fieldMapping : dtoMapping.getFields()) {
-//            selections2.add(buildPath(root, fieldMapping.getEntityFieldQueue()));
-//        }
-//        query.multiselect(selections2);
-//        List<Path<?>> p = buildPathForDTOMapping(root, objectMapping);
 
-        List<Selection<?>> selections2;
+        // Get Selection of ObjectMapping
+        List<Selection<?>> selections;
         if (!collection) {
-            selections2 = objectMapping.getNoneCollectionSelections(root, filterData);
+            selections = objectMapping.getNoneCollectionSelections(root, filterData);
         } else {
-            selections2 = objectMapping.getCollectionSelections(root, filterData);
+            selections = objectMapping.getCollectionSelections(root, filterData);
         }
-        query.multiselect(selections2);
-
-        // Build selections
-//        if (!CollectionUtils.isEmpty(entityFieldPaths)) {
-//            List<Selection<?>> selections = new ArrayList<>();
-//            for (String entityFieldPath : entityFieldPaths) {
-//                Path<?> path = buildPath(root, entityFieldPath, entityType);
-//                if (null != path) {
-//                    selections.add(path.alias(entityFieldPath));
-//                }
-//            }
-//
-//            query.multiselect(selections);
-//        }
+        query.multiselect(selections);
 
         // Build where clause
         Predicate predicate = null;
@@ -134,42 +113,6 @@ public class DefaultGenericSpecification implements GenericSpecification {
             predicate = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         }
         return predicate;
-    }
-
-//    private List<Path<?>> buildPathForFieldMapping(From<?, ?> from, Class<?> dtoFieldType, Queue<GenericField> entityFieldQueue) {
-//        List<Path<?>> lstPath = new LinkedList<>();
-//        if (null != entityFieldQueue && entityFieldQueue.size() > 0) {
-//            GenericField entityField = entityFieldQueue.poll();
-//            if (!entityField.isInnerEntity()) {
-//                lstPath.add(from.get(entityField.getFieldName()));
-//            } else {
-//                // If join is exist, get join from From instance, otherwise create new join
-//                Join<?, ?> join = DuplicateChecker.existJoin(from, entityField.getClassDeclaring());
-//                if (null == join) {
-//                    join = from.join(entityField.getFieldName(), JoinType.LEFT);
-//                }
-//                if (entityFieldQueue.size() > 0) {
-//                    lstPath.addAll(buildPathForFieldMapping(join, dtoFieldType, entityFieldQueue));
-//                } else {
-//                    lstPath.addAll(buildPathForDTOMapping(join, mappingCache.getByDTOClass(dtoFieldType)));
-//                }
-//            }
-//        }
-//        return lstPath;
-//    }
-//
-//    private List<Path<?>> buildPathForDTOMapping(From<?, ?> from, ObjectMapping objectMapping) {
-//        List<Path<?>> lstPath = new LinkedList<>();
-//        for (FieldMapping fieldMapping : objectMapping.getFields()) {
-//            lstPath.addAll(buildPathForFieldMapping(from, fieldMapping.getDtoField().getClassDeclaring(), fieldMapping.getEntityFieldQueue()));
-//        }
-//        lstPath = lstPath.stream().distinct().collect(Collectors.toList());
-//
-//        return lstPath;
-//    }
-
-    private void buildPath(From<?, ?> from, ObjectMapping objectMapping) {
-
     }
 
     /**

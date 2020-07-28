@@ -193,29 +193,36 @@ public class FieldMapping {
      * @return list {@link Selection}
      */
     public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
+        Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
         List<Selection<?>> selections = new ArrayList<>();
-        int index = 0;
-        for (GenericField entityFieldElement : entityFieldQueue) {
-            prefixAlias += entityFieldElement.getFieldName();
-            index++;
-            if (index == entityFieldQueue.size()) {
-                if (!entityFieldElement.isInnerEntity()) {
-                    selections.add(from.get(entityFieldElement.getFieldName()).alias(prefixAlias));
-                } else {
-                    // If FieldMapping is inner Entity object
-                    ObjectMapping innerObj = mappingCache.getByDTOClass(dtoField.getFieldClass());
-                    if (null != innerObj) {
-                        // If selection type is COLLECTION_FIELD and field mapping is inner entity then change selection type
-                        if (SelectionType.COLLECTION_FIELD.equals(selectionType)) {
-                            // If field is collection then selection type is ALL_FIELD, otherwise ID_FIELD to get only id of inner entity
-                            selectionType = isCollection() ? SelectionType.ALL_FIELD : SelectionType.ID_FIELD;
+        if (isId() || (filterData.isKeepField(prefixAlias, this) && (
+                SelectionType.ALL_FIELD.equals(selectionType) ||
+                        (SelectionType.COLLECTION_FIELD.equals(selectionType) && isInnerObject()) ||
+                        (SelectionType.NONE_COLLECTION_FIELD.equals(selectionType) && !isCollection())))) {
+
+            int index = 0;
+            for (GenericField entityFieldElement : entityFieldQueue) {
+                prefixAlias += entityFieldElement.getFieldName();
+                index++;
+                if (index == entityFieldQueue.size()) {
+                    if (!entityFieldElement.isInnerEntity()) {
+                        selections.add(from.get(entityFieldElement.getFieldName()).alias(prefixAlias));
+                    } else {
+                        // If FieldMapping is inner Entity object
+                        ObjectMapping innerObj = mappingCache.getByDTOClass(dtoField.getFieldClass());
+                        if (null != innerObj) {
+                            // If selection type is COLLECTION_FIELD and field mapping is inner entity then change selection type
+                            if (SelectionType.COLLECTION_FIELD.equals(selectionType)) {
+                                // If field is collection then selection type is ALL_FIELD, otherwise ID_FIELD to get only id of inner entity
+                                selectionType = isCollection() ? SelectionType.ALL_FIELD : SelectionType.ID_FIELD;
+                            }
+                            selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, filterData, prefixAlias + Constants.DOT));
                         }
-                        selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, filterData, prefixAlias + Constants.DOT));
                     }
+                } else {
+                    from = getJoin(from, entityFieldElement);
+                    prefixAlias += Constants.DOT;
                 }
-            } else {
-                from = getJoin(from, entityFieldElement);
-                prefixAlias += Constants.DOT;
             }
         }
         return selections;
