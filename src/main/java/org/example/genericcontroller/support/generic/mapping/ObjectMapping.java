@@ -162,18 +162,17 @@ public class ObjectMapping {
      *
      * @param from          {@link From} instance
      * @param selectionType {@link SelectionType} selection type
-     * @param prefixAlias   prefix of alias
+     * @param prefixPath    prefix path of field
      * @return list {@link Selection} by selection type
      */
-    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
-        Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
+    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, PrefixPath prefixPath) {
         List<Selection<?>> selections = new ArrayList<>();
         for (FieldMapping fieldMapping : fields) {
             // SelectionType describe:
             // ALL_FIELD: Get all field
             // COLLECTION_FIELD: Get id, sub id and collection field
             // NONE_COLLECTION_FIELD: Get id and field which is not collection
-            selections.addAll(fieldMapping.getSelections(from, selectionType, filterData, prefixAlias));
+            selections.addAll(fieldMapping.getSelections(from, selectionType, filterData, prefixPath));
         }
         return selections.stream().distinct().collect(Collectors.toList());
     }
@@ -185,7 +184,7 @@ public class ObjectMapping {
      * @return list {@link Selection}
      */
     public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from, FilterData filterData) {
-        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, filterData, "");
+        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, filterData, null);
     }
 
     /**
@@ -195,7 +194,7 @@ public class ObjectMapping {
      * @return list {@link Selection}
      */
     public List<Selection<?>> getCollectionSelections(From<?, ?> from, FilterData filterData) {
-        return getSelections(from, SelectionType.COLLECTION_FIELD, filterData, "");
+        return getSelections(from, SelectionType.COLLECTION_FIELD, filterData, null);
     }
 
     @Override

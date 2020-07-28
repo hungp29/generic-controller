@@ -37,7 +37,8 @@ public class BookBasicInfo extends DTOTemplate {
 //    @MappingField(entityField = "publisher.name")
 //    private String publisherName2;
 
-    private List<AuthorDTO> authors;
+    @MappingField(entityField = "authors")
+    private List<AuthorDTO> authorTests;
 
     private List<HistoryPublisherDTO> historyPublishers;
 

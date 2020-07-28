@@ -8,6 +8,7 @@ import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.Id;
 import javax.persistence.criteria.From;
@@ -151,6 +152,15 @@ public class FieldMapping {
     }
 
     /**
+     * Get {@link ObjectMappingCache} instance.
+     *
+     * @return {@link ObjectMappingCache}
+     */
+    public ObjectMappingCache getMappingCache() {
+        return mappingCache;
+    }
+
+    /**
      * Check field is collection.
      *
      * @return true if field is collection
@@ -205,18 +215,17 @@ public class FieldMapping {
      *
      * @param from          {@link From} instance
      * @param selectionType {@link SelectionType} selection type
-     * @param prefixAlias   prefix of alias
+     * @param prefixPath    prefix path of field
      * @return list {@link Selection}
      */
-    public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
-        Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
-
+    List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, PrefixPath prefixPath) {
         List<Selection<?>> selections = new ArrayList<>();
-        if (isId() || (filterData.isKeepField(prefixAlias, this) && (
-                SelectionType.ALL_FIELD.equals(selectionType) ||
+        if (isId() || (isKeepField(prefixPath, filterData) &&
+                (SelectionType.ALL_FIELD.equals(selectionType) ||
                         (SelectionType.COLLECTION_FIELD.equals(selectionType) && isInnerObject()) ||
                         (SelectionType.NONE_COLLECTION_FIELD.equals(selectionType) && !isCollection())))) {
 
+            String prefixAlias = null == prefixPath ? "" : prefixPath.getEntityPrefix();
             int index = 0;
             for (GenericField entityFieldElement : entityFieldQueue) {
                 prefixAlias += entityFieldElement.getFieldName();
@@ -233,7 +242,11 @@ public class FieldMapping {
                                 // If field is collection then selection type is ALL_FIELD, otherwise ID_FIELD to get only id of inner entity
                                 selectionType = isCollection() ? SelectionType.ALL_FIELD : SelectionType.ID_FIELD;
                             }
-                            selections.addAll(innerObj.getSelections(getJoin(from, entityFieldElement), selectionType, filterData, prefixAlias + Constants.DOT));
+                            selections.addAll(innerObj.getSelections(
+                                    getJoin(from, entityFieldElement),
+                                    selectionType,
+                                    filterData,
+                                    new PrefixPath.PrefixPathBuilder(prefixPath).add(this).build()));
                         }
                     }
                 } else {
@@ -243,6 +256,29 @@ public class FieldMapping {
             }
         }
         return selections;
+    }
+
+    /**
+     * Checking field is keeping or remove.
+     *
+     * @param prefixPath prefix path of field
+     * @param filterData {@link FilterData} field data
+     * @return true if field is keep
+     */
+    private boolean isKeepField(PrefixPath prefixPath, FilterData filterData) {
+        String fieldPath = (null == prefixPath ? "" : prefixPath.getDtoPrefix()) + getDTOField().getFieldName();
+        boolean keep = isId() || (isInnerObject() && !isCollection()) || (!StringUtils.isEmpty(fieldPath) && null == filterData.getFilter());
+        if (!keep && null != filterData.getFilter()) {
+            for (String keepField : filterData.getFilter()) {
+                if (fieldPath.equals(keepField) ||
+                        fieldPath.startsWith(keepField.concat(Constants.DOT)) ||
+                        keepField.startsWith(fieldPath.concat(Constants.DOT))) {
+                    keep = true;
+                    break;
+                }
+            }
+        }
+        return keep;
     }
 
     /**

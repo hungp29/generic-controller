@@ -3,8 +3,8 @@ package org.example.genericcontroller.support.generic;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.support.generic.mapping.FieldMapping;
+import org.example.genericcontroller.support.generic.mapping.PrefixPath;
 import org.example.genericcontroller.utils.constant.Constants;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -76,29 +76,5 @@ public class FilterData {
             filterArray = filter.toArray(new String[0]);
         }
         return filterArray;
-    }
-
-    /**
-     * Checking field is keeping or remove.
-     *
-     * @param prefixAlias  prefix alias
-     * @param fieldMapping {@link FieldMapping} field mapping
-     * @return true if field is keep
-     */
-    public boolean isKeepField(String prefixAlias, FieldMapping fieldMapping) {
-        Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
-        String fieldPath = prefixAlias + fieldMapping.getMappingPath();
-        boolean keep = !StringUtils.isEmpty(fieldPath) && null == filter;
-        if (!keep && null != filter) {
-            for (String keepField : filter) {
-                if (fieldPath.equals(keepField) ||
-                        fieldPath.startsWith(keepField.concat(Constants.DOT)) ||
-                        keepField.startsWith(fieldPath.concat(Constants.DOT))) {
-                    keep = true;
-                    break;
-                }
-            }
-        }
-        return keep;
     }
 }
