@@ -7,6 +7,7 @@ import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
+import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -195,6 +196,30 @@ public class ObjectMapping {
      */
     public List<Selection<?>> getCollectionSelections(From<?, ?> from, FilterData filterData) {
         return getSelections(from, SelectionType.COLLECTION_FIELD, filterData, null);
+    }
+
+    /**
+     * Checking field path is exist or not.
+     *
+     * @param fieldPath
+     * @return
+     */
+    public boolean existFieldPath(String fieldPath) {
+        for (FieldMapping field : fields) {
+            if (fieldPath.equals(field.getDTOField().getFieldName())) {
+                return true;
+            } else if (fieldPath.startsWith(field.getDTOField().getFieldName().concat(Constants.DOT))) {
+                if (field.isInnerObject()) {
+                    ObjectMapping innerObj = mappingCache.getByDTOClass(field.getDTOField().getFieldClass());
+                    if (null != innerObj) {
+                        return innerObj.existFieldPath(fieldPath.replaceFirst(field.getDTOField().getFieldName().concat(Constants.DOT), ""));
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

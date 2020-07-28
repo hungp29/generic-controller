@@ -86,13 +86,13 @@ public class DefaultGenericSpecification implements GenericSpecification {
 
         // Build where clause
         Predicate predicate = null;
-        if (!CollectionUtils.isEmpty(params)) {
+        if (!CollectionUtils.isEmpty(filterData.getParams())) {
             List<Predicate> predicates = new ArrayList<>();
-            for (Map.Entry<String, String> param : params.entrySet()) {
+            for (Map.Entry<String, String> param : filterData.getParams().entrySet()) {
                 String paramName = param.getKey();
                 String paramValue = param.getValue();
 
-                if (!DataTransferObjectUtils.fieldPathExist(dtoType, paramName)) {
+                if (!objectMapping.existFieldPath(paramName)) {
                     throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
                 }
 

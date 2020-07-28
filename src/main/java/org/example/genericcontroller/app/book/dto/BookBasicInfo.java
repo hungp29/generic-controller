@@ -26,8 +26,8 @@ public class BookBasicInfo extends DTOTemplate {
 
     private Integer year;
 
-//    @MappingField(entityField = "publisher.id")
-//    private int publisherId;
+    @MappingField(entityField = "publisher.id")
+    private int publisherId;
 //
     @MappingField(entityField = "publisher.name")
     private String publisherName;
