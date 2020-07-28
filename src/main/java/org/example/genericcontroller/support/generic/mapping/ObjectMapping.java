@@ -68,7 +68,7 @@ public class ObjectMapping {
                 path = mappingField.entityField();
             }
             Field[] entityFieldPath = fieldTypeResolved.parseFieldByPath(entityType, path);
-            fields.add(FieldMapping.of(path, mappingCache, field, entityFieldPath));
+            fields.add(FieldMapping.of(path, this, mappingCache, field, entityFieldPath));
         }
     }
 

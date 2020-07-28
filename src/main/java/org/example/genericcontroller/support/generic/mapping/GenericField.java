@@ -17,6 +17,7 @@ import java.util.Collection;
  */
 public class GenericField {
 
+    private GenericField parentField;
     private ObjectMappingCache mappingCache;
     private Field field;
     private Class<?> fieldType;
@@ -28,12 +29,14 @@ public class GenericField {
      * New instance of {@link GenericField}.
      *
      * @param field        {@link Field} instance
+     * @param parentField  {@link GenericField} parent field
      * @param mappingCache {@link ObjectMappingCache} cache of {@link ObjectMapping}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private GenericField(Field field, ObjectMappingCache mappingCache) {
+    private GenericField(Field field, GenericField parentField, ObjectMappingCache mappingCache) {
         Assert.notNull(field, "Generic field must be not null");
         this.field = field;
+        this.parentField = parentField;
         this.mappingCache = mappingCache;
         if (Collection.class.isAssignableFrom(field.getType())) {
             isCollection = true;
@@ -129,11 +132,12 @@ public class GenericField {
      * Static method to new {@link GenericField}.
      *
      * @param field        {@link Field} instance
+     * @param parentField  {@link GenericField} parent field
      * @param mappingCache {@link ObjectMappingCache} cache of {@link ObjectMapping}
      * @return new instance of {@link GenericField}
      */
-    public static GenericField of(Field field, ObjectMappingCache mappingCache) {
-        return new GenericField(field, mappingCache);
+    public static GenericField of(Field field, GenericField parentField, ObjectMappingCache mappingCache) {
+        return new GenericField(field, parentField, mappingCache);
     }
 
     @Override

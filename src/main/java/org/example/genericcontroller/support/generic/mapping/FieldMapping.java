@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
  */
 public class FieldMapping {
 
+    private ObjectMapping objectMapping;
     private GenericField dtoField;
     private LinkedList<GenericField> entityFieldQueue;
     private String mappingPath;
@@ -38,20 +39,25 @@ public class FieldMapping {
     /**
      * New instance of {@link FieldMapping}.
      *
-     * @param dtoField     {@link Field} of DTO
-     * @param entityFields {@link Field} of entity
-     * @param mappingPath  mapping class
-     * @param mappingCache {@link ObjectMappingCache} object mapping cache
+     * @param dtoField      {@link Field} of DTO
+     * @param entityFields  {@link Field} of entity
+     * @param mappingPath   mapping class
+     * @param objectMapping {@link ObjectMapping} parent contains {@link FieldMapping}
+     * @param mappingCache  {@link ObjectMappingCache} object mapping cache
      */
-    private FieldMapping(Field dtoField, List<Field> entityFields, String mappingPath, ObjectMappingCache mappingCache) {
+    private FieldMapping(Field dtoField, List<Field> entityFields, String mappingPath, ObjectMapping objectMapping, ObjectMappingCache mappingCache) {
         Assert.notNull(dtoField, "Data Transfer Object field must be not null");
         Assert.notEmpty(entityFields, "Entity field must be not empty");
+        Assert.notNull(objectMapping, "Object Mapping must be not null");
         this.mappingPath = mappingPath;
         this.mappingCache = mappingCache;
-        this.dtoField = GenericField.of(dtoField, mappingCache);
+        this.objectMapping = objectMapping;
+        this.dtoField = GenericField.of(dtoField, null, mappingCache);
         this.entityFieldQueue = new LinkedList<>();
+        GenericField parentField = null;
         for (Field entityField : entityFields) {
-            this.entityFieldQueue.add(GenericField.of(entityField, mappingCache));
+            this.entityFieldQueue.add(GenericField.of(entityField, parentField, mappingCache));
+            parentField = this.entityFieldQueue.getLast();
         }
         this.isId = AnnotatedElementUtils.hasAnnotation(entityFieldQueue.getLast().getField(), Id.class);
         validate();
@@ -78,14 +84,15 @@ public class FieldMapping {
     /**
      * Static method to new instance {@link FieldMapping}.
      *
-     * @param mappingPath  mapping path
-     * @param mappingCache {@link ObjectMappingCache} object mapping cache
-     * @param dtoField     {@link Field} DTO Field
-     * @param entityField  {@link Field} Entity Field
+     * @param mappingPath   mapping path
+     * @param objectMapping {@link ObjectMapping} parent contains {@link FieldMapping}
+     * @param mappingCache  {@link ObjectMappingCache} object mapping cache
+     * @param dtoField      {@link Field} DTO Field
+     * @param entityField   {@link Field} Entity Field
      * @return {@link FieldMapping} instance
      */
-    public static FieldMapping of(String mappingPath, ObjectMappingCache mappingCache, Field dtoField, Field... entityField) {
-        return new FieldMapping(dtoField, Arrays.asList(entityField), mappingPath, mappingCache);
+    public static FieldMapping of(String mappingPath, ObjectMapping objectMapping, ObjectMappingCache mappingCache, Field dtoField, Field... entityField) {
+        return new FieldMapping(dtoField, Arrays.asList(entityField), mappingPath, objectMapping, mappingCache);
     }
 
     /**
@@ -132,6 +139,15 @@ public class FieldMapping {
      */
     public String getMappingPath() {
         return mappingPath;
+    }
+
+    /**
+     * Get {@link ObjectMapping} parent of mapping field.
+     *
+     * @return {@link ObjectMapping} instance
+     */
+    public ObjectMapping getObjectMapping() {
+        return objectMapping;
     }
 
     /**
@@ -194,6 +210,7 @@ public class FieldMapping {
      */
     public List<Selection<?>> getSelections(From<?, ?> from, SelectionType selectionType, FilterData filterData, String prefixAlias) {
         Assert.notNull(prefixAlias, "Prefix alias cannot be null!");
+
         List<Selection<?>> selections = new ArrayList<>();
         if (isId() || (filterData.isKeepField(prefixAlias, this) && (
                 SelectionType.ALL_FIELD.equals(selectionType) ||
