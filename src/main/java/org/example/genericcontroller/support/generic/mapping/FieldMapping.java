@@ -1,10 +1,12 @@
 package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.support.generic.FilterData;
+import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping.SelectionType;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
+import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.Assert;
@@ -36,6 +38,7 @@ public class FieldMapping {
     private String mappingPath;
     private boolean isId;
     private ObjectMappingCache mappingCache;
+    private Class<?> converterType;
 
     /**
      * New instance of {@link FieldMapping}.
@@ -61,6 +64,11 @@ public class FieldMapping {
             parentField = this.entityFieldQueue.getLast();
         }
         this.isId = AnnotatedElementUtils.hasAnnotation(entityFieldQueue.getLast().getField(), Id.class);
+
+        MappingField mappingField = ObjectUtils.getAnnotation(dtoField, MappingField.class);
+        if (null != mappingField) {
+            this.converterType = mappingField.converter();
+        }
         validate();
     }
 
@@ -158,6 +166,15 @@ public class FieldMapping {
      */
     public ObjectMappingCache getMappingCache() {
         return mappingCache;
+    }
+
+    /**
+     * Get Field Converter type.
+     *
+     * @return Field Converter type
+     */
+    public Class<?> getConverterType() {
+        return converterType;
     }
 
     /**

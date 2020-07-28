@@ -100,17 +100,24 @@ public class DefaultGenericSpecification implements GenericSpecification {
                     throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
                 }
 
-                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, paramName);
-                Class<?> fieldConverterType = DataTransferObjectUtils.getFieldConverterType(dtoField);
-                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, paramName);
-                Field entityField = EntityUtils.getFieldByPath(entityType, entityFieldPath);
-                Path<?> path = buildPath(root, entityFieldPath, entityType);
+//                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, paramName);
+//                Class<?> fieldConverterType = DataTransferObjectUtils.getFieldConverterType(dtoField);
+//                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, paramName);
+//                Field entityField = EntityUtils.getFieldByPath(entityType, entityFieldPath);
+//                Path<?> path = buildPath(root, entityFieldPath, entityType);
 
                 // Build predicate
-                if (EntityUtils.isPrimaryKey(entityType, entityFieldPath)) {
-                    buildPredicateForKey(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
-                } else if (ObjectUtils.isNumber(entityField)) {
-                    buildPredicateForOperator(path, criteriaBuilder, fieldConverterType, paramValue).ifPresent(predicates::add);
+//                if (EntityUtils.isPrimaryKey(entityType, entityFieldPath)) {
+//                    buildPredicateForKey(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
+//                } else if (ObjectUtils.isNumber(entityField)) {
+//                    buildPredicateForOperator(path, criteriaBuilder, fieldConverterType, paramValue).ifPresent(predicates::add);
+//                }
+
+                FieldMapping whereConditionField = whereCondition.getFieldMapping();
+                if (whereConditionField.isId()) {
+                    buildPredicateForKey(whereCondition.getPath(), criteriaBuilder, paramValue).ifPresent(predicates::add);
+                } else if (ObjectUtils.isNumber(whereCondition.getFieldMapping().getLastEntityField().getField())) {
+                    buildPredicateForOperator(whereCondition.getPath(), criteriaBuilder, whereConditionField.getConverterType(), paramValue).ifPresent(predicates::add);
                 }
             }
 
