@@ -204,22 +204,24 @@ public class ObjectMapping {
      * @param fieldPath
      * @return
      */
-    public boolean existFieldPath(String fieldPath) {
+    public WhereCondition existFieldPath(From<?, ?> from, String fieldPath) {
+        Assert.notNull(from, "From instance must be not null!");
+        Assert.hasLength(fieldPath, "Field path must be not empty!");
         for (FieldMapping field : fields) {
-            if (fieldPath.equals(field.getDTOField().getFieldName())) {
-                return true;
+            if (fieldPath.equals(field.getDTOField().getFieldName()) && !field.isInnerObject()) {
+                from = field.buildFrom(from);
+                return WhereCondition.of(field, from.get(field.getLastEntityField().getFieldName()));
             } else if (fieldPath.startsWith(field.getDTOField().getFieldName().concat(Constants.DOT))) {
                 if (field.isInnerObject()) {
+                    from = field.buildFrom(from);
                     ObjectMapping innerObj = mappingCache.getByDTOClass(field.getDTOField().getFieldClass());
                     if (null != innerObj) {
-                        return innerObj.existFieldPath(fieldPath.replaceFirst(field.getDTOField().getFieldName().concat(Constants.DOT), ""));
+                        return innerObj.existFieldPath(from, fieldPath.replaceFirst(field.getDTOField().getFieldName().concat(Constants.DOT), ""));
                     }
-                } else {
-                    return true;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     @Override

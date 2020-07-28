@@ -258,6 +258,18 @@ public class FieldMapping {
         return selections;
     }
 
+    From<?, ?> buildFrom(From<?, ?> from) {
+        int lastIndex = entityFieldQueue.size();
+        if (!isInnerObject()) {
+            --lastIndex;
+        }
+        for (int i = 0; i < lastIndex; i++) {
+            GenericField entityFieldElement = entityFieldQueue.get(i);
+            from = getJoin(from, entityFieldElement);
+        }
+        return from;
+    }
+
     /**
      * Checking field is keeping or remove.
      *

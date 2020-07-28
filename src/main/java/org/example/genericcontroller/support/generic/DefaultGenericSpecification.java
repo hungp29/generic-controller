@@ -5,7 +5,9 @@ import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
 import org.example.genericcontroller.support.generic.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
+import org.example.genericcontroller.support.generic.mapping.FieldMapping;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
+import org.example.genericcontroller.support.generic.mapping.WhereCondition;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
 import org.example.genericcontroller.support.generic.utils.EntityUtils;
@@ -69,7 +71,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
 //        }
 
         // Distinct if params is not null
-        if (!CollectionUtils.isEmpty(params)) {
+        if (!CollectionUtils.isEmpty(filterData.getParams())) {
             query.distinct(true);
         }
 
@@ -92,7 +94,9 @@ public class DefaultGenericSpecification implements GenericSpecification {
                 String paramName = param.getKey();
                 String paramValue = param.getValue();
 
-                if (!objectMapping.existFieldPath(paramName)) {
+                WhereCondition whereCondition = objectMapping.existFieldPath(root, paramName);
+
+                if (null == whereCondition) {
                     throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
                 }
 
