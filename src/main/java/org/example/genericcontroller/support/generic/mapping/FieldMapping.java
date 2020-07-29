@@ -1,8 +1,8 @@
 package org.example.genericcontroller.support.generic.mapping;
 
-import org.example.genericcontroller.support.generic.FilterData;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
+import org.example.genericcontroller.support.generic.RootFilterData.FilterData;
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping.SelectionType;
 import org.example.genericcontroller.support.generic.utils.DuplicateChecker;

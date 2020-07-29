@@ -1,10 +1,10 @@
 package org.example.genericcontroller.support.generic.mapping;
 
 import org.example.genericcontroller.entity.Audit;
-import org.example.genericcontroller.support.generic.FilterData;
 import org.example.genericcontroller.support.generic.MappingClass;
 import org.example.genericcontroller.support.generic.MappingField;
 import org.example.genericcontroller.support.generic.ObjectMappingCache;
+import org.example.genericcontroller.support.generic.RootFilterData.FilterData;
 import org.example.genericcontroller.support.generic.exception.ConfigurationInvalidException;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
@@ -184,8 +184,8 @@ public class ObjectMapping {
      * @param from {@link From} instance
      * @return list {@link Selection}
      */
-    public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from, FilterData filterData) {
-        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, filterData, null);
+    public List<Selection<?>> getNoneCollectionSelections(From<?, ?> from, FilterData rootFilterData) {
+        return getSelections(from, SelectionType.NONE_COLLECTION_FIELD, rootFilterData, null);
     }
 
     /**
@@ -199,12 +199,13 @@ public class ObjectMapping {
     }
 
     /**
-     * Checking field path is exist or not.
+     * Build where condition.
      *
-     * @param fieldPath
-     * @return
+     * @param from      {@link From} instance
+     * @param fieldPath field path
+     * @return {@link WhereCondition} where condition
      */
-    public WhereCondition existFieldPath(From<?, ?> from, String fieldPath) {
+    public WhereCondition buildWhereCondition(From<?, ?> from, String fieldPath) {
         Assert.notNull(from, "From instance must be not null!");
         Assert.hasLength(fieldPath, "Field path must be not empty!");
         for (FieldMapping field : fields) {
@@ -216,7 +217,7 @@ public class ObjectMapping {
                     from = field.buildFrom(from);
                     ObjectMapping innerObj = mappingCache.getByDTOClass(field.getDTOField().getFieldClass());
                     if (null != innerObj) {
-                        return innerObj.existFieldPath(from, fieldPath.replaceFirst(field.getDTOField().getFieldName().concat(Constants.DOT), ""));
+                        return innerObj.buildWhereCondition(from, fieldPath.replaceFirst(field.getDTOField().getFieldName().concat(Constants.DOT), ""));
                     }
                 }
             }

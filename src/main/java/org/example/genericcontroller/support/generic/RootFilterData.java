@@ -1,11 +1,9 @@
 package org.example.genericcontroller.support.generic;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.example.genericcontroller.support.generic.mapping.FieldMapping;
-import org.example.genericcontroller.support.generic.mapping.PrefixPath;
 import org.example.genericcontroller.utils.constant.Constants;
-import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Data
-public class FilterData {
+public class RootFilterData {
 
     private Class<?> dtoType;
     private String[] filter;
@@ -29,7 +27,7 @@ public class FilterData {
     /**
      * Purpose for app new instance in controller.
      */
-    public FilterData() {
+    public RootFilterData() {
         log.debug("Controller create Filter Data object");
     }
 
@@ -40,7 +38,7 @@ public class FilterData {
      * @param filter
      * @param params
      */
-    public FilterData(Class<?> dtoType, String[] filter, Map<String, String> params) {
+    public RootFilterData(Class<?> dtoType, String[] filter, Map<String, String> params) {
         this.dtoType = dtoType;
         this.filter = merge(filter);
         this.params = params;
@@ -76,5 +74,45 @@ public class FilterData {
             filterArray = filter.toArray(new String[0]);
         }
         return filterArray;
+    }
+
+    /**
+     * News instance {@link FilterData} from {@link RootFilterData}.
+     *
+     * @return {@link FilterData} instance
+     */
+    public FilterData toFilterData() {
+        return new FilterData(dtoType, filter, params);
+    }
+
+    /**
+     * News instance {@link FilterData} from {@link RootFilterData}.
+     *
+     * @return {@link FilterData} instance
+     */
+    public FilterData toCollectionFilterData() {
+        return new FilterData(dtoType, filter, null);
+    }
+
+    /**
+     * News instance {@link FilterData} from {@link RootFilterData}.
+     *
+     * @return {@link FilterData} instance
+     */
+    public FilterData toCountFilterData() {
+        return new FilterData(dtoType, null, params);
+    }
+
+    @Getter
+    public static class FilterData {
+        private Class<?> dtoType;
+        private String[] filter;
+        private Map<String, String> params;
+
+        private FilterData(Class<?> dtoType, String[] filter, Map<String, String> params) {
+            this.dtoType = dtoType;
+            this.filter = filter;
+            this.params = params;
+        }
     }
 }

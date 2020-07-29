@@ -29,7 +29,7 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param params  request params
      * @return list Data Transfer Object
      */
-    List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData);
+    List<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, RootFilterData rootFilterData);
 
     /**
      * Find one page of entity and get data return as Data Transfer Object.
@@ -40,7 +40,7 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param pageable Paging info
      * @return page data
      */
-    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Pageable pageable);
+    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, RootFilterData rootFilterData, Pageable pageable);
 
     /**
      * Find all data of entity and return as Data Transfer Object.
@@ -51,7 +51,7 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param sort    Sort instance
      * @return list data as page
      */
-    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, Sort sort);
+    Page<Object> findAll(Class<?> dtoType, String[] filter, Map<String, String> params, RootFilterData rootFilterData, Sort sort);
 
     /**
      * Find one entity by id.
@@ -62,7 +62,7 @@ public interface GenericRepository<T extends Audit> extends JpaRepository<T, Ser
      * @param <ID>    generic of id
      * @return Data Transfer Object of entity
      */
-    <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter, FilterData filterData);
+    <ID extends Serializable> Object findOneById(ID id, Class<?> dtoType, String[] filter, RootFilterData rootFilterData);
 
     /**
      * Save Data Transfer Object.

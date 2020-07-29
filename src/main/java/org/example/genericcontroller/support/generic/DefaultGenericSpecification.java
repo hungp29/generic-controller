@@ -1,6 +1,7 @@
 package org.example.genericcontroller.support.generic;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.genericcontroller.support.generic.RootFilterData.FilterData;
 import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
@@ -42,9 +43,6 @@ public class DefaultGenericSpecification implements GenericSpecification {
      * @param root            Root Entity
      * @param query           Criteria query
      * @param criteriaBuilder Criteria builder
-     * @param dtoType         Data Transfer Object type
-     * @param filter          list field accepted to get from database
-     * @param params          request params
      * @param filterData      contain DTO Type, Filter field and params
      * @param collection      flat to detect build criteria for collection fields
      * @param <T>             generic of entity
@@ -52,7 +50,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
      */
     @Override
     public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
-                                       Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, boolean collection) {
+                                       FilterData filterData, boolean collection) {
 
         // Distinct if params is not null
         if (!CollectionUtils.isEmpty(filterData.getParams())) {
@@ -78,7 +76,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
                 String paramName = param.getKey();
                 String paramValue = param.getValue();
 
-                WhereCondition whereCondition = objectMapping.existFieldPath(root, paramName);
+                WhereCondition whereCondition = objectMapping.buildWhereCondition(root, paramName);
 
                 if (null == whereCondition) {
                     throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
