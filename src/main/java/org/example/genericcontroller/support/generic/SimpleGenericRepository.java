@@ -2,6 +2,7 @@ package org.example.genericcontroller.support.generic;
 
 import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.RootFilterData.FilterData;
+import org.example.genericcontroller.support.generic.mapping.RecordData;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
 import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
-import java.util.stream.Collectors;
 
 import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
@@ -169,12 +169,12 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
      *
      * @param rootFilterData contain DTO Type, Filter field and params
      * @param domainClass    Entity class
-     * @param records        records entity
+     * @param recordData     records entity
      * @param <S>            generic entity
      * @return collection query
      */
     protected <S extends T> TypedQuery<Tuple> getCollectionQuery(RootFilterData rootFilterData,
-                                                                 Class<S> domainClass, List<Map<String, Object>> records) {
+                                                                 Class<S> domainClass, RecordData recordData) {
         Assert.notNull(rootFilterData, "Root Filter Data must not be null!");
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
@@ -188,8 +188,7 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
 
         List<Predicate> conditions = new ArrayList<>();
         entityInformation.getIdAttributeNames().forEach(key -> {
-            List<Object> conditionValue = records.stream().map(record -> record.get(key)).distinct().collect(Collectors.toList());
-            conditions.add(root.get(key).in(conditionValue));
+            conditions.add(root.get(key).in(recordData.getConditionValues(key)));
         });
 
         query.where(builder.and(conditions.toArray(new Predicate[0])));
@@ -338,8 +337,9 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         Assert.notNull(query, "TypedQuery must be not null!");
         List<Tuple> tuples = query.getResultList();
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
-        if (records.size() > 0) {
-            List<Tuple> collectionTuples = getCollectionQuery(rootFilterData, getDomainClass(), records).getResultList();
+        RecordData recordData = RecordData.from(tuples);
+        if (recordData.size() > 0) {
+            List<Tuple> collectionTuples = getCollectionQuery(rootFilterData, getDomainClass(), recordData).getResultList();
             List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true));
             records = MappingUtils.merge(records, collectionRecords, dtoType);
         }
