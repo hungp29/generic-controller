@@ -1,17 +1,11 @@
 package org.example.genericcontroller.support.generic;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.genericcontroller.entity.Audit;
 import org.example.genericcontroller.support.generic.exception.ConditionValueInvalidException;
-import org.example.genericcontroller.support.generic.exception.GenericFieldNameIncorrectException;
 import org.example.genericcontroller.support.generic.exception.WhereConditionNotSupportException;
-import org.example.genericcontroller.support.generic.mapping.FieldMapping;
 import org.example.genericcontroller.support.generic.mapping.ObjectMapping;
 import org.example.genericcontroller.support.generic.mapping.WhereCondition;
 import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
-import org.example.genericcontroller.support.generic.utils.DuplicateChecker;
-import org.example.genericcontroller.support.generic.utils.EntityUtils;
-import org.example.genericcontroller.support.generic.utils.MappingUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
@@ -19,14 +13,10 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +45,7 @@ public class DefaultGenericSpecification implements GenericSpecification {
      * @param dtoType         Data Transfer Object type
      * @param filter          list field accepted to get from database
      * @param params          request params
+     * @param filterData      contain DTO Type, Filter field and params
      * @param collection      flat to detect build criteria for collection fields
      * @param <T>             generic of entity
      * @return Predicate instance
@@ -62,20 +53,13 @@ public class DefaultGenericSpecification implements GenericSpecification {
     @Override
     public <T> Predicate buildCriteria(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder,
                                        Class<?> dtoType, String[] filter, Map<String, String> params, FilterData filterData, boolean collection) {
-        Class<? extends Audit> entityType = DataTransferObjectUtils.getEntityType(dtoType);
-//        List<String> entityFieldPaths;
-//        if (!collection) {
-//            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false);
-//        } else {
-//            entityFieldPaths = MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true);
-//        }
 
         // Distinct if params is not null
         if (!CollectionUtils.isEmpty(filterData.getParams())) {
             query.distinct(true);
         }
 
-        ObjectMapping objectMapping = mappingCache.getByDTOClass(dtoType);
+        ObjectMapping objectMapping = mappingCache.getByDTOClass(filterData.getDtoType());
 
         // Get Selection of ObjectMapping
         List<Selection<?>> selections;
@@ -100,24 +84,10 @@ public class DefaultGenericSpecification implements GenericSpecification {
                     throw new WhereConditionNotSupportException("Don't support condition field '" + paramName + "'");
                 }
 
-//                Field dtoField = DataTransferObjectUtils.getFieldByPath(dtoType, paramName);
-//                Class<?> fieldConverterType = DataTransferObjectUtils.getFieldConverterType(dtoField);
-//                String entityFieldPath = DataTransferObjectUtils.getEntityMappingFieldPath(dtoType, paramName);
-//                Field entityField = EntityUtils.getFieldByPath(entityType, entityFieldPath);
-//                Path<?> path = buildPath(root, entityFieldPath, entityType);
-
-                // Build predicate
-//                if (EntityUtils.isPrimaryKey(entityType, entityFieldPath)) {
-//                    buildPredicateForKey(path, criteriaBuilder, paramValue).ifPresent(predicates::add);
-//                } else if (ObjectUtils.isNumber(entityField)) {
-//                    buildPredicateForOperator(path, criteriaBuilder, fieldConverterType, paramValue).ifPresent(predicates::add);
-//                }
-
-                FieldMapping whereConditionField = whereCondition.getFieldMapping();
-                if (whereConditionField.isId()) {
+                if (whereCondition.isId()) {
                     buildPredicateForKey(whereCondition.getPath(), criteriaBuilder, paramValue).ifPresent(predicates::add);
-                } else if (ObjectUtils.isNumber(whereCondition.getFieldMapping().getLastEntityField().getField())) {
-                    buildPredicateForOperator(whereCondition.getPath(), criteriaBuilder, whereConditionField.getConverterType(), paramValue).ifPresent(predicates::add);
+                } else if (ObjectUtils.isNumber(whereCondition.getEntityField())) {
+                    buildPredicateForOperator(whereCondition.getPath(), criteriaBuilder, whereCondition.getConverterType(), paramValue).ifPresent(predicates::add);
                 }
             }
 
@@ -184,42 +154,6 @@ public class DefaultGenericSpecification implements GenericSpecification {
             }
         }
         return Optional.ofNullable(predicate);
-    }
-
-    /**
-     * Build path for selection.
-     *
-     * @param from            From instance (root, join)
-     * @param entityFieldPath entity field path
-     * @param entityType      entity type
-     * @return path
-     */
-    private static Path<?> buildPath(From<?, ?> from, String entityFieldPath, Class<?> entityType) {
-        if (null != from && !StringUtils.isEmpty(entityFieldPath) && null != entityType) {
-            String[] entityPaths = entityFieldPath.split(Constants.DOT_REGEX);
-
-            Field entityField = ObjectUtils.getField(entityType, entityPaths[0], true);
-            if (null != entityField) {
-                if (entityPaths.length > 1 && EntityUtils.isForeignKey(entityField)) {
-                    Class<?> innerClass = MappingUtils.getFieldType(entityField);
-
-                    // If join is exist, get join from From instance, otherwise create new join
-                    Join<?, ?> join = DuplicateChecker.existJoin(from, innerClass);
-                    if (null == join) {
-                        join = from.join(entityPaths[0], JoinType.LEFT);
-                    }
-                    String nextPath = entityFieldPath.substring(entityFieldPath.indexOf(Constants.DOT) + 1);
-
-                    return buildPath(join, nextPath, innerClass);
-                } else {
-                    return from.get(entityPaths[0]);
-                }
-            } else {
-                throw new GenericFieldNameIncorrectException(String
-                        .format("Cannot found field '%s' in entity '%s'", entityPaths[0], entityType.getSimpleName()));
-            }
-        }
-        return null;
     }
 
     /**

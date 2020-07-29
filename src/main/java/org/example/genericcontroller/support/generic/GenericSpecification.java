@@ -24,6 +24,7 @@ public interface GenericSpecification {
      * @param dtoType         Data Transfer Object type
      * @param filter          list field accepted to get from database
      * @param params          request params
+     * @param filterData      contain DTO Type, Filter field and params
      * @param collection      flat to detect build criteria for collection fields
      * @param <T>             generic of entity
      */
