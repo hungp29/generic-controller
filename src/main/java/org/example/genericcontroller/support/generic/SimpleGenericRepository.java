@@ -337,9 +337,10 @@ public class SimpleGenericRepository<T extends Audit> extends SimpleJpaRepositor
         Assert.notNull(query, "TypedQuery must be not null!");
         List<Tuple> tuples = query.getResultList();
         List<Map<String, Object>> records = MappingUtils.convertTupleToMapRecord(tuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, false));
-        RecordData recordData = RecordData.from(tuples);
+        RecordData recordData = RecordData.from(mappingCache.getByDTOClass(rootFilterData.getDtoType()), tuples);
         if (recordData.size() > 0) {
             List<Tuple> collectionTuples = getCollectionQuery(rootFilterData, getDomainClass(), recordData).getResultList();
+            recordData.merge(collectionTuples);
             List<Map<String, Object>> collectionRecords = MappingUtils.convertTupleToMapRecord(collectionTuples, MappingUtils.getEntityMappingFieldPaths(dtoType, filter, true));
             records = MappingUtils.merge(records, collectionRecords, dtoType);
         }

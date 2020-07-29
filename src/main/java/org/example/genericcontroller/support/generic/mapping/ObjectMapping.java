@@ -31,6 +31,7 @@ public class ObjectMapping {
     private Class<?> dtoType;
     private Class<? extends Audit> entityType;
     private List<FieldMapping> fields;
+    private FieldMapping idField;
     private ObjectMappingCache mappingCache;
 
     private FieldTypeResolved fieldTypeResolved = FieldTypeResolved.getInstance();
@@ -69,7 +70,11 @@ public class ObjectMapping {
                 path = mappingField.entityField();
             }
             Field[] entityFieldPath = fieldTypeResolved.parseFieldByPath(entityType, path);
-            fields.add(FieldMapping.of(path, this, mappingCache, field, entityFieldPath));
+            FieldMapping fieldMapping = FieldMapping.of(path, this, mappingCache, field, entityFieldPath);
+            fields.add(fieldMapping);
+            if (fieldMapping.isId()) {
+                idField = fieldMapping;
+            }
         }
     }
 
@@ -127,6 +132,15 @@ public class ObjectMapping {
      */
     public List<FieldMapping> getFields() {
         return fields;
+    }
+
+    /**
+     * Get Id field.
+     *
+     * @return {@link FieldMapping} instance
+     */
+    public FieldMapping getIdField() {
+        return idField;
     }
 
     /**
