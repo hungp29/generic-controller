@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.proxy.process.argument;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.support.generic.Pagination;
 import org.example.genericcontroller.support.generic.RootFilterData;
 import org.example.genericcontroller.support.generic.exception.ArgumentException;
@@ -12,11 +13,18 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
+/**
+ * Process Argument for read all method.
+ *
+ * @author hungp
+ */
+@Slf4j
 @Component
 public class ProcessArgumentReadAllMethod extends ProcessArgument {
 
     @Override
     public Object[] prepareArguments(Object[] args, Class<?> entityType, Class<?> controllerType) {
+        log.debug("Start prepare arguments for Read All Method of " + controllerType.getSimpleName());
         Class<?> readDTOType = null;
         Map<String, String> params = null;
         Pagination pagination = null;

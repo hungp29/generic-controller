@@ -92,16 +92,4 @@ public class GenericAroundAdvice implements MethodInterceptor {
     protected ProceedingJoinPoint lazyGetProceedingJoinPoint(ProxyMethodInvocation rmi) {
         return new MethodInvocationProceedingJoinPoint(rmi);
     }
-
-    /**
-     * Check API generic method is match with {@link APIGenericMethod} param.
-     *
-     * @param invocation    {@link MethodInvocation} instance
-     * @param genericMethod {@link APIGenericMethod} method need check
-     * @return true if method is match {@link APIGenericMethod} specify
-     */
-    private boolean isMethod(MethodInvocation invocation, APIGenericMethod genericMethod) {
-        APIGeneric apiGeneric = ObjectUtils.getAnnotation(invocation.getMethod(), APIGeneric.class, true);
-        return null != apiGeneric && apiGeneric.genericMethod().equals(genericMethod);
-    }
 }
