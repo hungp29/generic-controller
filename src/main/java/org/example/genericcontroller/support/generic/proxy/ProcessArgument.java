@@ -1,18 +1,13 @@
 package org.example.genericcontroller.support.generic.proxy;
 
 import org.apache.catalina.connector.RequestFacade;
-import org.example.genericcontroller.support.generic.exception.ArgumentException;
 import org.example.genericcontroller.support.generic.exception.GenericException;
 import org.example.genericcontroller.support.generic.exception.ParamInvalidException;
-import org.example.genericcontroller.support.generic.Pagination;
-import org.example.genericcontroller.support.generic.RootFilterData;
-import org.example.genericcontroller.support.generic.utils.ControllerUtils;
 import org.example.genericcontroller.utils.ObjectUtils;
 import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,8 +22,7 @@ import java.util.regex.Pattern;
  *
  * @author hungp
  */
-@Component
-public class ProcessArgument {
+public abstract class ProcessArgument {
 
     public static final String PAGE = "page";
     public static final String LIMIT = "limit";
@@ -40,93 +34,14 @@ public class ProcessArgument {
     private int defaultLimit = 10;
 
     /**
-     * Prepare Arguments for create method.
+     * Prepare arguments for Generic methods.
      *
-     * @param args       array argument
-     * @param entityType Entity type
+     * @param args           array argument
+     * @param entityType     Entity type
+     * @param controllerType Controller type
      * @return array argument
      */
-    public Object[] prepareArgumentsForCreateMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
-        Object createRequestDTO = null;
-        if (null != args && args.length > 0 && null != entityType) {
-            Class<?> dtoType = ControllerUtils.getCreateRequestDTO(controllerType);
-            createRequestDTO = convertToDataTransferObject(args[0], dtoType);
-        }
-        return new Object[]{createRequestDTO};
-    }
-
-    /**
-     * Prepare arguments for read all method.
-     * 1. ReadDTOType
-     * 2. Map params
-     * 3. Pagination info
-     * 4. Filter field array
-     *
-     * @param args       array arguments
-     * @param entityType Entity type
-     * @return array arguments
-     */
-    public Object[] prepareArgumentsForReadAllMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
-        Class<?> readDTOType = null;
-        Map<String, String> params = null;
-        Pagination pagination = null;
-        String[] filter = null;
-        HttpServletRequest request = null;
-
-        if (null != args && args.length > 0 && null != entityType) {
-            // 1. ReadDTOType
-            readDTOType = ControllerUtils.getReadResponseDTO(controllerType);
-            request = getHttpServletRequest(args);
-            if (null != request) {
-                // 2. Map params
-                params = getParameters(request);
-                // 3. Pagination info
-                Sort sort = getSortRequest(request);
-                Pageable pageable = getPageRequest(request, sort);
-                pagination = new Pagination(pageable, sort);
-                // 4. Filter field array
-                filter = getFilterFields(request);
-            } else {
-                throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
-            }
-        }
-        RootFilterData rootFilterData = new RootFilterData(readDTOType, filter, params);
-
-        return new Object[]{readDTOType, params, pagination, filter, rootFilterData};
-    }
-
-    /**
-     * Prepare arguments for read one method.
-     * 1. ID
-     * 2. ReadDTOType
-     * 3. Filter field array
-     *
-     * @param args       array arguments
-     * @param entityType Entity type
-     * @return array arguments
-     */
-    public Object[] prepareArgumentsForReadOneMethod(Object[] args, Class<?> entityType, Class<?> controllerType) {
-        Class<?> readDTOType = null;
-        Object id = null;
-        String[] filter = null;
-        HttpServletRequest request = null;
-
-        if (null != args && args.length > 0 && null != entityType) {
-            // 1. ID
-            id = args[0];
-            // 2. ReadDTOType
-            readDTOType = ControllerUtils.getReadResponseDTO(controllerType);
-            request = getHttpServletRequest(args);
-            if (null != request) {
-                // 3. Filter field array
-                filter = getFilterFields(request);
-            } else {
-                throw new ArgumentException("Cannot find HttpServletRequest in array arguments of method");
-            }
-        }
-
-        return new Object[]{id, readDTOType, filter};
-    }
+    public abstract Object[] prepareArguments(Object[] args, Class<?> entityType, Class<?> controllerType);
 
     /**
      * Get map parameters from Http Servlet Request.
@@ -134,7 +49,7 @@ public class ProcessArgument {
      * @param request Http Servlet Request
      * @return map params
      */
-    private Map<String, String> getParameters(HttpServletRequest request) {
+    protected Map<String, String> getParameters(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
             String paramName = entry.getKey();
@@ -152,7 +67,7 @@ public class ProcessArgument {
      * @param request {@link HttpServletRequest} http request
      * @return {@link Pageable} instance
      */
-    private Pageable getPageRequest(HttpServletRequest request, Sort sort) {
+    protected Pageable getPageRequest(HttpServletRequest request, Sort sort) {
         String pageValue = getValueFromRequest(PAGE, request);
         String limitValue = getValueFromRequest(LIMIT, request);
         Integer page = null;
@@ -177,7 +92,7 @@ public class ProcessArgument {
      * @param request {@link HttpServletRequest} http request
      * @return {@link Sort} instance
      */
-    private Sort getSortRequest(HttpServletRequest request) {
+    protected Sort getSortRequest(HttpServletRequest request) {
         String sortValue = getValueFromRequest(ORDER_BY, request);
         if (!StringUtils.isEmpty(sortValue)) {
             return buildSort(sortValue);
@@ -191,7 +106,7 @@ public class ProcessArgument {
      * @param request Http Servlet Request
      * @return return filter fields array
      */
-    private String[] getFilterFields(HttpServletRequest request) {
+    protected String[] getFilterFields(HttpServletRequest request) {
         String filterFieldsValue = request.getParameter(FILTER);
         if (!StringUtils.isEmpty(filterFieldsValue)) {
             return StringUtils.trimArrayElements(filterFieldsValue.split(Constants.COMMA));
@@ -261,7 +176,7 @@ public class ProcessArgument {
      * @return Data Transfer Object instance
      */
     @SuppressWarnings("unchecked")
-    private Object convertToDataTransferObject(Object data, Class<?> dtoType) {
+    protected Object convertToDataTransferObject(Object data, Class<?> dtoType) {
         if (Map.class.isAssignableFrom(data.getClass())) {
             return ObjectUtils.convertMapToObject((Map<String, ?>) data, dtoType);
         }
@@ -274,7 +189,7 @@ public class ProcessArgument {
      * @param arguments array arguments
      * @return {@link HttpServletRequest}
      */
-    private HttpServletRequest getHttpServletRequest(Object[] arguments) {
+    protected HttpServletRequest getHttpServletRequest(Object[] arguments) {
         if (null != arguments && arguments.length > 0) {
             for (Object arg : arguments) {
                 if (null != arg && RequestFacade.class.isAssignableFrom(arg.getClass())) {

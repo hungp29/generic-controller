@@ -27,17 +27,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GenericAroundAdvice implements MethodInterceptor {
 
-    private final ProcessArgument processArgument;
-    private final ProcessResponse processResponse;
-
-    public GenericAroundAdvice(ProcessArgument processArgument, ProcessResponse processResponse) {
-        this.processArgument = processArgument;
-        this.processResponse = processResponse;
-    }
-
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        log.info("Proxy for " + invocation.getThis().getClass().getName() + "." + invocation.getMethod().getName());
+        log.debug("Proxy for " + invocation.getThis().getClass().getName() + "." + invocation.getMethod().getName());
 
         ProxyMethodInvocation proxyMethodInvocation = (ProxyMethodInvocation) invocation;
         ProceedingJoinPoint joinPoint = lazyGetProceedingJoinPoint(proxyMethodInvocation);
@@ -47,17 +39,18 @@ public class GenericAroundAdvice implements MethodInterceptor {
         Object result;
         // Prepare data for create method
         Object[] args = buildArguments(invocation);
-        if (isMethod(invocation, APIGenericMethod.CREATE)) {
-            args = processArgument.prepareArgumentsForCreateMethod(args, entityType, controllerType);
-            result = processResponse.convertResponseForCreateMethod(joinPoint.proceed(args), controllerType);
-        } else if (isMethod(invocation, APIGenericMethod.READ_ALL)) {
-            args = processArgument.prepareArgumentsForReadAllMethod(args, entityType, controllerType);
-            result = joinPoint.proceed(args);
-        } else if (isMethod(invocation, APIGenericMethod.READ_ONE)) {
-            args = processArgument.prepareArgumentsForReadOneMethod(args, entityType, controllerType);
+
+        ProcessArgument processArgument = ProcessArgumentFactory.getProcessArgument(invocation);
+        if (null != processArgument) {
+            args = processArgument.prepareArguments(args, entityType, controllerType);
             result = joinPoint.proceed(args);
         } else {
             result = joinPoint.proceed();
+        }
+
+        ProcessResponse processResponse = ProcessResponseFactory.getProcessResponse(invocation);
+        if (null != processResponse) {
+            result = processResponse.convertResponse(result, controllerType);
         }
 
         return result;

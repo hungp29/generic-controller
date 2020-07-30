@@ -1,37 +1,18 @@
 package org.example.genericcontroller.support.generic.proxy;
 
-import org.example.genericcontroller.support.generic.utils.ControllerUtils;
-import org.example.genericcontroller.support.generic.utils.MappingUtils;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-
 /**
  * Process Response.
  *
  * @author hungp
  */
-@Component
-public class ProcessResponse {
+public abstract class ProcessResponse {
 
     /**
-     * Convert Response For Read All Method.
+     * Convert result of Generic API to response.
      *
-     * @param result         response
+     * @param result         result of method
      * @param controllerType controller type
-     * @return result after converted
+     * @return response
      */
-    public Object convertResponseForCreateMethod(Object result, Class<?> controllerType) {
-        if (null != result && null != controllerType) {
-            boolean isResponseEntity = ResponseEntity.class.isAssignableFrom(result.getClass());
-            Class<?> dtoType = ControllerUtils.getCreateResponseDTO(controllerType);
-            if (isResponseEntity) {
-                ResponseEntity<?> responseEntity = ((ResponseEntity<?>) result);
-                Object entityConverted = MappingUtils.convertEntityToDataTransferObject(responseEntity.getBody(), dtoType);
-                result = null != entityConverted ? ResponseEntity.ok(entityConverted) : ResponseEntity.noContent();
-            } else {
-                result = MappingUtils.convertEntityToDataTransferObject(result, dtoType);
-            }
-        }
-        return result;
-    }
+    public abstract Object convertResponse(Object result, Class<?> controllerType);
 }

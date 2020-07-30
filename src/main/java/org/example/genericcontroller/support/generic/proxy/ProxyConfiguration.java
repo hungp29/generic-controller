@@ -1,5 +1,6 @@
 package org.example.genericcontroller.support.generic.proxy;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.genericcontroller.support.generic.GenericRestController;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator;
@@ -12,16 +13,9 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author hungp
  */
+@Slf4j
 @Configuration
 public class ProxyConfiguration {
-
-    private final ProcessArgument processArgument;
-    private final ProcessResponse processResponse;
-
-    public ProxyConfiguration(ProcessArgument processArgument, ProcessResponse processResponse) {
-        this.processArgument = processArgument;
-        this.processResponse = processResponse;
-    }
 
     /**
      * Create Auto Proxy Creator bean.
@@ -35,7 +29,8 @@ public class ProxyConfiguration {
             protected Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName,
                                                             TargetSource customTargetSource) throws BeansException {
                 if (GenericRestController.class.isAssignableFrom(beanClass)) {
-                    return new Object[]{genericAroundAdvice(processArgument, processResponse)};
+                    log.debug("Apply proxy for Generic Controller " + beanName);
+                    return new Object[]{genericAroundAdvice()};
                 } else {
                     return DO_NOT_PROXY;
                 }
@@ -43,16 +38,13 @@ public class ProxyConfiguration {
         };
     }
 
-
     /**
      * Create Generic Around Advice.
      *
-     * @param processArgument {@link ProcessArgument} instance
-     * @param processResponse {@link ProcessResponse} instance
      * @return {@link GenericAroundAdvice} instance
      */
     @Bean
-    public GenericAroundAdvice genericAroundAdvice(ProcessArgument processArgument, ProcessResponse processResponse) {
-        return new GenericAroundAdvice(processArgument, processResponse);
+    public GenericAroundAdvice genericAroundAdvice() {
+        return new GenericAroundAdvice();
     }
 }
