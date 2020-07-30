@@ -1,5 +1,7 @@
 package org.example.genericcontroller.support.generic.mapping;
 
+import org.example.genericcontroller.support.generic.utils.DataTransferObjectUtils;
+import org.example.genericcontroller.utils.constant.Constants;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.Tuple;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
  */
 public class RecordData {
 
+    private ObjectMapping objectMapping;
     private List<Map<String, Object>> records = new ArrayList<>();
 
     /**
@@ -24,7 +27,8 @@ public class RecordData {
      *
      * @param tuples list {@link Tuple} records
      */
-    private RecordData(List<Tuple> tuples) {
+    private RecordData(ObjectMapping objectMapping, List<Tuple> tuples) {
+        this.objectMapping = objectMapping;
         records.addAll(convertTupleToMap(tuples));
     }
 
@@ -48,6 +52,30 @@ public class RecordData {
             }
         }
         return records;
+    }
+
+    public void merge(List<Tuple> tuples) {
+        List<Map<String, Object>> merged = new ArrayList<>();
+        List<Map<String, Object>> collection = convertTupleToMap(tuples);
+        Map<String, List<Map<String, Object>>> mapCollectionById = new HashMap<>();
+        if (!CollectionUtils.isEmpty(collection)) {
+            for (Map<String, Object> collect : collection) {
+//                String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, collect);
+//                List<Map<String, Object>> list = mapCollectionById.get(key);
+//                if (null == list) {
+//                    list = new ArrayList<>();
+//                }
+//                list.add(collect);
+//                mapCollectionById.put(key, list);
+            }
+        }
+        if (!CollectionUtils.isEmpty(records)) {
+            for (Map<String, Object> record : records) {
+                String key = DataTransferObjectUtils.getKey(Constants.EMPTY_STRING, dtoType, record);
+                List<Map<String, Object>> list = mapCollectionById.get(key);
+                merged.addAll(buildMergeRecord(record, list));
+            }
+        }
     }
 
     /**
@@ -78,8 +106,8 @@ public class RecordData {
         return records.stream().map(record -> record.get(key)).distinct().collect(Collectors.toList());
     }
 
-    public static RecordData from(List<Tuple> tuples) {
-        return new RecordData(tuples);
+    public static RecordData from(ObjectMapping objectMapping, List<Tuple> tuples) {
+        return new RecordData(objectMapping, tuples);
     }
 
 }
