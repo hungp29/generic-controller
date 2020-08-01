@@ -17,8 +17,8 @@ import java.util.Collection;
  */
 public class GenericField {
 
-    private GenericField parentField;
     private ObjectMappingCache mappingCache;
+    private GenericField parentField;
     private Field field;
     private Class<?> fieldType;
     private boolean isCollection;

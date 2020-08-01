@@ -28,11 +28,11 @@ import java.util.stream.Collectors;
  */
 public class ObjectMapping {
 
+    private ObjectMappingCache mappingCache;
     private Class<?> dtoType;
     private Class<? extends Audit> entityType;
     private List<FieldMapping> fields;
     private FieldMapping idField;
-    private ObjectMappingCache mappingCache;
 
     private FieldTypeResolved fieldTypeResolved = FieldTypeResolved.getInstance();
 

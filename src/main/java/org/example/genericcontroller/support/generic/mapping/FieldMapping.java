@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
  */
 public class FieldMapping {
 
+    private ObjectMappingCache mappingCache;
     private ObjectMapping objectMapping;
     private GenericField dtoField;
     private LinkedList<GenericField> entityFieldQueue;
     private String mappingPath;
     private boolean isId;
-    private ObjectMappingCache mappingCache;
     private Class<?> converterType;
 
     /**
